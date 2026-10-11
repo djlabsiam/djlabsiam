@@ -5,10 +5,10 @@ from scipy.signal import stft
 import lameenc
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'assets', 'audio', 'User generate audio')   # full-length originals (not committed)
+SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'assets', 'audio', 'User generate audio')   # full-length originals as 16-bit stereo WAV, named house.wav ... (not committed)
 OUT = os.path.join(ROOT, 'assets', 'audio')
-FILES = [('house', 'House Track.wav', 125), ('hiphop', 'Hiphop Track.wav', 92), ('trap', 'TRAP Track.wav', 100),
-         ('techno', 'Techno Track.wav', 134), ('funk', 'DISCO TRACK.wav', 120)]
+FILES = [('house', 'house.wav', 126), ('hiphop', 'hiphop.wav', 92), ('trap', 'trap.wav', 100),
+         ('techno', 'techno.wav', 135), ('funk', 'disco.wav', 120)]   # id (-> demo-<id>.mp3), source file, rough bpm
 BARS = 16
 report = {}
 
@@ -52,20 +52,24 @@ for tid, fn, est in FILES:
     nbeats = int((len(mono) / sr - first) / beat)
     # energy per beat
     rms = np.array([np.sqrt((mono[int((first + i * beat) * sr):int((first + (i + 1) * beat) * sr)] ** 2).mean() + 1e-12) for i in range(nbeats)])
-    L = BARS * 4
-    cands = []
-    for i in range(8, nbeats - L - 4):
-        if i % 4 != 0:
-            continue
-        seg = rms[i:i + L]
-        roll = np.convolve(seg, np.ones(4) / 4, mode='valid')
-        if roll.min() < 0.055 or seg.mean() < 0.08:
-            continue
-        before = rms[i - 8:i].mean()
-        jump = seg[:8].mean() - before
-        # prefer a section whose body is steady and which starts with a drop/entry
-        sc = jump * 2.0 + seg.mean() - 1.5 * seg.std()
-        cands.append((sc, i))
+    med = float(np.median(rms[rms > 0.02])) if (rms > 0.02).any() else 0.05
+    for bars, thr, win in ((16, .5, 4), (12, .5, 4), (8, .5, 4), (8, .35, 8), (4, .3, 8)):   # longest steady phrase available
+        L = bars * 4
+        cands = []
+        for i in range(8, nbeats - L - 4):
+            if i % 4 != 0:
+                continue
+            seg = rms[i:i + L]
+            roll = np.convolve(seg, np.ones(win) / win, mode='valid')
+            if roll.min() < thr * med or seg.mean() < 0.7 * med:   # relative to this file's typical loudness (stems differ)
+                continue
+            before = rms[i - 8:i].mean()
+            jump = seg[:8].mean() - before
+            # prefer a section whose body is steady and which starts with a drop/entry
+            sc = jump * 2.0 + seg.mean() - 1.5 * seg.std()
+            cands.append((sc, i))
+        if cands:
+            break
     cands.sort(reverse=True)
     sc, i = cands[0]
     t0 = first + i * beat

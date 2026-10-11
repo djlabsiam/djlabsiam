@@ -12,7 +12,7 @@ TRACKS = [  # id, name shown on the deck, bpm (measured on the owner's own track
     ("house", "House", 126, ""),
     ("hiphop", "Hip-Hop", 92, ""),
     ("trap", "Trap", 100, ""),
-    ("techno", "Techno", 135, ""),
+    ("techno", "Techno", 134.1, ""),
     ("funk", "Disco", 120, ""),
 ]
 
@@ -122,7 +122,7 @@ def section_html(line_btn_html):
         '<span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
         '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
-        '<em class="dm-tip" aria-hidden="true">แตะเพื่อเสียบ</em></button></h1>'
+        '<em class="dm-tip" aria-hidden="true"><span>แตะเพื่อเสียบ</span></em></button></h1>'
         '<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
         '<div class="dm-lead"><h2>ลองเล่น CDJ-3000X ตรงนี้ได้เลย</h2>'
@@ -171,7 +171,8 @@ CSS = r"""
 .dm-plug::before,.dm-plug::after{content:"";position:absolute;top:50%;width:.16em;height:.1em;margin-top:-.05em;background:#4A515B;border-radius:.02em}
 .dm-plug::before{left:.12em}.dm-plug::after{left:.32em}
 .dm-stick.usb .dm-plug{display:block}
-.dm-tip{display:none;position:absolute;left:calc(100% + .9em);top:50%;white-space:nowrap;font:700 14px/1.4 var(--font-family-display);font-style:normal;background:#0F0F0F;color:#fff;padding:3px 12px;border-radius:999px;transform:translateY(-50%)}
+.dm-tip{display:none;position:absolute;left:calc(100% + 1.15em);top:50%;transform:translateY(-50%);white-space:nowrap;font-style:normal}
+.dm-tip span{display:block;font:700 14px/1.4 var(--font-family-display);background:#0F0F0F;color:#fff;padding:3px 12px;border-radius:999px}
 .dm-stick.hintp .dm-tip{display:block}
 .dm-fly{position:fixed;margin:0;z-index:70;pointer-events:none;animation:none!important}
 .dm-fly .dm-tip{display:none!important}
