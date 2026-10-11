@@ -132,8 +132,9 @@ def section_html(line_btn_html):
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
         '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
         '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1></div>'
-        '<div class="dm-stage">'
+        '<div class="dm-stage" id="dm-stage">'
         + deck_html() +
+        '<button type="button" class="dm-pin" id="dm-pin" hidden>ปล่อยเครื่อง · เลื่อนอ่านข้อความ</button>'
         '</div><div class="dm-body">'
         '<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
@@ -168,7 +169,10 @@ CSS = r"""
 .dm-st b{display:block;margin-top:2px;font:700 20px/1.4 var(--font-family-display)}
 .dm-st p{margin:6px 0 0;color:var(--text-secondary);font-size:15px}
 .dm-skip{margin-top:22px;position:sticky;bottom:16px;z-index:5;background:#fff}
-.dm-stage{position:sticky;top:68px;z-index:12;display:flex;justify-content:center;padding:6px 0 10px;margin:0 0 18px;background:#fff;box-shadow:0 14px 14px -14px rgba(15,15,15,.3)}
+.dm-stage{position:relative;display:flex;justify-content:center;flex-direction:column;align-items:center;padding:6px 0 10px;margin:0 0 18px}
+.dm-stage.pin{position:sticky;top:68px;z-index:12;background:#fff;box-shadow:0 14px 14px -14px rgba(15,15,15,.3)}
+.dm-pin{margin-top:8px;font:700 13px/1.2 var(--font-family-display);padding:8px 14px;border-radius:999px;border:1.5px solid var(--text-primary);background:#fff;color:var(--text-primary);cursor:pointer}
+.dm-pin[hidden]{display:none}
 .dm-tip{left:0!important;top:calc(100% + 6px)!important;transform:none!important}
 .dm-arr{transform:rotate(90deg)}
 .dm-stick{position:relative;font:inherit;cursor:pointer;border:0;margin-right:.62em;vertical-align:baseline}
@@ -269,7 +273,8 @@ CSS = r"""
   .dm-in{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-areas:"head stage" "body stage";grid-template-rows:auto 1fr;column-gap:40px;align-items:start}
   .dm-head{grid-area:head}
   .dm-body{grid-area:body}
-  .dm-stage{grid-area:stage;position:sticky;top:84px;z-index:auto;justify-content:flex-end;align-items:flex-start;padding:0;margin:0;background:none;box-shadow:none}
+  .dm-stage,.dm-stage.pin{grid-area:stage;position:sticky;top:84px;z-index:auto;flex-direction:row;justify-content:flex-end;align-items:flex-start;padding:0;margin:0;background:none;box-shadow:none}
+  .dm-pin{display:none!important}
   .dm-tip{left:calc(100% + .78em)!important;top:50%!important;transform:translateY(-50%)!important}
   .dm-arr{transform:none}
   .dm-steps{margin-top:18px}
@@ -344,7 +349,14 @@ function placeCard(k,side){
     slots.forEach(function(t){var ov=Math.max(0,Math.min(t+h,ty1)-Math.max(t,ty0));if(ov<bo){bo=ov;bt=t}});
     top=bt}
   info.style.left=left+'px';info.style.top=top+'px'}
+var stg=document.getElementById('dm-stage'),pinb=document.getElementById('dm-pin'),pinned=false;
+pinb.addEventListener('click',function(){F.unpin=!F.unpin;pinUpdate()});
+function pinUpdate(){   /* phone: the deck is pinned to the top only while the guided tour runs (and the reader hasn't released it) */
+  var tour=S.usb&&!F.skip&&GI<GS.length,want=tour&&!F.unpin;
+  if(want!==pinned){pinned=want;stg.classList.toggle('pin',want)}
+  pinb.hidden=!tour;pinb.textContent=F.unpin?'ปักเครื่องไว้บนจอ':'ปล่อยเครื่อง · เลื่อนอ่านข้อความ'}
 function guide(){
+  pinUpdate();
   if(!S.usb||F.skip){if(!S.usb)hideGuide();else hideGuide();return}
   while(GI<GS.length&&GS[GI].done())GI++;
   if(GI>=GS.length){hideGuide();return}
