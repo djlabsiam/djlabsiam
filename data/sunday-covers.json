@@ -1,0 +1,81 @@
+{
+  "_about": "ปกรายการ Sunday Live / วิดีโอ DJ LAB ที่วนเป็นสไลด์ในกล่อง Sunday Live หน้าแรก — ไฟล์ใน assets/img/sunday/ (960x540) · yt = รหัสวิดีโอ YouTube (ถ้ามี ปกจะลิงก์ไปดูบน YouTube) · เพิ่ม/ลบ/สลับลำดับได้ที่ไฟล์นี้ แล้วรัน tools/build_pages.py --home /",
+  "items": [
+    {
+      "img": "sunday-01.webp",
+      "alt": "M DEY SAY showcase SxSK"
+    },
+    {
+      "img": "sunday-02.webp",
+      "alt": "การได้งานของ DJ ตัดสินกันตั้งแต่ก่อนเปิดเพลง",
+      "yt": "pSKfjzWsRUA"
+    },
+    {
+      "img": "sunday-03.webp",
+      "alt": "PULSE โกง? หรือแค่ตัวช่วยสำหรับ DJ",
+      "yt": "onSeIZE4Ukk"
+    },
+    {
+      "img": "sunday-04.webp",
+      "alt": "Serato DJ Pro 5.0 Beta",
+      "yt": "iSIqKWNqAL8"
+    },
+    {
+      "img": "sunday-05.webp",
+      "alt": "จัดอันดับ Serato DJ Pro Controller"
+    },
+    {
+      "img": "sunday-06.webp",
+      "alt": "เพลงใหม่ไม่ใช่ตัวเลือกของดีเจ",
+      "yt": "LC52WMhTkf8"
+    },
+    {
+      "img": "sunday-07.webp",
+      "alt": "DJ Vinyl Record ดีที่สุดจริงหรือ",
+      "yt": "_XF38HSArU4"
+    },
+    {
+      "img": "sunday-08.webp",
+      "alt": "วิธีการหาคอนเนคชั่น"
+    },
+    {
+      "img": "sunday-09.webp",
+      "alt": "Scratch จำเป็นไหมสำหรับสาย Open Format",
+      "yt": "HvDmdsHw7p4"
+    },
+    {
+      "img": "sunday-10.webp",
+      "alt": "ทำไม DJ ไม่เปิดเพลงของศิลปินที่ร่วมงาน",
+      "yt": "A6rgKBdTy7k"
+    },
+    {
+      "img": "sunday-11.webp",
+      "alt": "DJ เป็น vs เป็น DJ"
+    },
+    {
+      "img": "sunday-12.webp",
+      "alt": "โปรแกรม DJ ที่เราใช้ แทงข้างหลัง",
+      "yt": "HhqP0FXwuy8"
+    },
+    {
+      "img": "sunday-13.webp",
+      "alt": "DJ เล่นเบรกแรก ใส่สุด หรือต้องวอมรอ",
+      "yt": "29-ff5WyXQ0"
+    },
+    {
+      "img": "sunday-14.webp",
+      "alt": "ทักษะที่กำลังจะหายไปสำหรับดีเจ",
+      "yt": "3clTOcWCMLU"
+    },
+    {
+      "img": "sunday-15.webp",
+      "alt": "ดีเจเปิดเพลงเหมือนกันทุกที่ เพลงซ้ำๆ ความผิดใคร",
+      "yt": "0dseN5QevF4"
+    },
+    {
+      "img": "sunday-16.webp",
+      "alt": "Open Format หยุดดดดดด",
+      "yt": "iDUVeQQH2ZM"
+    }
+  ]
+}

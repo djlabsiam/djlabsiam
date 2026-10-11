@@ -1,4 +1,21 @@
 {
-  "_about": "คลิปบรรยากาศการเรียนการสอนแบบไม่มีเสียง แสดงที่หัวหน้า /courses/ — ใส่ไฟล์ใน assets/video/ แล้วเพิ่มรายการใน items (mp4 H.264 ไม่มีเสียง 720p ยาว 6-10 วิ ไฟล์ละไม่เกิน ~2MB) ว่าง = ใช้ภาพเครื่อง DJ เดิม",
-  "items": []
+  "_about": "คลิปบรรยากาศการเรียนการสอนแบบไม่มีเสียง แสดงที่หัวหน้า /courses/ — mp4 H.264 ไม่มีเสียง 960x540 ยาว ~8 วิ ใน assets/video/ (ทำจากคลิปที่เจ้าของให้ 12 ต.ค. 2569) · เพิ่ม/ลบ/สลับลำดับที่ items · ว่าง = ใช้ภาพเครื่อง DJ เดิม",
+  "items": [
+    {
+      "src": "/assets/video/class-1.mp4",
+      "poster": "/assets/video/class-1.jpg"
+    },
+    {
+      "src": "/assets/video/class-2.mp4",
+      "poster": "/assets/video/class-2.jpg"
+    },
+    {
+      "src": "/assets/video/class-3.mp4",
+      "poster": "/assets/video/class-3.jpg"
+    },
+    {
+      "src": "/assets/video/class-4.mp4",
+      "poster": "/assets/video/class-4.jpg"
+    }
+  ]
 }

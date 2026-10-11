@@ -949,6 +949,17 @@ HOME_CSS = r"""
 .hlive .acts{display:flex;flex-wrap:wrap;gap:12px}
 .hlive .btn.sec{background:transparent;border-color:#fff;color:#fff}
 .hlive .btn.sec:hover{background:#fff;color:#0F0F0F}
+.hl-t{display:grid;gap:18px;align-content:center}
+.cov{position:relative;aspect-ratio:16/9;border-radius:var(--radius-md);overflow:hidden;background:#000;box-shadow:0 18px 36px rgba(0,0,0,.45)}
+.cov ul{margin:0;padding:0;list-style:none}
+.cv{position:absolute;inset:0;opacity:0;transition:opacity .7s ease;pointer-events:none}
+.cv.on{opacity:1;pointer-events:auto}
+.cv a,.cv img{display:block;width:100%;height:100%}
+.cv img{object-fit:cover}
+.cv-b{position:absolute;top:calc(50% - 20px);width:40px;height:40px;border-radius:50%;border:0;background:rgba(15,15,15,.62);color:#fff;font:700 24px/1 var(--font-family-display);cursor:pointer}
+.cv-b.p{left:8px}.cv-b.n{right:8px}
+.cv-n{position:absolute;right:10px;bottom:8px;background:rgba(15,15,15,.7);color:#fff;font:600 12px/1.4 var(--font-family-body);padding:2px 10px;border-radius:999px;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.cv{transition:none}}
 .hvisit{display:grid;gap:20px}
 .hvisit .ph{border-radius:var(--radius-lg);overflow:hidden;background:#222;aspect-ratio:16/9}
 .hvisit .ph img{width:100%;height:100%;object-fit:cover}
@@ -1041,6 +1052,38 @@ def _gear_sz():
 GEAR_SZ = _gear_sz()
 
 
+SUNDAY = (load(os.path.join(SITE, "data", "sunday-covers.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "sunday-covers.json")) else []
+
+
+def cover_slider():
+    if not SUNDAY:
+        return ""
+    sl = ""
+    for k, it in enumerate(SUNDAY):
+        img = (f'<img src="/assets/img/sunday/{E(it["img"])}" width="960" height="540" alt="{E(it["alt"])}"'
+               + (' fetchpriority="low" loading="lazy"' if k else ' loading="lazy"') + ' decoding="async">')
+        if it.get("yt") and re.fullmatch(r"[A-Za-z0-9_-]{11}", it["yt"]):
+            img = f'<a href="https://www.youtube.com/watch?v={it["yt"]}" target="_blank" rel="noopener" tabindex="-1">{img}</a>'
+        sl += f'<li class="cv{" on" if k == 0 else ""}">{img}</li>'
+    return (f'<div class="cov" id="cov" role="group" aria-roledescription="carousel" aria-label="ปกรายการและวิดีโอจาก DJ LAB SIAM"><ul>{sl}</ul>'
+            f'<button type="button" class="cv-b p" aria-label="ปกก่อนหน้า">‹</button><button type="button" class="cv-b n" aria-label="ปกถัดไป">›</button>'
+            f'<div class="cv-n" aria-live="off"><span id="cv-i">1</span> / {len(SUNDAY)}</div></div>')
+
+
+COV_JS = """<script>
+(function(){var c=document.getElementById('cov');if(!c)return;var L=[].slice.call(c.querySelectorAll('.cv')),i=0,n=document.getElementById('cv-i'),t=null,
+rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function go(k){L[i].classList.remove('on');i=(k+L.length)%L.length;L[i].classList.add('on');n.textContent=i+1;
+  var a=L[i].querySelector('a');L.forEach(function(x){var q=x.querySelector('a');if(q)q.tabIndex=x===L[i]?0:-1})}
+function auto(){stop();if(!rm)t=setInterval(function(){go(i+1)},4200)}function stop(){if(t){clearInterval(t);t=null}}
+c.querySelector('.cv-b.p').addEventListener('click',function(){go(i-1);auto()});c.querySelector('.cv-b.n').addEventListener('click',function(){go(i+1);auto()});
+c.addEventListener('mouseenter',stop);c.addEventListener('mouseleave',auto);c.addEventListener('focusin',stop);c.addEventListener('focusout',auto);
+var sx=null;c.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;stop()},{passive:true});
+c.addEventListener('touchend',function(e){if(sx===null)return;var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)go(i+(d<0?1:-1));sx=null;auto()});
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].isIntersecting?auto():stop()}).observe(c);else auto()})();
+</script>"""
+
+
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
@@ -1084,10 +1127,10 @@ def home_page():
         f'<section class="hsec team" id="teachers"><h2>ทีมครูผู้สอน</h2><p class="lede">{E(D["instructors"]["intro"])}</p>{tiles()}</section>'
         f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
         f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p></div></section>'
-        f'<section class="hsec"><div class="hlive"><div><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
-        f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p></div>'
+        f'<section class="hsec"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
+        f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
-        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div></section>'
+        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
         f'<div><h2>แวะมาที่ร้านได้เลย</h2><dl><dt>ที่อยู่</dt><dd>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330</dd>'
         f'<dt>เปิด</dt><dd>ทุกวัน 12:00–20:00 น.</dd><dt>โทร</dt><dd><a href="tel:022525868">02-252-5868</a> · <a href="tel:0886560464">088-656-0464</a></dd></dl>'
@@ -1108,7 +1151,7 @@ def home_page():
            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}]
     title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
     desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
-    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", script=cdj_demo.js_html(), css_extra=HOME_CSS)
+    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", script=cdj_demo.js_html() + COV_JS, css_extra=HOME_CSS)
 
 
 
