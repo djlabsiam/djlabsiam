@@ -109,8 +109,9 @@ function load(i){
 /* ---------- USB ---------- */
 function insertUsb(){
   if(S.usb||stick.disabled)return;stick.disabled=true;ac();stick.classList.remove('hintp');
-  var plug=stick.querySelector('.dm-plug'),a=stick.getBoundingClientRect(),pr=plug.getBoundingClientRect(),sr=usbin.getBoundingClientRect();
-  var dx=sr.left+sr.width/2-(pr.left+pr.width/2),dy=sr.top+sr.height/2-(pr.top+pr.height/2),fly=null;
+  var plug=stick.querySelector('.dm-plug'),a=stick.getBoundingClientRect(),pr=plug.getBoundingClientRect(),dr=deck.getBoundingClientRect();
+  var sx=dr.left+dr.width*parseFloat(usbin.style.left)/100,sy=dr.top+dr.height*parseFloat(usbin.style.top)/100;
+  var dx=sx-(pr.left+pr.width/2),dy=sy-(pr.top+pr.height/2),fly=null;
   var done=function(){if(fly&&fly.parentNode)fly.parentNode.removeChild(fly);stick.style.visibility='';stick.classList.remove('usb');stick.style.cursor='default';
     usbin.classList.add('on');S.usb=true;toast('USB 1 พร้อม — เลือกเพลงด้วยปุ่ม Browse');setMode('browse');
     TR.forEach(function(t,i){fetchTrack(i).catch(function(){})})};
