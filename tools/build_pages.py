@@ -810,7 +810,7 @@ HOME_CSS = r"""
 .htag.b{right:-2%;top:-6%;transform:rotate(2.5deg)}
 .cdj{position:relative;margin:0;container-type:inline-size;border-radius:var(--radius-lg);overflow:hidden;background:#000;box-shadow:0 30px 60px rgba(15,15,15,.22)}
 .cdj-img{display:block;width:100%;height:auto}
-.cdj-scr{position:absolute;left:17.7%;top:18%;width:64.7%;height:58.7%;display:flex;flex-direction:column;background:#06080B;color:#EDEFF2;overflow:hidden;font-family:var(--font-family-body)}
+.cdj-scr{position:absolute;left:17.06%;top:16.45%;width:65.87%;height:59.78%;display:flex;flex-direction:column;background:#06080B;color:#EDEFF2;overflow:hidden;font-family:var(--font-family-body)}
 .cdj-h{display:flex;align-items:center;gap:2cqw;padding:1.2cqw 2cqw;background:#10151C;border-bottom:1px solid #263040;font-size:max(10px,2.1cqw);line-height:1.3;white-space:nowrap}
 .cdj-h b{font-family:var(--font-family-display);color:#fff;letter-spacing:.02em}
 .cdj-h span{color:#8FA0B5;overflow:hidden;text-overflow:ellipsis}
@@ -825,7 +825,7 @@ HOME_CSS = r"""
 .cdj-l li.on i{color:#BFD9FF}.cdj-l li.on b{color:#fff}.cdj-l li.on small{color:#BFD3EE}
 .cdj-sb{position:absolute;right:.6cqw;top:.8cqw;bottom:.8cqw;width:.7cqw;border-radius:2px;background:#151B24}
 .cdj-sb i{position:absolute;left:0;right:0;border-radius:2px;background:#5BA2FF;transition:top .28s,height .28s}
-.cdj-knob{position:absolute;left:90.1%;top:54.8%;width:12.5%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
+.cdj-knob{position:absolute;left:90.84%;top:53.93%;width:12.5%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
 .cdj-knob::after{content:"";position:absolute;inset:-4%;border-radius:50%;border:2px solid rgba(221,70,76,.9);opacity:0;transform:scale(.7)}
 .cdj-knob.hint::after{animation:cdjp 2.2s ease-out infinite}
 @keyframes cdjp{0%{opacity:.95;transform:scale(.62)}100%{opacity:0;transform:scale(1.05)}}
@@ -834,14 +834,26 @@ HOME_CSS = r"""
   background:repeating-conic-gradient(rgba(255,255,255,.16) 0 4deg,transparent 4deg 15deg)}
 .cdj-dial::before{content:"";position:absolute;left:50%;top:6%;width:6%;height:20%;margin-left:-3%;border-radius:3px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.6)}
 .cdj-hint{margin:12px 0 0;font-size:14px;color:var(--text-secondary);text-align:center}
-.gearrow{margin:32px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gearrow{position:relative;z-index:3;margin:-8px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 4px;align-items:end}
 .gearrow li{margin:0}
-.gearrow figure{margin:0;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden;transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .3s}
-.gearrow figure:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
-.gearrow img{display:block;width:100%;height:auto;aspect-ratio:1}
-.gearrow figcaption{padding:8px 12px 12px;font:700 15px/1.35 var(--font-family-display)}
-.gearrow small{display:block;font:600 12px/1.4 var(--font-family-body);color:var(--text-muted)}
-@media (min-width:960px){.gearrow{grid-template-columns:repeat(6,1fr);gap:16px}}
+.gearrow figure{margin:0;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.gearrow figure:hover{transform:translateY(-6px)}
+.gearrow img{display:block;width:100%;height:auto;filter:drop-shadow(0 16px 18px rgba(15,15,15,.28))}
+.gearrow figcaption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hhero .lede{max-width:28em}
+body{overflow-x:clip}
+.hphoto .cdj{border-radius:0;box-shadow:none;background:transparent;
+  -webkit-mask-image:linear-gradient(to top,transparent 0,#000 24%);mask-image:linear-gradient(to top,transparent 0,#000 24%)}
+@media (min-width:960px){
+  .hhero{grid-template-columns:minmax(0,1fr)!important;min-height:600px}
+  .hhero>div:first-child{position:relative;z-index:4;max-width:520px}
+  .hphoto{position:absolute!important;right:calc(50% - 50vw);top:-8px;width:min(56vw,860px);z-index:1}
+  .hphoto .cdj{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 22%),linear-gradient(to top,transparent 0,#000 24%);-webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right,transparent 0,#000 22%),linear-gradient(to top,transparent 0,#000 24%);mask-composite:intersect}
+  .cdj-hint{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .gearrow{display:flex;gap:0;margin-top:-72px;padding:0 4px}
+  .gearrow li{flex:1 1 0;min-width:0}
+}
 @media (prefers-reduced-motion:reduce){.cdj-l,.cdj-dial,.cdj-sb i{transition:none}.cdj-knob.hint::after{animation:none}}
 .rackband.lt{padding:32px 0 0}
 .rackband.lt .rack *{stroke:#0F0F0F;fill:#fff}
@@ -912,7 +924,7 @@ HOME_CSS = r"""
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
 }
 @media (min-width:1360px){.hcards{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:700px){.htag.b{display:none}.cdj-l li small{display:none}}
+@media (max-width:700px){.cdj-l li small{display:none}}
 """
 
 SITE_ORG = {
@@ -962,6 +974,16 @@ def home_faq_pairs():
 
 GEAR = [("vm-80", "Pioneer DJ", "VM-80"), ("cdj-3000x", "Pioneer DJ", "CDJ-3000X"), ("djm-a9", "Pioneer DJ", "DJM-A9"),
         ("xdj-az", "Pioneer DJ", "XDJ-AZ"), ("ddj-rev5", "Pioneer DJ", "DDJ-REV5"), ("ddj-flx10", "Pioneer DJ", "DDJ-FLX10")]   # the shop's own product photos (product-images bucket)
+def _gear_sz():
+    from PIL import Image
+    out = []
+    for f, b, n in GEAR:
+        with Image.open(os.path.join(SITE, "assets", "img", f"cut-{f}.webp")) as im:
+            out.append((f, b, n, im.width, im.height))
+    return out
+
+
+GEAR_SZ = _gear_sz()
 NEWS = [("เปิดทุกวัน 12:00–20:00 น.", "Lido Connect ชั้น 2 สยามสแควร์ ซอย 3"),
         ("Sunday Live ทุกวันอาทิตย์ 18:30 น.", "ไลฟ์สดคุยเรื่อง DJ ทาง Facebook Page"),
         (f"คอร์สเรียนตัวต่อตัว {len(COURSES)} คอร์ส", "เริ่มจากศูนย์ก็เรียนได้ เลือกวันเวลาเองได้"),
@@ -1025,22 +1047,22 @@ def home_page():
         (3, "นัดวันเรียน", "จัดตารางให้ตรงกับเวลาที่ว่าง เรียนที่ DJ LAB SIAM Lido Connect สยามสแควร์"),
         (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
     news = "".join(f'<li{" class=on" if k == 0 else ""}><i>{k + 1:02d}</i><b>{E(t)}</b><small>{E(d)}</small></li>' for k, (t, d) in enumerate(NEWS))
-    gear = "".join(f'<li><figure><img src="/assets/img/home-gear-{f}.webp" width="480" height="480" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
-                   f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n in GEAR)
+    gear = "".join(f'<li><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
+                   f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h in GEAR_SZ)
     body = (
         EQ_SYMBOLS +
         f'<section class="hero hhero"><div><span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
-        f'<h1>ซื้อ เรียน ซ้อม ซ่อม DJ ในที่เดียวกับ <span class="lab">DJ LAB</span></h1>'
-        f'<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และช่างอยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ใช้เครื่องพวกนี้จริง</p>'
+        f'<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ <span class="lab">DJ LAB</span></h1>'
+        f'<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
         f'<div class="hphoto"><figure class="cdj" id="cdj">'
-        f'<img class="cdj-img" src="/assets/img/home-cdj-top.webp" width="812" height="557" alt="ส่วนบนของ Pioneer DJ CDJ-3000X จอสัมผัสขนาดใหญ่และปุ่ม Browse" fetchpriority="high" decoding="async">'
+        f'<img class="cdj-img" src="/assets/img/home-cdj-top.webp" width="797" height="547" alt="ส่วนบนของ Pioneer DJ CDJ-3000X จอสัมผัสขนาดใหญ่และปุ่ม Browse" fetchpriority="high" decoding="async">'
         f'<div class="cdj-scr"><div class="cdj-h"><b>DJ LAB SIAM</b><span>ข่าวจากร้าน</span><em id="cdj-n">1/{len(NEWS)}</em></div>'
         f'<div class="cdj-vp"><ol class="cdj-l" id="cdj-l">{news}</ol><div class="cdj-sb" aria-hidden="true"><i id="cdj-sb"></i></div></div></div>'
         f'<div class="cdj-knob hint" id="cdj-k" role="slider" tabindex="0" aria-label="ปุ่ม Browse เลื่อนอ่านข่าวจากร้าน" aria-valuemin="1" aria-valuemax="{len(NEWS)}" aria-valuenow="1">'
         f'<div class="cdj-dial" id="cdj-d"></div></div></figure>'
         f'<p class="cdj-hint">เลื่อนล้อเมาส์บนปุ่ม Browse (หรือลากขึ้น-ลงบนมือถือ) เพื่ออ่านข่าวจากร้าน</p>'
-        f'<div class="htag a">เปิดทุกวัน<small>12:00–20:00 น.</small></div><div class="htag b">Pioneer DJ · AlphaTheta<small>Authorized Dealer</small></div></div>'
+        f'</div>'
         f'</section>'
         f'<section><ul class="gearrow" aria-label="ตัวอย่างอุปกรณ์ที่ร้านมีจำหน่าย">{gear}</ul><div class="zones">{zones}</div></section>'
         f'<section class="hsec" id="equipment"><h2>อุปกรณ์ DJ ตัวแทนจำหน่ายอย่างเป็นทางการ</h2>'
