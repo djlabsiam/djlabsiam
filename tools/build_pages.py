@@ -817,10 +817,24 @@ HOME_CSS = r"""
 .gearrow img{display:block;width:100%;height:auto;filter:drop-shadow(0 16px 18px rgba(15,15,15,.28))}
 .gearrow figcaption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .pgm>section.dm-inv{padding:0}
+.pcards{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
+.pcard{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .2s}
+.pcard:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
+.pcard .pa{position:relative;aspect-ratio:4/3;overflow:hidden;background-color:#FAF9F6;background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
+.pcard .pa img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:28px 8px 8px;mix-blend-mode:multiply}
+.pcard .pk{position:absolute;left:10px;top:10px;z-index:2;font:600 13px/1.4 var(--font-family-body);padding:3px 10px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
+.pcard .pb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
+.pcard .pbr{font:600 13px/1.4 var(--font-family-body);color:var(--text-muted)}
+.pcard h3{font-size:18px;line-height:1.35}
+.pcard .btn{margin-top:auto;align-self:flex-start}
+.pcard .pb h3+.btn{margin-top:12px}
+@media (min-width:960px){.pcards{grid-template-columns:repeat(3,1fr);gap:18px}}
+@media (min-width:1360px){.pcards{grid-template-columns:repeat(6,1fr)}}
+@media (max-width:420px){.pcards{grid-template-columns:1fr}}
 @media (min-width:960px){
   .pgm>.hero.dm{padding-right:0}
   .gearrow{display:flex;gap:0;padding:0 4px}
-  .gearrow li{flex:1 1 0;min-width:0}
+  .gearrow li{flex:var(--w) 1 0;min-width:0}
 }
 .rackband.lt{padding:32px 0 0}
 .rackband.lt .rack *{stroke:#0F0F0F;fill:#fff}
@@ -940,14 +954,20 @@ def home_faq_pairs():
     return pairs
 
 
-GEAR = [("vm-80", "Pioneer DJ", "VM-80"), ("cdj-3000x", "Pioneer DJ", "CDJ-3000X"), ("djm-a9", "Pioneer DJ", "DJM-A9"),
-        ("xdj-az", "Pioneer DJ", "XDJ-AZ"), ("ddj-rev5", "Pioneer DJ", "DDJ-REV5"), ("ddj-flx10", "Pioneer DJ", "DDJ-FLX10")]   # the shop's own product photos (product-images bucket)
+GEAR = [("xdj-az", "Pioneer DJ", "XDJ-AZ", 895), ("ddj-rev5", "Pioneer DJ", "DDJ-REV5", 736), ("ddj-flx10", "Pioneer DJ", "DDJ-FLX10", 716),
+        ("vm-80", "Pioneer DJ", "VM-80", 544), ("djm-a9", "Pioneer DJ", "DJM-A9", 407), ("cdj-3000x", "Pioneer DJ", "CDJ-3000X", 329)]   # name, brand, model, width mm (VM-80 = the pair); the shop's own product photos
+# equipment cards: real shop products (photo + name), no price
+PRODUCTS = [("pc-cdj-3000x", "CDJ / Player", "Pioneer DJ", "CDJ-3000X"), ("pc-djm-a9", "Mixer", "Pioneer DJ", "DJM-A9"),
+            ("pc-ddj-flx4", "Controller", "Pioneer DJ", "DDJ-FLX4"), ("pc-dm-50d", "ลำโพงมอนิเตอร์", "Pioneer DJ", "DM-50D"),
+            ("pc-hdj-x5k", "หูฟัง", "Pioneer DJ", "HDJ-X5K"), ("pc-djset-typec", "สายสัญญาณ", "NEO by OYAIDE", "DJSET TYPE-C 1.0")]
+
+
 def _gear_sz():
     from PIL import Image
     out = []
-    for f, b, n in GEAR:
+    for f, b, n, mm in GEAR:
         with Image.open(os.path.join(SITE, "assets", "img", f"cut-{f}.webp")) as im:
-            out.append((f, b, n, im.width, im.height))
+            out.append((f, b, n, im.width, im.height, mm))
     return out
 
 
@@ -963,7 +983,6 @@ def home_page():
         ("ทีมครู", "/courses/#teachers", f"Pro DJ {len(TEACHERS)} คน เลือกอาจารย์ตามสายที่อยากไป", "ดูทีมครู"),
         ("จองห้องซ้อม", "/book/", "ซ้อมกับเครื่องจริง จองเวลาออนไลน์ได้", "จองห้อง"),
         ("วิดีโอและรายการ", "/content/", "Sunday Live พอดแคสต์ และคลิปสอน", "ดูรายการ"))))
-    eq = "".join(f'<div class="eq"><svg viewBox="0 0 120 90" aria-hidden="true"><use href="#e-{k}"/></svg><b>{E(t)}</b></div>' for k, t in EQ_ITEMS)
     cards = ""
     for c in COURSES:
         f = F[c["title"]]
@@ -977,16 +996,18 @@ def home_page():
         (2, "เลือกคอร์ส", "เลือกคอร์สที่ตรงกับระดับและเวลาที่มี"),
         (3, "นัดวันเรียน", "จัดตารางให้ตรงกับเวลาที่ว่าง เรียนที่ DJ LAB SIAM Lido Connect สยามสแควร์"),
         (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
-    gear = "".join(f'<li><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
-                   f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h in GEAR_SZ)
+    gear = "".join(f'<li style="--w:{mm}"><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
+                   f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h, mm in GEAR_SZ)
+    eq = "".join(f'<article class="pcard"><div class="pa"><img src="/assets/img/{f}.webp" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
+                 f'<span class="pk">{E(t)}</span></div><div class="pb"><span class="pbr">{E(b)}</span><h3>{E(n)}</h3>'
+                 f'<a class="btn sec sm" href="{LINE_ADD}" rel="noopener">ถามราคา LINE</a></div></article>' for f, t, b, n in PRODUCTS)
     body = (
-        EQ_SYMBOLS +
         cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
         f'<section><ul class="gearrow" aria-label="ตัวอย่างอุปกรณ์ที่ร้านมีจำหน่าย">{gear}</ul><div class="zones">{zones}</div></section>'
         f'<section class="hsec" id="equipment"><h2>อุปกรณ์ DJ ตัวแทนจำหน่ายอย่างเป็นทางการ</h2>'
         f'<p class="lede">สินค้าครบ ทั้ง CDJ Player, DJM Mixer, Controller, หูฟัง และสายสัญญาณคุณภาพสูง พร้อมรับประกันจากผู้ผลิต ถามรุ่นและราคาได้ทาง LINE</p>'
-        f'<div class="eqgrid">{eq}</div>'
+        f'<div class="pcards">{eq}</div>'
         f'<div class="brands"><div>Pioneer DJ <span>Authorized</span></div><div>AlphaTheta <span>Authorized</span></div><div>NEO by OYAIDE <span>Official</span></div></div>'
         f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}</div></section>'
         f'<section class="hsec" id="courses"><h2>เรียน DJ ตัวต่อตัวกับ Pro DJ</h2>'

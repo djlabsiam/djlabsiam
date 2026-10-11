@@ -72,7 +72,8 @@ def _hs_html():
                f'style="left:{fl:.2f}%;top:{ft:.2f}%;width:{64 / DW * 100:.2f}%;height:{(FADER[2] - FADER[1]) / DH * 100:.2f}%"><i class="fcap" id="dm-cap"></i></div>')
     jl, jt = _pct(JOG[0], JOG[1])
     out.append(f'<div class="dkb jog" data-k="jog" role="application" aria-label="จอก Jog — ลากเพื่อสแครช/ดันจังหวะ" '
-               f'style="left:{jl:.2f}%;top:{jt:.2f}%;width:{JOG[2] / DW * 100:.2f}%"><i id="dm-jog"></i></div>')
+               f'style="left:{jl:.2f}%;top:{jt:.2f}%;width:{JOG[2] / DW * 100:.2f}%"></div>'
+               f'<div class="dm-jd" style="left:{jl:.2f}%;top:{jt:.2f}%"><i id="dm-jog"></i></div>')
     return "".join(out)
 
 
@@ -215,12 +216,13 @@ CSS = r"""
 .dkb.r.lit{background:none}
 .dkb.jog{aspect-ratio:1;height:auto!important;cursor:grab;touch-action:none;overflow:hidden}
 .dkb.jog:hover{outline:0}
-.dkb.jog i{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.05) 0 3deg,transparent 3deg 28deg)}
-.dkb.jog i::after{content:"";position:absolute;left:50%;top:5%;width:2.4%;aspect-ratio:1;margin-left:-1.2%;border-radius:50%;background:#DD464C;box-shadow:0 0 8px #DD464C}
+.dm-jd{position:absolute;width:12.4%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.dm-jd i{position:absolute;inset:0;border-radius:50%}
+.dm-jd i::after{content:"";position:absolute;left:50%;top:0;width:11%;aspect-ratio:1;margin-left:-5.5%;border-radius:50%;background:#FF9F1A;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 .dkb.fd{cursor:ns-resize;touch-action:none;border-radius:6px}
 .dkb.fd:hover{outline:0}
-.fcap{position:absolute;left:50%;top:50%;width:70%;height:15.5%;transform:translate(-50%,-50%);border-radius:5px;background:linear-gradient(#34383E,#1C1F23);box-shadow:0 4px 8px rgba(0,0,0,.6);border:1px solid #4A5058;pointer-events:none}
-.fcap::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:2px;margin-top:-1px;background:#fff}
+.fcap{position:absolute;left:50%;top:50%;width:72%;height:15.8%;transform:translate(-50%,-50%);border-radius:4px;background:linear-gradient(#41454B 0 31%,#17191C 31% 37%,#2C2F34 37% 63%,#17191C 63% 69%,#3A3E44 69%);box-shadow:0 3px 6px rgba(0,0,0,.55);pointer-events:none}
+.fcap::after{content:"";position:absolute;left:4%;right:4%;top:50%;height:2px;margin-top:-1px;background:#E8EAEE}
 .dm-ind{position:absolute;transform:translate(-50%,-50%);border:3px solid var(--brand-base);border-radius:50%;pointer-events:none;z-index:5;animation:dmp 1.6s ease-out infinite}
 .dm-ind::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 13px/1.4 var(--font-family-display);padding:4px 10px;border-radius:999px;box-shadow:0 6px 14px rgba(0,0,0,.3)}
 .dm-ind.sq{border-radius:10px}
@@ -402,8 +404,8 @@ kb.addEventListener('keydown',function(e){var m={ArrowDown:1,ArrowUp:-1};if(e.ke
 rows.forEach(function(r,i){r.addEventListener('click',function(){if(S.mode==='browse'){if(S.sel===i)load(i);else sel(i,true)}})});
 /* ---------- tempo fader ---------- */
 var fd=btn('tempo'),FY=1;
-function capPos(){var f=(S.tempo/.1);capEl.style.top=(50+f*(46))+'%';fd.setAttribute('aria-valuenow',Math.round(S.tempo*100))}
-function fdSet(e){var r=fd.getBoundingClientRect();var f=((e.clientY-r.top)/r.height-.5)*2;f=Math.max(-1,Math.min(1,f/.92));
+function capPos(){var f=(S.tempo/.1);capEl.style.top=(50+f*39.3)+'%';fd.setAttribute('aria-valuenow',Math.round(S.tempo*100))}
+function fdSet(e){var r=fd.getBoundingClientRect();var f=((e.clientY-r.top)/r.height-.5)/.393;f=Math.max(-1,Math.min(1,f));
   if(Math.abs(f)<.03)f=0;S.tempo=f*.1;capPos();applyRate()}
 fd.addEventListener('pointerdown',function(e){try{fd.setPointerCapture(e.pointerId)}catch(x){}FY=0;fdSet(e)});
 fd.addEventListener('pointermove',function(e){if(FY===0)fdSet(e)});
