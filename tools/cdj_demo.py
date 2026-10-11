@@ -122,7 +122,7 @@ def section_html(line_btn_html):
         '<span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
         '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
-        '<em class="dm-tip" aria-hidden="true"><span>แตะเพื่อเสียบ</span></em></button></h1>'
+        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1>'
         '<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
         '<div class="dm-lead"><h2>ลองเล่น CDJ-3000X ตรงนี้ได้เลย</h2>'
@@ -171,9 +171,11 @@ CSS = r"""
 .dm-plug::before,.dm-plug::after{content:"";position:absolute;top:50%;width:.16em;height:.1em;margin-top:-.05em;background:#4A515B;border-radius:.02em}
 .dm-plug::before{left:.12em}.dm-plug::after{left:.32em}
 .dm-stick.usb .dm-plug{display:block}
-.dm-tip{display:none;position:absolute;left:calc(100% + 1.15em);top:50%;transform:translateY(-50%);white-space:nowrap;font-style:normal}
+.dm-tip{display:none;position:absolute;left:calc(100% + .78em);top:50%;transform:translateY(-50%);white-space:nowrap;font-style:normal;align-items:center;gap:4px}
+.dm-arr{flex:none;animation:dmn 1.1s ease-in-out infinite}
+@keyframes dmn{50%{transform:translateX(-6px)}}
 .dm-tip span{display:block;font:700 14px/1.4 var(--font-family-display);background:#0F0F0F;color:#fff;padding:3px 12px;border-radius:999px}
-.dm-stick.hintp .dm-tip{display:block}
+.dm-stick.hintp .dm-tip{display:flex}
 .dm-fly{position:fixed;margin:0;z-index:70;pointer-events:none;animation:none!important}
 .dm-fly .dm-tip{display:none!important}
 .dm-deck{position:relative;width:min(100%,520px);aspect-ratio:800/1139;container-type:inline-size;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 26px 30px rgba(15,15,15,.32))}
@@ -254,7 +256,7 @@ CSS = r"""
   .dm-inv-in{padding:64px 56px}
 }
 @media (min-width:1280px){.dm-inv h2{font-size:44px}}
-@media (prefers-reduced-motion:reduce){.dm-l,.dm-knob i{transition:none}.dm-ind,.dm-stick.hintp::after,.dm-knob.act{animation:none}}
+@media (prefers-reduced-motion:reduce){.dm-arr{animation:none}.dm-l,.dm-knob i{transition:none}.dm-ind,.dm-stick.hintp::after,.dm-knob.act{animation:none}}
 """
 
 JS = r"""<script>
