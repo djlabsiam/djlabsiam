@@ -10,6 +10,8 @@ Each generated file carries the md5 of the courses.json it was built from; tools
 Standard library only.  Usage (from anywhere):  python tools/build_pages.py [--courses PATH] [--profiles PATH] [--out DIR]
 """
 import argparse, hashlib, html, io, json, os, re, sys, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import cdj_demo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -808,53 +810,18 @@ HOME_CSS = r"""
 .htag small{display:block;font:400 13px/1.4 var(--font-family-body);color:var(--text-muted)}
 .htag.a{left:-2%;bottom:10%;transform:rotate(-3deg)}
 .htag.b{right:-2%;top:-6%;transform:rotate(2.5deg)}
-.cdj{position:relative;margin:0;container-type:inline-size;border-radius:var(--radius-lg);overflow:hidden;background:#000;box-shadow:0 30px 60px rgba(15,15,15,.22)}
-.cdj-img{display:block;width:100%;height:auto}
-.cdj-scr{position:absolute;left:17.00%;top:17.60%;width:65.62%;height:65.40%;display:flex;flex-direction:column;background:#06080B;color:#EDEFF2;overflow:hidden;font-family:var(--font-family-body)}
-.cdj-h{display:flex;align-items:center;gap:2cqw;padding:1.2cqw 2cqw;background:#10151C;border-bottom:1px solid #263040;font-size:max(10px,2.1cqw);line-height:1.3;white-space:nowrap}
-.cdj-h b{font-family:var(--font-family-display);color:#fff;letter-spacing:.02em}
-.cdj-h span{color:#8FA0B5;overflow:hidden;text-overflow:ellipsis}
-.cdj-h em{margin-left:auto;font-style:normal;color:#5BA2FF;font-variant-numeric:tabular-nums}
-.cdj-vp{position:relative;flex:1;min-height:0;overflow:hidden}
-.cdj-l{margin:0;padding:0;list-style:none;height:100%;transition:transform .28s cubic-bezier(.16,1,.3,1)}
-.cdj-l li{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:1.8cqw;align-content:center;height:25%;box-sizing:border-box;padding:0 2.4cqw;border-bottom:1px solid #151B24;cursor:pointer}
-.cdj-l li i{grid-row:1/3;align-self:center;font:700 max(10px,1.9cqw)/1 var(--font-family-display);font-style:normal;color:#5C6B7E;font-variant-numeric:tabular-nums}
-.cdj-l li b{font:600 max(11px,2.5cqw)/1.35 var(--font-family-display);color:#DCE2EA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cdj-l li small{font-size:max(10px,1.95cqw);line-height:1.35;color:#7F8EA3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cdj-l li.on{background:linear-gradient(90deg,#1A56A8,#10305F)}
-.cdj-l li.on i{color:#BFD9FF}.cdj-l li.on b{color:#fff}.cdj-l li.on small{color:#BFD3EE}
-.cdj-sb{position:absolute;right:.6cqw;top:.8cqw;bottom:.8cqw;width:.7cqw;border-radius:2px;background:#151B24}
-.cdj-sb i{position:absolute;left:0;right:0;border-radius:2px;background:#5BA2FF;transition:top .28s,height .28s}
-.cdj-knob{position:absolute;left:90.50%;top:58.60%;width:12.5%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
-.cdj-knob::after{content:"";position:absolute;inset:-4%;border-radius:50%;border:2px solid rgba(221,70,76,.9);opacity:0;transform:scale(.7)}
-.cdj-knob.hint::after{animation:cdjp 2.2s ease-out infinite}
-@keyframes cdjp{0%{opacity:.95;transform:scale(.62)}100%{opacity:0;transform:scale(1.05)}}
-.cdj-knob:focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--brand-base)}
-.cdj-dial{position:absolute;left:19%;top:19%;width:62%;height:62%;border-radius:50%;transition:transform .28s cubic-bezier(.16,1,.3,1);
-  background:repeating-conic-gradient(rgba(255,255,255,.16) 0 4deg,transparent 4deg 15deg)}
-.cdj-dial::before{content:"";position:absolute;left:50%;top:6%;width:6%;height:20%;margin-left:-3%;border-radius:3px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.6)}
-.cdj-hint{margin:12px 0 0;font-size:14px;color:var(--text-secondary);text-align:center}
-.gearrow{position:relative;z-index:3;margin:-8px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 4px;align-items:end}
+.gearrow{margin:36px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 4px;align-items:end}
 .gearrow li{margin:0}
 .gearrow figure{margin:0;transition:transform .35s cubic-bezier(.16,1,.3,1)}
 .gearrow figure:hover{transform:translateY(-6px)}
 .gearrow img{display:block;width:100%;height:auto;filter:drop-shadow(0 16px 18px rgba(15,15,15,.28))}
 .gearrow figcaption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.hhero .lede{max-width:28em}
-body{overflow-x:clip}
-.hphoto .cdj{border-radius:0;box-shadow:none;background:transparent;overflow:visible;filter:drop-shadow(0 22px 26px rgba(15,15,15,.3))}
-.cdj-img{border-radius:0}
-.hhero h1,.hhero .lede{text-shadow:0 0 3px #fff,0 0 12px #fff,0 0 22px rgba(255,255,255,.9)}
-.hhero h1 .lab{text-shadow:none}
+.pgm>section.dm-inv{padding:0}
 @media (min-width:960px){
-  .hhero{grid-template-columns:minmax(0,1fr)!important;min-height:600px;align-items:start}
-  .hhero>div:first-child{position:relative;z-index:4;max-width:520px}
-  .hphoto{position:absolute!important;right:calc(50% - 50vw);top:72px;width:min(54vw,820px);z-index:1}
-  .cdj-hint{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .gearrow{display:flex;gap:0;margin-top:-72px;padding:0 4px}
+  .pgm>.hero.dm{padding-right:0}
+  .gearrow{display:flex;gap:0;padding:0 4px}
   .gearrow li{flex:1 1 0;min-width:0}
 }
-@media (prefers-reduced-motion:reduce){.cdj-l,.cdj-dial,.cdj-sb i{transition:none}.cdj-knob.hint::after{animation:none}}
 .rackband.lt{padding:32px 0 0}
 .rackband.lt .rack *{stroke:#0F0F0F;fill:#fff}
 .rackband.lt .rack path{fill:none}
@@ -924,8 +891,9 @@ body{overflow-x:clip}
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
 }
 @media (min-width:1360px){.hcards{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:700px){.cdj-l li small{display:none}}
 """
+
+HOME_CSS += cdj_demo.CSS
 
 SITE_ORG = {
     "@type": "Organization", "@id": ORIGIN + "/#org", "name": "DJ LAB SIAM", "legalName": "DJ LAB SIAM CO., LTD.", "url": ORIGIN + "/",
@@ -984,43 +952,6 @@ def _gear_sz():
 
 
 GEAR_SZ = _gear_sz()
-NEWS = [("เปิดทุกวัน 12:00–20:00 น.", "Lido Connect ชั้น 2 สยามสแควร์ ซอย 3"),
-        ("Sunday Live ทุกวันอาทิตย์ 18:30 น.", "ไลฟ์สดคุยเรื่อง DJ ทาง Facebook Page"),
-        (f"คอร์สเรียนตัวต่อตัว {len(COURSES)} คอร์ส", "เริ่มจากศูนย์ก็เรียนได้ เลือกวันเวลาเองได้"),
-        (f"ทีมครู Pro DJ {len(TEACHERS)} คน", "เลือกอาจารย์ตามสายที่อยากไป"),
-        ("จองห้องซ้อมออนไลน์ได้", "ซ้อมกับเครื่องจริงที่ร้าน djlabsiam.com/book/"),
-        ("ตัวแทนจำหน่ายอย่างเป็นทางการ", "Pioneer DJ · AlphaTheta · NEO by OYAIDE"),
-        ("DJ LAB Open Format Contest", "จัดร่วมกับ AlphaTheta และ Mahajak"),
-        ("ถามรุ่นและราคาทาง LINE @djlabsiam", "หรือโทร 02-252-5868 · 088-656-0464")]
-HOME_JS = r"""<script>
-(function(){
-var k=document.getElementById('cdj-k'),l=document.getElementById('cdj-l');if(!k||!l)return;
-var rows=[].slice.call(l.children),N=rows.length,d=document.getElementById('cdj-d'),sb=document.getElementById('cdj-sb'),cn=document.getElementById('cdj-n'),i=0,acc=0,drag=null,auto=null,
-RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-function stop(){k.classList.remove('hint');if(auto){clearInterval(auto);auto=null}}
-function set(n,user){
-  n=Math.max(0,Math.min(N-1,n));if(user)stop();
-  rows[i].classList.remove('on');i=n;rows[i].classList.add('on');
-  var vp=l.parentNode.clientHeight,h=vp/4,off=Math.max(0,Math.min(i-1,N-4));
-  l.style.height=(N*h)+'px';rows.forEach(function(r){r.style.height=h+'px'});
-  l.style.transform='translateY('+(-off*h)+'px)';d.style.transform='rotate('+(i*28)+'deg)';
-  cn.textContent=(i+1)+'/'+N;k.setAttribute('aria-valuenow',i+1);k.setAttribute('aria-valuetext',rows[i].textContent);
-  sb.style.height=(4/N*100)+'%';sb.style.top=(off/N*100)+'%'}
-k.addEventListener('wheel',function(e){
-  var dy=e.deltaMode===1?e.deltaY*40:e.deltaY,dir=dy>0?1:-1;
-  if((dir>0&&i>=N-1)||(dir<0&&i<=0)){acc=0;return}
-  e.preventDefault();acc+=dy;if(Math.abs(acc)>=50){set(i+(acc>0?1:-1),true);acc=0}},{passive:false});
-k.addEventListener('keydown',function(e){var m={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1,Home:-N,End:N};
-  if(e.key in m){e.preventDefault();set(i+m[e.key],true)}});
-k.addEventListener('pointerdown',function(e){drag=e.clientY;try{k.setPointerCapture(e.pointerId)}catch(x){}stop()});
-k.addEventListener('pointermove',function(e){if(drag===null)return;var dy=e.clientY-drag;if(Math.abs(dy)>=22){set(i+(dy>0?1:-1),true);drag=e.clientY}});
-['pointerup','pointercancel'].forEach(function(t){k.addEventListener(t,function(){drag=null})});
-rows.forEach(function(r,n){r.addEventListener('click',function(){set(n,true)})});
-set(0);
-if(!RM)auto=setInterval(function(){set(i>=N-1?0:i+1)},4200);
-window.addEventListener('resize',function(){set(i)});
-})();
-</script>"""
 
 
 def home_page():
@@ -1046,24 +977,12 @@ def home_page():
         (2, "เลือกคอร์ส", "เลือกคอร์สที่ตรงกับระดับและเวลาที่มี"),
         (3, "นัดวันเรียน", "จัดตารางให้ตรงกับเวลาที่ว่าง เรียนที่ DJ LAB SIAM Lido Connect สยามสแควร์"),
         (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
-    news = "".join(f'<li{" class=on" if k == 0 else ""}><i>{k + 1:02d}</i><b>{E(t)}</b><small>{E(d)}</small></li>' for k, (t, d) in enumerate(NEWS))
     gear = "".join(f'<li><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
                    f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h in GEAR_SZ)
     body = (
         EQ_SYMBOLS +
-        f'<section class="hero hhero"><div><span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
-        f'<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ <span class="lab">DJ LAB</span></h1>'
-        f'<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
-        f'<div class="cta">{line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
-        f'<div class="hphoto"><figure class="cdj" id="cdj">'
-        f'<img class="cdj-img" src="/assets/img/home-cdj-top.webp" width="800" height="500" alt="ส่วนบนของ Pioneer DJ CDJ-3000X จอสัมผัสขนาดใหญ่และปุ่ม Browse" fetchpriority="high" decoding="async">'
-        f'<div class="cdj-scr"><div class="cdj-h"><b>DJ LAB SIAM</b><span>ข่าวจากร้าน</span><em id="cdj-n">1/{len(NEWS)}</em></div>'
-        f'<div class="cdj-vp"><ol class="cdj-l" id="cdj-l">{news}</ol><div class="cdj-sb" aria-hidden="true"><i id="cdj-sb"></i></div></div></div>'
-        f'<div class="cdj-knob hint" id="cdj-k" role="slider" tabindex="0" aria-label="ปุ่ม Browse เลื่อนอ่านข่าวจากร้าน" aria-valuemin="1" aria-valuemax="{len(NEWS)}" aria-valuenow="1">'
-        f'<div class="cdj-dial" id="cdj-d"></div></div></figure>'
-        f'<p class="cdj-hint">เลื่อนล้อเมาส์บนปุ่ม Browse (หรือลากขึ้น-ลงบนมือถือ) เพื่ออ่านข่าวจากร้าน</p>'
-        f'</div>'
-        f'</section>'
+        cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
+        cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
         f'<section><ul class="gearrow" aria-label="ตัวอย่างอุปกรณ์ที่ร้านมีจำหน่าย">{gear}</ul><div class="zones">{zones}</div></section>'
         f'<section class="hsec" id="equipment"><h2>อุปกรณ์ DJ ตัวแทนจำหน่ายอย่างเป็นทางการ</h2>'
         f'<p class="lede">สินค้าครบ ทั้ง CDJ Player, DJM Mixer, Controller, หูฟัง และสายสัญญาณคุณภาพสูง พร้อมรับประกันจากผู้ผลิต ถามรุ่นและราคาได้ทาง LINE</p>'
@@ -1101,7 +1020,7 @@ def home_page():
            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}]
     title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
     desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
-    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", script=HOME_JS, css_extra=HOME_CSS)
+    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", script=cdj_demo.js_html(), css_extra=HOME_CSS)
 
 
 
