@@ -810,7 +810,7 @@ HOME_CSS = r"""
 .htag.b{right:-2%;top:-6%;transform:rotate(2.5deg)}
 .cdj{position:relative;margin:0;container-type:inline-size;border-radius:var(--radius-lg);overflow:hidden;background:#000;box-shadow:0 30px 60px rgba(15,15,15,.22)}
 .cdj-img{display:block;width:100%;height:auto}
-.cdj-scr{position:absolute;left:17.06%;top:16.45%;width:65.87%;height:59.78%;display:flex;flex-direction:column;background:#06080B;color:#EDEFF2;overflow:hidden;font-family:var(--font-family-body)}
+.cdj-scr{position:absolute;left:17.00%;top:17.60%;width:65.62%;height:65.40%;display:flex;flex-direction:column;background:#06080B;color:#EDEFF2;overflow:hidden;font-family:var(--font-family-body)}
 .cdj-h{display:flex;align-items:center;gap:2cqw;padding:1.2cqw 2cqw;background:#10151C;border-bottom:1px solid #263040;font-size:max(10px,2.1cqw);line-height:1.3;white-space:nowrap}
 .cdj-h b{font-family:var(--font-family-display);color:#fff;letter-spacing:.02em}
 .cdj-h span{color:#8FA0B5;overflow:hidden;text-overflow:ellipsis}
@@ -825,7 +825,7 @@ HOME_CSS = r"""
 .cdj-l li.on i{color:#BFD9FF}.cdj-l li.on b{color:#fff}.cdj-l li.on small{color:#BFD3EE}
 .cdj-sb{position:absolute;right:.6cqw;top:.8cqw;bottom:.8cqw;width:.7cqw;border-radius:2px;background:#151B24}
 .cdj-sb i{position:absolute;left:0;right:0;border-radius:2px;background:#5BA2FF;transition:top .28s,height .28s}
-.cdj-knob{position:absolute;left:90.84%;top:53.93%;width:12.5%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
+.cdj-knob{position:absolute;left:90.50%;top:58.60%;width:12.5%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
 .cdj-knob::after{content:"";position:absolute;inset:-4%;border-radius:50%;border:2px solid rgba(221,70,76,.9);opacity:0;transform:scale(.7)}
 .cdj-knob.hint::after{animation:cdjp 2.2s ease-out infinite}
 @keyframes cdjp{0%{opacity:.95;transform:scale(.62)}100%{opacity:0;transform:scale(1.05)}}
@@ -842,14 +842,14 @@ HOME_CSS = r"""
 .gearrow figcaption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .hhero .lede{max-width:28em}
 body{overflow-x:clip}
-.hphoto .cdj{border-radius:0;box-shadow:none;background:transparent;
-  -webkit-mask-image:linear-gradient(to top,transparent 0,#000 24%);mask-image:linear-gradient(to top,transparent 0,#000 24%)}
+.hphoto .cdj{border-radius:0;box-shadow:none;background:transparent;overflow:visible;filter:drop-shadow(0 22px 26px rgba(15,15,15,.3))}
+.cdj-img{border-radius:0}
+.hhero h1,.hhero .lede{text-shadow:0 0 3px #fff,0 0 12px #fff,0 0 22px rgba(255,255,255,.9)}
+.hhero h1 .lab{text-shadow:none}
 @media (min-width:960px){
-  .hhero{grid-template-columns:minmax(0,1fr)!important;min-height:600px}
+  .hhero{grid-template-columns:minmax(0,1fr)!important;min-height:600px;align-items:start}
   .hhero>div:first-child{position:relative;z-index:4;max-width:520px}
-  .hphoto{position:absolute!important;right:calc(50% - 50vw);top:-8px;width:min(56vw,860px);z-index:1}
-  .hphoto .cdj{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 22%),linear-gradient(to top,transparent 0,#000 24%);-webkit-mask-composite:source-in;
-    mask-image:linear-gradient(to right,transparent 0,#000 22%),linear-gradient(to top,transparent 0,#000 24%);mask-composite:intersect}
+  .hphoto{position:absolute!important;right:calc(50% - 50vw);top:72px;width:min(54vw,820px);z-index:1}
   .cdj-hint{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .gearrow{display:flex;gap:0;margin-top:-72px;padding:0 4px}
   .gearrow li{flex:1 1 0;min-width:0}
@@ -1056,7 +1056,7 @@ def home_page():
         f'<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
         f'<div class="hphoto"><figure class="cdj" id="cdj">'
-        f'<img class="cdj-img" src="/assets/img/home-cdj-top.webp" width="797" height="547" alt="ส่วนบนของ Pioneer DJ CDJ-3000X จอสัมผัสขนาดใหญ่และปุ่ม Browse" fetchpriority="high" decoding="async">'
+        f'<img class="cdj-img" src="/assets/img/home-cdj-top.webp" width="800" height="500" alt="ส่วนบนของ Pioneer DJ CDJ-3000X จอสัมผัสขนาดใหญ่และปุ่ม Browse" fetchpriority="high" decoding="async">'
         f'<div class="cdj-scr"><div class="cdj-h"><b>DJ LAB SIAM</b><span>ข่าวจากร้าน</span><em id="cdj-n">1/{len(NEWS)}</em></div>'
         f'<div class="cdj-vp"><ol class="cdj-l" id="cdj-l">{news}</ol><div class="cdj-sb" aria-hidden="true"><i id="cdj-sb"></i></div></div></div>'
         f'<div class="cdj-knob hint" id="cdj-k" role="slider" tabindex="0" aria-label="ปุ่ม Browse เลื่อนอ่านข่าวจากร้าน" aria-valuemin="1" aria-valuemax="{len(NEWS)}" aria-valuenow="1">'
