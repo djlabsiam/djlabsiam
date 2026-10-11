@@ -32,6 +32,7 @@ ap.add_argument("--course-images", default=os.path.join(SITE, "data", "course-im
 ap.add_argument("--out", default=SITE)
 ap.add_argument("--home", default="/next/", help="where the home page is written: /next/ = draft (noindex) · / = live home")
 ap.add_argument("--home-faq", default=os.path.join(SITE, "data", "faq-home.json"))
+ap.add_argument("--shop", default="/next/shop/", help="where the shop page is written: /next/shop/ = draft (noindex) · /shop/ = live")
 A = ap.parse_args()
 
 
@@ -496,7 +497,9 @@ def minify_css(c):
 RACK = r'''<svg class="rack" viewBox="0 0 1200 176" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMax meet"><path class="rk-g" d="M0 168H1200"/><rect x="12" y="22" width="100" height="146" rx="10"/><circle cx="62" cy="112" r="34"/><circle cx="62" cy="112" r="10" class="rk-r"/><circle cx="62" cy="56" r="13"/><rect x="132" y="48" width="170" height="120" rx="10"/><circle cx="205" cy="110" r="44"/><circle cx="205" cy="110" r="5" class="rk-r"/><path d="M276 60l-44 44"/><circle cx="278" cy="58" r="5"/><rect x="262" y="132" width="26" height="24" rx="4"/><rect x="322" y="52" width="170" height="116" rx="10"/><rect x="344" y="62" width="126" height="26" rx="4"/><circle cx="407" cy="130" r="28"/><circle cx="407" cy="130" r="5" class="rk-r"/><rect x="336" y="100" width="20" height="14" rx="3"/><rect x="458" y="100" width="20" height="14" rx="3"/><rect x="512" y="48" width="176" height="120" rx="10"/><circle cx="542" cy="68" r="8"/><path d="M542 86v52"/><rect x="535" y="100" width="14" height="10" rx="2"/><circle cx="580" cy="68" r="8"/><path d="M580 86v52"/><rect x="573" y="112" width="14" height="10" rx="2" class="rk-rf"/><circle cx="618" cy="68" r="8"/><path d="M618 86v52"/><rect x="611" y="100" width="14" height="10" rx="2"/><circle cx="656" cy="68" r="8"/><path d="M656 86v52"/><rect x="649" y="112" width="14" height="10" rx="2"/><rect x="568" y="148" width="64" height="10" rx="5"/><rect x="608" y="145" width="12" height="16" rx="3" class="rk-rf"/><path d="M552 48a48 48 0 0 1 96 0"/><rect x="542" y="30" width="16" height="22" rx="6"/><rect x="642" y="30" width="16" height="22" rx="6"/><rect x="702" y="52" width="170" height="116" rx="10"/><rect x="724" y="62" width="126" height="26" rx="4"/><circle cx="787" cy="130" r="28"/><circle cx="787" cy="130" r="5" class="rk-r"/><rect x="716" y="100" width="20" height="14" rx="3"/><rect x="838" y="100" width="20" height="14" rx="3"/><rect x="890" y="68" width="300" height="100" rx="12"/><circle cx="952" cy="120" r="32"/><circle cx="1128" cy="120" r="32"/><circle cx="952" cy="120" r="5" class="rk-r"/><circle cx="1128" cy="120" r="5" class="rk-r"/><rect x="1002" y="100" width="14" height="14" rx="3"/><rect x="1022" y="100" width="14" height="14" rx="3"/><rect x="1042" y="100" width="14" height="14" rx="3"/><rect x="1062" y="100" width="14" height="14" rx="3"/><rect x="1002" y="120" width="14" height="14" rx="3"/><rect x="1022" y="120" width="14" height="14" rx="3"/><rect x="1042" y="120" width="14" height="14" rx="3"/><rect x="1062" y="120" width="14" height="14" rx="3"/><path d="M1002 82h76"/></svg>'''
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book")]  # add Shop / Members here when those pages exist
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book")]  # Shop is appended below when --shop /shop/ ; Members when that page exists
+if A.shop == "/shop/":
+    NAV.insert(1, ("ร้านอุปกรณ์", "/shop/", "shop"))
 GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data-depth="14">'
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
@@ -1000,6 +1003,124 @@ def home_page():
 
 
 
+# ───────── /shop/ ─────────
+SHOP_CSS = r"""
+.shead h1{max-width:16ch}
+.sbar{display:grid;gap:14px;margin-top:28px}
+.schips{display:flex;flex-wrap:wrap;gap:8px}
+.schip{min-height:44px;padding:0 16px;border:1.5px solid var(--lab-line);border-radius:var(--radius-pill);background:#fff;font:600 15px/1 var(--font-family-display);cursor:pointer;color:var(--text-primary)}
+.schip:hover{border-color:var(--text-primary)}
+.schip[aria-pressed="true"]{background:var(--text-primary);color:#fff;border-color:var(--text-primary)}
+.stools{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;font-size:15px;color:var(--text-secondary)}
+.stools label{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.stools select{min-height:44px;padding:0 12px;border:1.5px solid var(--lab-line);border-radius:var(--radius-sm);background:#fff;font:500 15px var(--font-family-body)}
+.stools input[type=checkbox]{width:20px;height:20px;accent-color:var(--brand-base)}
+.scount{margin-top:14px;color:var(--text-secondary);font-size:15px}
+.sgrid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:14px}
+.pc{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .2s}
+.pc:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
+.pc .art{position:relative;aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden;background-color:#FAF9F6;
+  background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
+.pc .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px}
+.pc .art svg{width:56%;height:auto;stroke:var(--text-primary);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.pc .art svg .r{stroke:var(--brand-base)}
+.stk{position:absolute;left:10px;top:10px;z-index:2;font:600 13px/1.4 var(--font-family-body);padding:3px 10px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
+.stk.in{color:var(--status-active-text)}
+.stk.out{color:var(--text-muted)}
+.pc .b{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
+.pc .br{font:600 13px/1.4 var(--font-family-body);color:var(--text-muted)}
+.pc h3{font-size:18px;line-height:1.35}
+.pc .pr{font:800 22px/1.4 var(--font-family-display);margin-top:2px}
+.pc .btn{margin-top:auto;align-self:flex-start}
+.pc .bwrap{margin-top:auto;padding-top:10px}
+.snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
+.serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
+@media (min-width:960px){.sgrid{grid-template-columns:repeat(4,1fr);gap:18px}.stools{justify-content:flex-start}}
+@media (max-width:420px){.sgrid{grid-template-columns:1fr}}
+"""
+
+SHOP_JS = r"""<script>
+(function(){
+var REST='@@REST@@',KEY='@@KEY@@',IMG='@@IMG@@',LINE='https://line.me/R/oaMessage/%40djlabsiam/?',PAGE=24;
+var LABEL={player:'CDJ / Player',mixer:'Mixer','all-in-one':'All-in-one',controller:'Controller',turntable:'Turntable',headphones:'หูฟัง',speaker:'ลำโพง',cable:'สาย',accessory:'อุปกรณ์เสริม'};
+var CATMAP={'cdj':'player','เครื่องเล่น':'player','มิกซ์เซอร์':'mixer','mixer':'mixer','all in one':'all-in-one','คอนโทลเลอร์':'controller','คอนโทรลเลอร์':'controller','midi':'controller','หูฟัง':'headphones','ลำโพง':'speaker','cable':'cable','deck cover':'accessory','flash drive':'accessory'};
+var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE;
+var grid=document.getElementById('sgrid'),count=document.getElementById('scount'),more=document.getElementById('smore'),NS='http://www.w3.org/2000/svg';
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function baht(n){return '฿'+Number(n).toLocaleString('en-US')}
+function group(p){if(p.bot_category&&LABEL[p.bot_category])return p.bot_category;return CATMAP[String(p.category||'').toLowerCase().trim()]||'accessory'}
+function brand(b){return (!b||b==='Other')?'แบรนด์อื่น':String(b)}
+function icon(g){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 120 90');s.setAttribute('aria-hidden','true');
+  var u=document.createElementNS(NS,'use');u.setAttribute('href','#p-'+g);s.appendChild(u);return s}
+function card(p){
+  var a=el('article','pc'),art=el('div','art'),ok=typeof p.image_path==='string'&&/^[A-Za-z0-9._\/-]{5,200}$/.test(p.image_path)&&p.image_path.indexOf('..')<0;
+  if(ok){var im=document.createElement('img');im.src=IMG+p.image_path;im.alt=p.name;im.loading='lazy';im.decoding='async';
+    im.addEventListener('error',function(){im.remove();art.appendChild(icon(p.g))});art.appendChild(im)}
+  else art.appendChild(icon(p.g));
+  var st=el('span','stk '+(p.in_stock?'in':'out'),p.in_stock?'มีของ':'สอบถามสต็อก');art.appendChild(st);a.appendChild(art);
+  var b=el('div','b');b.appendChild(el('span','br',brand(p.brand)));b.appendChild(el('h3','',p.name));b.appendChild(el('span','pr',baht(p.price)));
+  var w=el('div','bwrap'),l=el('a','btn sec sm','ถามทาง LINE');l.href=LINE+encodeURIComponent('สนใจ '+p.name);l.rel='noopener';w.appendChild(l);b.appendChild(w);a.appendChild(b);return a}
+function render(){
+  var rows=ROWS.filter(function(p){return (cat==='all'||p.g===cat)&&(!only||p.in_stock)});
+  rows.sort(function(a,b){return sort==='p-desc'?b.price-a.price:sort==='p-asc'?a.price-b.price:a.name.localeCompare(b.name)});
+  var list=rows.slice(0,shown);grid.textContent='';list.forEach(function(p){grid.appendChild(card(p))});
+  count.textContent='แสดง '+list.length+' จาก '+rows.length+' รายการ';more.hidden=rows.length<=list.length}
+Array.prototype.forEach.call(document.querySelectorAll('.schip'),function(c){c.addEventListener('click',function(){
+  cat=c.getAttribute('data-cat');shown=PAGE;Array.prototype.forEach.call(document.querySelectorAll('.schip'),function(x){x.setAttribute('aria-pressed',x===c?'true':'false')});render()})});
+document.getElementById('ssort').addEventListener('change',function(e){sort=e.target.value;shown=PAGE;render()});
+document.getElementById('sstock').addEventListener('change',function(e){only=e.target.checked;shown=PAGE;render()});
+more.addEventListener('click',function(){shown+=PAGE;render()});
+function load(){count.textContent='กำลังโหลดรายการสินค้า…';
+  fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
+  .then(function(d){if(!Array.isArray(d))throw new Error('bad');ROWS=d.filter(function(p){return p&&typeof p.name==='string'&&p.name&&Number(p.price)>0}).map(function(p){p.price=Number(p.price);p.g=group(p);return p});render()})
+  .catch(function(){count.textContent='';var e=el('div','serr');e.setAttribute('role','alert');e.appendChild(el('p','','โหลดรายการสินค้าไม่สำเร็จ ลองใหม่อีกครั้ง หรือถามทีมงานทาง LINE @djlabsiam'));
+    var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',function(){e.remove();load()});e.appendChild(r);count.parentNode.insertBefore(e,grid)})}
+load();
+})();
+</script>
+"""
+
+SHOP_SYMBOLS = (
+    '<svg width="0" height="0" style="position:absolute" aria-hidden="true">'
+    '<symbol id="p-player" viewBox="0 0 120 90"><rect x="6" y="8" width="108" height="74" rx="10"/><circle cx="60" cy="52" r="22"/><circle class="r" cx="60" cy="52" r="5"/><rect x="30" y="14" width="60" height="12" rx="3"/></symbol>'
+    '<symbol id="p-mixer" viewBox="0 0 120 90"><rect x="8" y="6" width="104" height="78" rx="10"/><path d="M30 22v46M52 22v46M74 22v46M96 22v46"/><rect class="r" x="25" y="50" width="10" height="8" rx="2"/><rect x="47" y="34" width="10" height="8" rx="2"/><rect x="69" y="46" width="10" height="8" rx="2"/><rect x="91" y="30" width="10" height="8" rx="2"/></symbol>'
+    '<symbol id="p-controller" viewBox="0 0 120 90"><rect x="4" y="14" width="112" height="62" rx="10"/><circle cx="32" cy="46" r="17"/><circle cx="88" cy="46" r="17"/><path d="M52 30h16M52 40h16M52 50h16"/><circle class="r" cx="32" cy="46" r="3"/><circle class="r" cx="88" cy="46" r="3"/></symbol>'
+    '<symbol id="p-all-in-one" viewBox="0 0 120 90"><rect x="4" y="10" width="112" height="70" rx="10"/><circle cx="26" cy="52" r="15"/><circle cx="94" cy="52" r="15"/><rect x="40" y="18" width="40" height="16" rx="3"/><path d="M42 48v22M52 48v22M62 48v22M72 48v22M80 48v22"/><circle class="r" cx="26" cy="52" r="3"/></symbol>'
+    '<symbol id="p-turntable" viewBox="0 0 120 90"><rect x="8" y="6" width="104" height="78" rx="10"/><circle cx="52" cy="45" r="28"/><circle class="r" cx="52" cy="45" r="5"/><path d="M96 16l-6 36"/><circle cx="96" cy="16" r="4"/></symbol>'
+    '<symbol id="p-headphones" viewBox="0 0 120 90"><path d="M22 54V44a38 38 0 0 1 76 0v10"/><rect x="14" y="50" width="20" height="30" rx="8"/><rect class="r" x="86" y="50" width="20" height="30" rx="8"/></symbol>'
+    '<symbol id="p-speaker" viewBox="0 0 120 90"><rect x="28" y="4" width="64" height="82" rx="10"/><circle cx="60" cy="30" r="9"/><circle class="r" cx="60" cy="60" r="16"/></symbol>'
+    '<symbol id="p-cable" viewBox="0 0 120 90"><path d="M10 28h18v-8h14v16H28v-8M110 62H92v8H78V54h14v8"/><path class="r" d="M42 28c26 0 10 34 36 34"/></symbol>'
+    '<symbol id="p-accessory" viewBox="0 0 120 90"><rect x="14" y="24" width="92" height="46" rx="8"/><path d="M30 24v-8h60v8M34 40h20M34 52h32"/><circle class="r" cx="88" cy="46" r="9"/></symbol>'
+    '</svg>')
+
+
+def shop_page():
+    live = A.shop == "/shop/"
+    api, key = book_backend()
+    origin = re.match(r"https://[a-z0-9.-]+\.supabase\.co", api).group(0)
+    rest = origin + "/rest/v1/web_products"
+    img = origin + "/storage/v1/object/public/product-images/"
+    cats = [("all", "ทั้งหมด"), ("player", "CDJ / Player"), ("mixer", "Mixer"), ("all-in-one", "All-in-one"), ("controller", "Controller"),
+            ("turntable", "Turntable"), ("headphones", "หูฟัง"), ("speaker", "ลำโพง"), ("cable", "สาย"), ("accessory", "อุปกรณ์เสริม")]
+    chips = "".join(f'<button class="schip" type="button" data-cat="{k}" aria-pressed="{"true" if k == "all" else "false"}">{E(t)}</button>' for k, t in cats)
+    body = (SHOP_SYMBOLS +
+            f'<section class="hero shead"><h1>Showroom อุปกรณ์ DJ</h1>'
+            f'<p class="lede">ราคาอ่านสดจากระบบร้าน รวม VAT 7% แล้ว เลือกดูตามประเภท แล้วแวะมาลองเครื่องจริงที่ร้านได้เลย</p>'
+            f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></section>'
+            f'<section id="catalog" aria-label="รายการสินค้า"><div class="sbar"><div class="schips" role="group" aria-label="ประเภทสินค้า">{chips}</div>'
+            f'<div class="stools"><label><input type="checkbox" id="sstock"> เฉพาะที่มีของ</label>'
+            f'<label>เรียงตาม <select id="ssort"><option value="p-desc">ราคาสูง → ต่ำ</option><option value="p-asc">ราคาต่ำ → สูง</option><option value="m">ชื่อรุ่น</option></select></label></div></div>'
+            f'<p class="scount" id="scount" aria-live="polite"></p><div class="sgrid" id="sgrid"></div>'
+            f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
+            f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
+            f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
+    js = SHOP_JS.replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img)
+    desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
+    return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
+                 active="shop", script=js, css_extra=SHOP_CSS)
+
+
 def write(path, text):
     full = os.path.join(A.out, path.strip("/").replace("/", os.sep), "index.html")
     os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -1013,6 +1134,7 @@ for t in TEACHERS:
     made.append(write(f"/teachers/{slug(t['name'])}/", teacher_page(t)))
 made.append(write("/content/", content_page()))
 made.append(write(A.home, home_page()))
+made.append(write(A.shop, shop_page()))
 for p, n in made:
     print(f"{n / 1024:6.1f} KB  {os.path.relpath(p, A.out)}")
 print(f"courses.json md5 {MD5} · {len(COURSES)} courses · {len(TEACHERS)} teachers")

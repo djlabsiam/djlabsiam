@@ -48,7 +48,9 @@ COURSES, TEACHERS = D["items"], D["instructors"]["items"]
 
 pages = {"courses": os.path.join(SITE, "courses", "index.html"), "content": os.path.join(SITE, "content", "index.html")}
 _hp = os.path.join(SITE, "next", "index.html")
-pages["home"] = _hp if os.path.exists(_hp) else os.path.join(SITE, "index.html")   # /next/ = draft · / = live (after cut-over)
+pages["home"] = _hp if os.path.exists(_hp) else os.path.join(SITE, "index.html")
+_sp = os.path.join(SITE, "next", "shop", "index.html")
+pages["shop"] = _sp if os.path.exists(_sp) else os.path.join(SITE, "shop", "index.html")   # /next/ = draft · / = live (after cut-over)
 for t in TEACHERS:
     pages["teacher:" + t["name"]] = os.path.join(SITE, "teachers", slug(t["name"]), "index.html")
 SRC = {}
@@ -189,6 +191,21 @@ if "home" in SRC:
     ok(sorted(n["name"] for n in graph if n.get("@type") == "Course") == sorted(c["title"] for c in COURSES), "home: JSON-LD Course names differ from courses.json")
     ok("02-252-5868" in hs and "https://maps.google.com/?cid=14947686714332238791" in hs, "home: phone / map link missing")
     ok(hs.count("<h1") == 1 and "ซื้อ เรียน ซ้อม ซ่อม" in hs, "home: h1 missing")
+
+# ---- shop: prices come live from the web view only; DB text is never HTML; no 3D files; VAT wording ----
+sh = SRC.get("shop", "")
+if sh:
+    scr = "\n".join(re.findall(r"<script>(.*?)</script>", sh, re.S))
+    vis_sh = text_of(sh)
+    ok("/rest/v1/web_products" in scr and "bot_products" not in sh, "shop: must read web_products and never bot_products")
+    ok("service_role" not in sh, "shop: a service key must never be on a public page")
+    ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function", scr), "shop: the page script must never turn database text into HTML")
+    ok("รวม VAT 7%" in vis_sh, "shop: the VAT wording is missing")
+    ok("product-images" in scr and ".glb" not in sh and "model-viewer" not in sh, "shop: product photos come from the public bucket and no 3D files/viewer may be on the page")
+    ok(sh.count("<h1") == 1 and "สอบถามโปรโมชัน" in vis_sh, "shop: h1 / promotion note missing")
+    _bk = read(os.path.join(SITE, "book", "index.html"))
+    b_key2 = re.search(r"const KEY='([^']+)'", _bk)
+    ok(bool(b_key2) and f"KEY='{b_key2.group(1)}'" in scr, "shop: the anon key must be the one /book/ uses")
 
 # ---- course pictures: shown exactly for the courses listed in data/course-images.json ----
 cimg = json.loads(read(os.path.join(SITE, "data", "course-images.json")))
