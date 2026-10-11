@@ -30,6 +30,8 @@ ap.add_argument("--faq", default=os.path.join(SITE, "data", "faq.json"))
 ap.add_argument("--programs", default=os.path.join(SITE, "data", "programs.json"))
 ap.add_argument("--course-images", default=os.path.join(SITE, "data", "course-images.json"))
 ap.add_argument("--out", default=SITE)
+ap.add_argument("--home", default="/next/", help="where the home page is written: /next/ = draft (noindex) · / = live home")
+ap.add_argument("--home-faq", default=os.path.join(SITE, "data", "faq-home.json"))
 A = ap.parse_args()
 
 
@@ -499,7 +501,7 @@ GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
 
-def shell(path, title, desc, body, robots=None, ld=None, script="", active=""):
+def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra=""):
     li = "".join(f'<a href="{h}"{" class=on aria-current=page" if k == active else ""}>{t}</a>' for t, h, k in NAV)
     strip = ('<div class="topbar"><div><span><b>ตัวแทนจำหน่ายอย่างเป็นทางการ</b> Pioneer DJ · AlphaTheta · NEO by OYAIDE</span>'
              '<span>Lido Connect ชั้น 2 สยามสแควร์ · เปิดทุกวัน 12:00–20:00</span></div></div>')
@@ -533,7 +535,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active=""):
             f'<link rel="icon" href="/favicon.ico" sizes="any">\n<link rel="icon" href="/favicon-512.png" type="image/png" sizes="512x512">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
-            f'<style>\n{minify_css(FONTS + TOKENS + CSS)}\n</style>\n{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
+            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
             f'{fader}<script src="/assets/js/decor.js" defer></script>\n{script}</body>\n</html>\n')
 
 
@@ -789,6 +791,215 @@ def content_page():
                  script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key))
 
 
+# ───────── / (home) ─────────
+HOME_CSS = r"""
+.hhero{display:grid;gap:36px;align-items:center}
+.hhero h1{font-size:40px;line-height:1.3;max-width:15ch}
+.hbadge{display:inline-flex;gap:8px;align-items:center;background:var(--lab-tint);color:#981C21;padding:8px 14px;border-radius:var(--radius-pill);font:600 14px/1.4 var(--font-family-body);margin-bottom:18px}
+.hbadge i{width:8px;height:8px;border-radius:50%;background:var(--brand-base);display:block}
+.hphoto{position:relative}
+.hphoto .ph{border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;background:#222;box-shadow:0 30px 60px rgba(15,15,15,.18);transform:rotate(1.2deg)}
+.hphoto .ph img{width:100%;height:100%;object-fit:cover}
+.htag{position:absolute;z-index:3;background:#fff;border-radius:var(--radius-md);padding:10px 16px 10px 34px;box-shadow:0 12px 24px rgba(15,15,15,.18);font:600 15px/1.4 var(--font-family-display)}
+.htag::before{content:"";position:absolute;left:12px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;border:3px solid var(--brand-base);background:#fff}
+.htag small{display:block;font:400 13px/1.4 var(--font-family-body);color:var(--text-muted)}
+.htag.a{left:-2%;bottom:10%;transform:rotate(-3deg)}
+.htag.b{right:-2%;top:6%;transform:rotate(2.5deg)}
+.hphoto .gear.h1g{width:46%;right:-6%;bottom:-16%}
+.hphoto .gear.h2g{width:28%;right:12%;top:-12%}
+.rackband.lt{padding:32px 0 0}
+.rackband.lt .rack *{stroke:#0F0F0F;fill:#fff}
+.rackband.lt .rack path{fill:none}
+.rackband.lt .rack .rk-g{fill:none}
+.rackband.lt .rack .rk-r{stroke:var(--brand-base)}
+.rackband.lt .rack .rk-rf{fill:var(--brand-base);stroke:var(--brand-base)}
+.zones{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
+.zone{display:flex;flex-direction:column;gap:6px;padding:20px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .3s}
+.zone:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
+.zone b{font:800 24px/1.3 var(--font-family-display)}
+.zone span{font-size:15px;color:var(--text-secondary);flex:1}
+.zone i{font:600 15px/1.5 var(--font-family-display);font-style:normal;color:var(--brand-base)}
+.hsec h2{font-size:30px}
+.hsec .lede{margin-top:10px}
+.eqgrid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
+.eq{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);padding:18px 14px 16px;text-align:center;position:relative}
+.eq::before{content:"";position:absolute;left:50%;top:9px;width:12px;height:12px;margin-left:-6px;border-radius:50%;border:2px solid var(--lab-line);background:var(--lab-paper)}
+.eq svg{width:100%;max-width:118px;height:auto;margin:10px auto 6px;stroke:var(--text-primary);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.eq svg .r{stroke:var(--brand-base)}
+.eq b{display:block;font:700 18px/1.4 var(--font-family-display)}
+.brands{display:grid;gap:0;margin-top:28px;border-top:1px solid var(--text-primary)}
+.brands div{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--text-primary);font:800 24px/1.4 var(--font-family-display)}
+.brands span{font:600 14px/1.4 var(--font-family-body);color:var(--text-secondary)}
+.hcards{display:grid;gap:18px;margin-top:28px}
+.hc{display:grid;gap:12px;padding:20px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);box-shadow:0 18px 36px rgba(15,15,15,.06)}
+.hc h3{font-size:24px;line-height:1.3}
+.hc .fit{margin:0;color:var(--text-secondary);font-size:15px}
+.hc .cimg{margin:0}
+.hc .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:15px;color:var(--text-secondary)}
+.hc .meta b{font:800 24px/1.3 var(--font-family-display);color:var(--text-primary)}
+.hc .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+.hsteps{display:grid;gap:16px;margin-top:28px}
+.hs{position:relative;padding:22px 18px 18px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md)}
+.hs::before{content:"";position:absolute;left:14px;right:14px;top:-7px;height:14px;background:var(--brand-base);transform:rotate(-1.4deg);border-radius:2px}
+.hs i{font:800 40px/1.3 var(--font-family-display);font-style:normal}
+.hs h3{margin:2px 0 4px;font-size:22px}
+.hs p{color:var(--text-secondary);font-size:15px}
+.hevent{display:grid;gap:14px;padding:26px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
+.hevent h3{font-size:24px;line-height:1.35}
+.hevent p{color:var(--text-secondary);max-width:60ch}
+.hlive{display:grid;gap:18px;padding:28px;background:#0F0F0F;color:#fff;border-radius:var(--radius-lg)}
+.hlive h2{font-size:30px}
+.hlive p{color:#D8D6CF;max-width:58ch}
+.hlive .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hlive .btn.sec{background:transparent;border-color:#fff;color:#fff}
+.hlive .btn.sec:hover{background:#fff;color:#0F0F0F}
+.hvisit{display:grid;gap:20px}
+.hvisit .ph{border-radius:var(--radius-lg);overflow:hidden;background:#222;aspect-ratio:16/9}
+.hvisit .ph img{width:100%;height:100%;object-fit:cover}
+.hvisit dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:16px 0 22px}
+.hvisit dt{font-weight:700}
+.hvisit dd{margin:0}
+.hbot{display:grid;gap:12px;padding:18px 20px;background:var(--lab-paper);border-radius:var(--radius-md);color:var(--text-secondary);font-size:15px}
+.hbot a{font-weight:700;color:var(--text-primary)}
+@media (min-width:960px){
+  .hhero{grid-template-columns:1.05fr 1fr;gap:64px}
+  .hhero h1{font-size:58px;line-height:1.28;max-width:17ch}
+  .pgm>.hero.hhero{padding-right:0}
+  .zones{grid-template-columns:repeat(4,1fr)}
+  .eqgrid{grid-template-columns:repeat(6,1fr)}
+  .hsec h2{font-size:38px}
+  .hcards{grid-template-columns:repeat(2,1fr)}
+  .hsteps{grid-template-columns:repeat(4,1fr)}
+  .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
+  .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
+  .hvisit{grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
+  .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
+}
+@media (min-width:1360px){.hcards{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:700px){.hphoto .gear.h2g{display:none}.htag.b{display:none}}
+"""
+
+SITE_ORG = {
+    "@type": "Organization", "@id": ORIGIN + "/#org", "name": "DJ LAB SIAM", "legalName": "DJ LAB SIAM CO., LTD.", "url": ORIGIN + "/",
+    "logo": ORIGIN + "/logo_full.png", "email": "djlabsiam@gmail.com", "telephone": "+66-2-252-5868",
+    "sameAs": ["https://www.facebook.com/PioneerDjLabSiam/", "https://www.instagram.com/djlabsiam/", "https://www.youtube.com/@DJLABSIAM",
+               "https://www.tiktok.com/@djlabsiam4", "https://discord.gg/VPnxXGuK8z", "https://maps.google.com/?cid=14947686714332238791"],
+}
+SITE_LOCAL = {
+    "@type": ["MusicSchool", "Store"], "@id": ORIGIN + "/#local", "name": "DJ LAB SIAM",
+    "description": "โรงเรียนสอน DJ ตัวต่อตัว และตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ / AlphaTheta อย่างเป็นทางการ รวมถึงสายสัญญาณ NEO by OYAIDE",
+    "url": ORIGIN + "/", "image": ORIGIN + "/logo_full.png", "telephone": "+66-2-252-5868", "email": "djlabsiam@gmail.com",
+    "parentOrganization": {"@id": ORIGIN + "/#org"}, "hasMap": "https://maps.google.com/?cid=14947686714332238791",
+    "address": {"@type": "PostalAddress", "streetAddress": "Lido Connect ชั้น 2, Siam Square Soi 3", "addressLocality": "ปทุมวัน",
+                "addressRegion": "กรุงเทพมหานคร", "postalCode": "10330", "addressCountry": "TH"},
+    "openingHoursSpecification": {"@type": "OpeningHoursSpecification",
+                                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "opens": "12:00", "closes": "20:00"},
+    "priceRange": "฿฿",
+    "brand": [{"@type": "Brand", "name": "Pioneer DJ"}, {"@type": "Brand", "name": "AlphaTheta"}, {"@type": "Brand", "name": "NEO by OYAIDE"}],
+}
+SITE_WEB = {"@type": "WebSite", "@id": ORIGIN + "/#website", "url": ORIGIN + "/", "name": "DJ LAB SIAM", "inLanguage": "th",
+            "publisher": {"@id": ORIGIN + "/#org"}}
+COURSE_LD_ID = {"Basic DJ Class": "course-beginner", "Advance DJ Class": "course-intermediate",
+                "Basic Scratch Class": "course-turntablism", "Advance Scratch Class": "course-professional"}   # ids kept from the old page so nothing that links to them breaks
+
+EQ_ITEMS = [("player", "CDJ / Player"), ("mixer", "Mixer"), ("controller", "Controller"), ("turntable", "Turntable"),
+            ("headphones", "หูฟัง"), ("cable", "สายและอุปกรณ์เสริม")]
+EQ_SYMBOLS = (
+    '<svg width="0" height="0" style="position:absolute" aria-hidden="true">'
+    '<symbol id="e-player" viewBox="0 0 120 90"><rect x="6" y="8" width="108" height="74" rx="10"/><circle cx="60" cy="52" r="22"/><circle class="r" cx="60" cy="52" r="5"/><rect x="30" y="14" width="60" height="12" rx="3"/></symbol>'
+    '<symbol id="e-mixer" viewBox="0 0 120 90"><rect x="8" y="6" width="104" height="78" rx="10"/><path d="M30 22v46M52 22v46M74 22v46M96 22v46"/><rect class="r" x="25" y="50" width="10" height="8" rx="2"/><rect x="47" y="34" width="10" height="8" rx="2"/><rect x="69" y="46" width="10" height="8" rx="2"/><rect x="91" y="30" width="10" height="8" rx="2"/></symbol>'
+    '<symbol id="e-controller" viewBox="0 0 120 90"><rect x="4" y="14" width="112" height="62" rx="10"/><circle cx="32" cy="46" r="17"/><circle cx="88" cy="46" r="17"/><path d="M52 30h16M52 40h16M52 50h16"/><circle class="r" cx="32" cy="46" r="3"/><circle class="r" cx="88" cy="46" r="3"/></symbol>'
+    '<symbol id="e-turntable" viewBox="0 0 120 90"><rect x="8" y="6" width="104" height="78" rx="10"/><circle cx="52" cy="45" r="28"/><circle class="r" cx="52" cy="45" r="5"/><path d="M96 16l-6 36"/><circle cx="96" cy="16" r="4"/></symbol>'
+    '<symbol id="e-headphones" viewBox="0 0 120 90"><path d="M22 54V44a38 38 0 0 1 76 0v10"/><rect x="14" y="50" width="20" height="30" rx="8"/><rect class="r" x="86" y="50" width="20" height="30" rx="8"/></symbol>'
+    '<symbol id="e-cable" viewBox="0 0 120 90"><path d="M10 28h18v-8h14v16H28v-8M110 62H92v8H78V54h14v8"/><path class="r" d="M42 28c26 0 10 34 36 34"/></symbol>'
+    '</svg>')
+
+
+def home_faq_pairs():
+    cfg = load(A.home_faq)
+    by_id = {it["id"]: faq_text(it["a"]) for it in FAQ}
+    qs = {it["id"]: it["q"] for it in FAQ}
+    pairs = [(qs[i], by_id[i]) for i in cfg["ids"]]
+    pairs += [(x["q"], x["a"]) for x in cfg["extra"]]
+    return pairs
+
+
+def home_page():
+    live = A.home == "/"
+    pairs = home_faq_pairs()
+    faq = "".join(f'<details class="q"{" open" if i == 0 else ""}><summary>{E(q)}</summary><p>{E(a)}</p></details>' for i, (q, a) in enumerate(pairs))
+    zones = ("".join(f'<a class="zone" href="{h}"><b>{t}</b><span>{d}</span><i>{cta} →</i></a>' for t, h, d, cta in (
+        ("คอร์สเรียน", "/courses/", f"{len(COURSES)} คอร์ส ตัวต่อตัว เริ่มจากศูนย์ก็เรียนได้", "ดูคอร์ส"),
+        ("ทีมครู", "/courses/#teachers", f"Pro DJ {len(TEACHERS)} คน เลือกอาจารย์ตามสายที่อยากไป", "ดูทีมครู"),
+        ("จองห้องซ้อม", "/book/", "ซ้อมกับเครื่องจริง จองเวลาออนไลน์ได้", "จองห้อง"),
+        ("วิดีโอและรายการ", "/content/", "Sunday Live พอดแคสต์ และคลิปสอน", "ดูรายการ"))))
+    eq = "".join(f'<div class="eq"><svg viewBox="0 0 120 90" aria-hidden="true"><use href="#e-{k}"/></svg><b>{E(t)}</b></div>' for k, t in EQ_ITEMS)
+    cards = ""
+    for c in COURSES:
+        f = F[c["title"]]
+        plus = f'<p class="fit"><b>รวมห้องซ้อมและอุปกรณ์ {f["practice"]} ชม.</b></p>' if f["practice"] else ""
+        cards += (f'<article class="hc">{cimg(c)}<h3>{E(c["title"])}</h3><p class="fit">{E(GOAL.get(c["title"], c["audience"]))}</p>{plus}'
+                  f'<p class="meta"><span>{f["sessions"]} ครั้ง × {f["per"]} ชม. = {f["learn"]} ชม.</span><b>{E(f["price"])}</b></p>'
+                  f'<div class="acts"><a class="btn sec sm" href="/courses/#{cid(c["title"])}">ดูรายละเอียด</a>'
+                  f'{line_btn("สนใจคอร์ส " + c["title"], "สอบถาม", "pri sm")}</div></article>')
+    steps = "".join(f'<div class="hs"><i>{n}</i><h3>{E(t)}</h3><p>{E(d)}</p></div>' for n, t, d in (
+        (1, "ทักมาคุย", "ทัก LINE @djlabsiam แจ้งระดับและเป้าหมาย ทีมงานจะแนะนำคอร์สที่เหมาะสม"),
+        (2, "เลือกคอร์ส", "เลือกคอร์สที่ตรงกับระดับและเวลาที่มี"),
+        (3, "นัดวันเรียน", "จัดตารางให้ตรงกับเวลาที่ว่าง เรียนที่ DJ LAB SIAM Lido Connect สยามสแควร์"),
+        (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
+    body = (
+        EQ_SYMBOLS +
+        f'<section class="hero hhero"><div><span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
+        f'<h1>ซื้อ เรียน ซ้อม ซ่อม DJ ในที่เดียวกับ <span class="lab">DJ LAB</span></h1>'
+        f'<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และช่างอยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ใช้เครื่องพวกนี้จริง</p>'
+        f'<div class="cta">{line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
+        f'<div class="hphoto"><div class="ph"><img src="/assets/img/home-shop-1200.webp" srcset="/assets/img/home-shop-800.webp 800w, /assets/img/home-shop-1200.webp 1200w" '
+        f'sizes="(min-width:960px) 46vw, 92vw" width="1200" height="900" alt="ชั้นวางเครื่อง DJ ลำโพงมอนิเตอร์ และสายสัญญาณสีสดในร้าน DJ LAB SIAM" fetchpriority="high" decoding="async"></div>'
+        f'<div class="htag a">เปิดทุกวัน<small>12:00–20:00 น.</small></div><div class="htag b">Pioneer DJ · AlphaTheta<small>Authorized Dealer</small></div>'
+        f'<div class="gear h1g" data-gear data-drop data-speed=".07" data-depth="16"><img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>'
+        f'<div class="gear h2g" data-gear data-drop data-speed=".12" data-depth="22"><img src="/assets/img/gear-cdj.webp" width="630" height="463" alt="" decoding="async"></div></div>'
+        f'</section>'
+        f'<section><div class="rackband lt">{RACK}</div><div class="zones">{zones}</div></section>'
+        f'<section class="hsec" id="equipment"><h2>อุปกรณ์ DJ ตัวแทนจำหน่ายอย่างเป็นทางการ</h2>'
+        f'<p class="lede">สินค้าครบ ทั้ง CDJ Player, DJM Mixer, Controller, หูฟัง และสายสัญญาณคุณภาพสูง พร้อมรับประกันจากผู้ผลิต ถามรุ่นและราคาได้ทาง LINE</p>'
+        f'<div class="eqgrid">{eq}</div>'
+        f'<div class="brands"><div>Pioneer DJ <span>Authorized</span></div><div>AlphaTheta <span>Authorized</span></div><div>NEO by OYAIDE <span>Official</span></div></div>'
+        f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}</div></section>'
+        f'<section class="hsec" id="courses"><h2>เรียน DJ ตัวต่อตัวกับ Pro DJ</h2>'
+        f'<p class="lede">ทุกคอร์สเรียนตัวต่อตัว {F0["sessions"]} ครั้ง × {F0["per"]} ชม. = {F0["learn"]} ชม. เลือกวันและเวลาเรียนได้ตามสะดวก</p>'
+        f'<div class="hcards">{cards}</div></section>'
+        f'<section class="hsec" id="steps"><h2>เริ่มต้นง่ายใน 4 ขั้นตอน</h2><div class="hsteps">{steps}</div></section>'
+        f'<section class="hsec team" id="teachers"><h2>ทีมครูผู้สอน</h2><p class="lede">{E(D["instructors"]["intro"])}</p>{tiles()}</section>'
+        f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
+        f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p></div></section>'
+        f'<section class="hsec"><div class="hlive"><div><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
+        f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p></div>'
+        f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
+        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div></section>'
+        f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
+        f'<div><h2>แวะมาที่ร้านได้เลย</h2><dl><dt>ที่อยู่</dt><dd>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330</dd>'
+        f'<dt>เปิด</dt><dd>ทุกวัน 12:00–20:00 น.</dd><dt>โทร</dt><dd><a href="tel:022525868">02-252-5868</a> · <a href="tel:0886560464">088-656-0464</a></dd></dl>'
+        f'<div class="cta"><a class="btn pri" href="https://maps.google.com/?cid=14947686714332238791" target="_blank" rel="noopener">เปิดแผนที่ {ic("ext", 18)}</a>'
+        f'<a class="btn sec" href="/book/">จองห้องซ้อม</a></div></div></div></section>'
+        f'<section class="hsec faq" id="faq"><h2>คำถามที่พบบ่อย</h2><div class="qs">{faq}</div></section>'
+        f'<section class="endcta"><h2>อยากได้เครื่อง หรืออยากเริ่มเรียน ทักมาคุยได้เลย</h2><div class="cta">{line_btn("ขอคำแนะนำจาก DJ LAB SIAM", "ทักหา LINE @djlabsiam")}'
+        f'<a class="btn sec" href="tel:022525868">{ic("phone", 18)} โทร 02-252-5868</a></div></section>')
+    graph = [SITE_ORG, SITE_LOCAL, SITE_WEB]
+    for c in COURSES:
+        f = F[c["title"]]
+        graph.append({"@type": "Course", "@id": f"{ORIGIN}/#{COURSE_LD_ID.get(c['title'], cid(c['title']))}", "name": c["title"],
+                      "description": f'{c["audience"]} · เรียนตัวต่อตัว {f["sessions"]} ครั้ง × {f["per"]} ชม. = {f["learn"]} ชม.',
+                      "provider": {"@id": ORIGIN + "/#org"},
+                      "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "Onsite", "location": {"@id": ORIGIN + "/#local"}}})
+    ld = [{"@context": "https://schema.org", "@graph": graph},
+          {"@context": "https://schema.org", "@type": "FAQPage", "@id": ORIGIN + "/#faqpage",
+           "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}]
+    title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
+    desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
+    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", css_extra=HOME_CSS)
+
+
+
 def write(path, text):
     full = os.path.join(A.out, path.strip("/").replace("/", os.sep), "index.html")
     os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -801,6 +1012,7 @@ made = [write("/courses/", courses_page())]
 for t in TEACHERS:
     made.append(write(f"/teachers/{slug(t['name'])}/", teacher_page(t)))
 made.append(write("/content/", content_page()))
+made.append(write(A.home, home_page()))
 for p, n in made:
     print(f"{n / 1024:6.1f} KB  {os.path.relpath(p, A.out)}")
 print(f"courses.json md5 {MD5} · {len(COURSES)} courses · {len(TEACHERS)} teachers")

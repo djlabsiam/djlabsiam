@@ -47,6 +47,8 @@ D = json.loads(raw.decode("utf-8"))
 COURSES, TEACHERS = D["items"], D["instructors"]["items"]
 
 pages = {"courses": os.path.join(SITE, "courses", "index.html"), "content": os.path.join(SITE, "content", "index.html")}
+_hp = os.path.join(SITE, "next", "index.html")
+pages["home"] = _hp if os.path.exists(_hp) else os.path.join(SITE, "index.html")   # /next/ = draft · / = live (after cut-over)
 for t in TEACHERS:
     pages["teacher:" + t["name"]] = os.path.join(SITE, "teachers", slug(t["name"]), "index.html")
 SRC = {}
@@ -169,6 +171,24 @@ for q, a in vis_faq:
         ok(not any(len(re.sub(r"\D", "", m)) >= 10 for m in re.findall(r"\d[\d\- ]*\d", a)), f"courses: the payment answer must not contain a bank account number (a run of 10+ digits): {a[:60]}")
     if "เลื่อน" in q:
         ok("อย่างน้อย 3 วัน" in a and not re.search(r"(?<!\d)[12](?!\d)\s*(?:[–-]\s*[12]\s*)?วัน", a), f"courses: the reschedule answer must say 'at least 3 days' and never a 1–2 day case: {a[:60]}")
+
+# ---- home page (generated): same single sources as /courses/, one FAQ for both the visible list and the JSON-LD ----
+if "home" in SRC:
+    hs = SRC["home"]
+    hcfg = json.loads(read(os.path.join(SITE, "data", "faq-home.json")))
+    ok(len(re.findall(r'<details class="q"', hs)) == len(hcfg["ids"]) + len(hcfg["extra"]), "home: FAQ count differs from data/faq-home.json")
+    hvis = [(html.unescape(re.sub(r"<[^>]+>", "", q)), html.unescape(re.sub(r"<[^>]+>", "", a))) for q, a in re.findall(r'<details class="q"[^>]*><summary>(.*?)</summary><p>(.*?)</p></details>', hs, re.S)]
+    hld = [json.loads(x) for x in re.findall(r'<script type="application/ld\+json">(.*?)</script>', hs, re.S)]
+    hfaq = next((x for x in hld if x.get("@type") == "FAQPage"), None)
+    ok(hfaq is not None and hvis == [(e["name"], e["acceptedAnswer"]["text"]) for e in hfaq["mainEntity"]], "home: visible FAQ differs from JSON-LD FAQPage")
+    for _, a in hvis:
+        ok("{" not in a and "}" not in a, f"home: unfilled placeholder in FAQ answer: {a[:40]}")
+    graph = next((x for x in hld if "@graph" in x), {"@graph": []})["@graph"]
+    types = [n.get("@type") for n in graph]
+    ok("Organization" in types and ["MusicSchool", "Store"] in types and "WebSite" in types, "home: JSON-LD Organization / MusicSchool+Store / WebSite missing")
+    ok(sorted(n["name"] for n in graph if n.get("@type") == "Course") == sorted(c["title"] for c in COURSES), "home: JSON-LD Course names differ from courses.json")
+    ok("02-252-5868" in hs and "https://maps.google.com/?cid=14947686714332238791" in hs, "home: phone / map link missing")
+    ok(hs.count("<h1") == 1 and "ซื้อ เรียน ซ้อม ซ่อม" in hs, "home: h1 missing")
 
 # ---- course pictures: shown exactly for the courses listed in data/course-images.json ----
 cimg = json.loads(read(os.path.join(SITE, "data", "course-images.json")))
