@@ -11,7 +11,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ap = argparse.ArgumentParser()
-ap.add_argument("--src", default=r"E:\ZLEXX\DJ LAB\รูปถ่าย\ภาพประกอบคอร์ส")
+ap.add_argument("--src", default=os.path.join(ROOT, "assets", "img"))   # new set (2026-10-12): คอร์สเรียน-<Course>.jpg
 A = ap.parse_args()
 OUT = os.path.join(ROOT, "assets", "img")
 RATIO = 3 / 2
@@ -19,10 +19,10 @@ WIDTHS = (480, 800, 1200)
 
 # course title in courses.json -> (source file, cx, fw, y0, alt)   cx = horizontal centre of the box, fw = box width, y0 = top edge (fractions of the source)
 CROPS = {
-    "Basic DJ Class":        ("basic-dj",        "Basic DJ Mixing.jpg",    0.54, 0.691, 0.712, "มือกำลังเล่นแพดบนคอนโทรลเลอร์ DJ"),
-    "Advance DJ Class":      ("advance-dj",      "Advance DJ Mixing.jpg",  0.45, 0.833, 0.680, "มือกำลังเล่นแพดและปุ่มบนคอนโทรลเลอร์ DJ"),
-    "Basic Scratch Class":   ("basic-scratch",   "Basic Scratching.jpg",   0.536, 0.9275, 0.0, "มือวางบนจานเสียงสีน้ำเงินของเครื่อง DJ"),
-    "Advance Scratch Class": ("advance-scratch", "Advance Scratching.jpg", 0.52, 0.92, 0.08, "Nutty อาจารย์ DJ LAB SIAM ยืนหลังเทิร์นเทเบิลสองเครื่องและมิกเซอร์"),
+    "Basic DJ Class":        ("basic-dj",        "คอร์สเรียน-Basic-DJ.jpg",        0.50, 1.00, 0.30, "มือหมุนปุ่มและเล่นแพดบนคอนโทรลเลอร์ DJ สีขาว"),
+    "Advance DJ Class":      ("advance-dj",      "คอร์สเรียน-Advance-DJ.jpg",      0.50, 0.80, 0.46, "ครูและนักเรียนจับเฟดเดอร์บนมิกเซอร์ของระบบ DJ แบบ All-in-one"),
+    "Basic Scratch Class":   ("basic-scratch",   "คอร์สเรียน-Basic-Scratch.jpg",   0.50, 0.92, 0.25, "มือวางบนแผ่นเสียงบนเทิร์นเทเบิล ข้างมิกเซอร์"),
+    "Advance Scratch Class": ("advance-scratch", "คอร์สเรียน-Advance-Scratch.jpg", 0.42, 0.80, 0.30, "มือสแครชแผ่นเสียงสีเขียวบนเทิร์นเทเบิล ข้างมิกเซอร์สีแดง"),
 }
 
 entries = {}
