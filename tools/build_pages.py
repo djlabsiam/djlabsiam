@@ -11,7 +11,7 @@ Standard library only.  Usage (from anywhere):  python tools/build_pages.py [--c
 """
 import argparse, hashlib, html, io, json, os, re, sys, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import cdj_demo
+import cdj_demo, siam_skyline
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -253,12 +253,16 @@ img{display:block;max-width:100%;height:auto}
 .foot-cta{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;color:#fff;padding-bottom:6px}
 .foot-cta b{font:800 24px/1.4 var(--font-family-display)}
 .rackband{padding-top:28px;overflow:hidden}
-.rack{display:block;width:100%;height:auto;max-height:170px}
+.rack{display:block;width:100%;height:auto;max-height:200px}
 .rack *{stroke:#F4F2EC;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:#0F0F0F}
 .rack path{fill:none}
 .rack .rk-g{fill:none}
 .rack .rk-r{stroke:#DD464C}
 .rack .rk-rf{fill:#DD464C;stroke:#DD464C}
+.rack text{stroke:none;fill:#F4F2EC;font:700 15px Arial,Helvetica,sans-serif;letter-spacing:.06em}
+.rack text.rk-s{font-size:10px;letter-spacing:.14em}
+.rack text.rk-m{font-size:17px;letter-spacing:.1em}
+.rack text.rk-t{fill:#fff;font-size:12px}
 .foot-cols{display:grid;gap:20px;padding-top:24px}
 .foot b{font:800 18px/1.4 var(--font-family-display);color:#fff}
 .foot a{display:inline-flex;align-items:center;min-height:44px;color:#fff}
@@ -496,7 +500,7 @@ def minify_css(c):
     return re.sub(r"\s*([{};])\s*", r"\1", c)
 
 
-RACK = r'''<svg class="rack" viewBox="0 0 1200 176" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMax meet"><path class="rk-g" d="M0 168H1200"/><rect x="12" y="22" width="100" height="146" rx="10"/><circle cx="62" cy="112" r="34"/><circle cx="62" cy="112" r="10" class="rk-r"/><circle cx="62" cy="56" r="13"/><rect x="132" y="48" width="170" height="120" rx="10"/><circle cx="205" cy="110" r="44"/><circle cx="205" cy="110" r="5" class="rk-r"/><path d="M276 60l-44 44"/><circle cx="278" cy="58" r="5"/><rect x="262" y="132" width="26" height="24" rx="4"/><rect x="322" y="52" width="170" height="116" rx="10"/><rect x="344" y="62" width="126" height="26" rx="4"/><circle cx="407" cy="130" r="28"/><circle cx="407" cy="130" r="5" class="rk-r"/><rect x="336" y="100" width="20" height="14" rx="3"/><rect x="458" y="100" width="20" height="14" rx="3"/><rect x="512" y="48" width="176" height="120" rx="10"/><circle cx="542" cy="68" r="8"/><path d="M542 86v52"/><rect x="535" y="100" width="14" height="10" rx="2"/><circle cx="580" cy="68" r="8"/><path d="M580 86v52"/><rect x="573" y="112" width="14" height="10" rx="2" class="rk-rf"/><circle cx="618" cy="68" r="8"/><path d="M618 86v52"/><rect x="611" y="100" width="14" height="10" rx="2"/><circle cx="656" cy="68" r="8"/><path d="M656 86v52"/><rect x="649" y="112" width="14" height="10" rx="2"/><rect x="568" y="148" width="64" height="10" rx="5"/><rect x="608" y="145" width="12" height="16" rx="3" class="rk-rf"/><path d="M552 48a48 48 0 0 1 96 0"/><rect x="542" y="30" width="16" height="22" rx="6"/><rect x="642" y="30" width="16" height="22" rx="6"/><rect x="702" y="52" width="170" height="116" rx="10"/><rect x="724" y="62" width="126" height="26" rx="4"/><circle cx="787" cy="130" r="28"/><circle cx="787" cy="130" r="5" class="rk-r"/><rect x="716" y="100" width="20" height="14" rx="3"/><rect x="838" y="100" width="20" height="14" rx="3"/><rect x="890" y="68" width="300" height="100" rx="12"/><circle cx="952" cy="120" r="32"/><circle cx="1128" cy="120" r="32"/><circle cx="952" cy="120" r="5" class="rk-r"/><circle cx="1128" cy="120" r="5" class="rk-r"/><rect x="1002" y="100" width="14" height="14" rx="3"/><rect x="1022" y="100" width="14" height="14" rx="3"/><rect x="1042" y="100" width="14" height="14" rx="3"/><rect x="1062" y="100" width="14" height="14" rx="3"/><rect x="1002" y="120" width="14" height="14" rx="3"/><rect x="1022" y="120" width="14" height="14" rx="3"/><rect x="1042" y="120" width="14" height="14" rx="3"/><rect x="1062" y="120" width="14" height="14" rx="3"/><path d="M1002 82h76"/></svg>'''
+RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
 NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book")]  # Shop is appended below when --shop /shop/ ; Members when that page exists
