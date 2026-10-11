@@ -245,6 +245,7 @@ CSS = r"""
 .dm-ind{position:absolute;transform:translate(-50%,-50%);border:3px solid var(--brand-base);border-radius:50%;pointer-events:none;z-index:5;animation:dmp 1.6s ease-out infinite}
 .dm-ind::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 13px/1.4 var(--font-family-display);padding:4px 10px;border-radius:999px;box-shadow:0 6px 14px rgba(0,0,0,.3)}
 .dm-ind.sq{border-radius:10px}
+.dm-ind[data-tip='']::after{display:none}
 .dm-ind.tl::after{left:0;transform:none}
 .dm-ind.tr::after{left:auto;right:0;transform:none}
 .dm-info{position:absolute;z-index:8;width:62cqw;max-width:260px;background:#0F0F0F;color:#fff;border-radius:12px;padding:12px 14px 10px;box-shadow:0 14px 30px rgba(0,0,0,.4);pointer-events:none;animation:dmi .28s ease-out}
@@ -310,7 +311,7 @@ var GS=[
   {k:'browse',side:'b',tip:'เลือกแนวที่ชอบ',t:'เลือกแนวเพลงที่ชอบ',d:'หมุนปุ่ม Browse (เลื่อนล้อเมาส์บนปุ่ม หรือลากขึ้น-ลง) เพื่อดูแต่ละแนว — แต่ละแนวมีจังหวะ (BPM) ไม่เหมือนกัน',done:function(){return S.selMoved!==undefined||S.cur>=0}},
   {k:'browse',side:'b',tip:'กดเพื่อ LOAD',t:'กดปุ่ม Browse = LOAD',d:'กดที่ปุ่ม Browse เหมือนกด Enter บนเครื่องจริง เพลงจะถูกโหลดเข้าเดค แล้วคลื่นเสียงขึ้นที่จอ',done:function(){return S.cur>=0}},
   {k:'play',tip:'กด PLAY',t:'PLAY / PAUSE',d:'เริ่มเล่นเพลง กดอีกครั้งเพื่อหยุด — พื้นฐานแรกของการเล่น',done:function(){return S.played}},
-  {k:'tempo',sq:1,tip:'เลื่อน TEMPO',t:'TEMPO · ปรับความเร็ว',d:'เลื่อนเฟดเดอร์ขึ้น-ลง (±10%) แล้วดูค่า BPM บนจอเปลี่ยน — ใช้ทำให้สองเพลงจังหวะตรงกันตอนต่อเพลง',done:function(){return F.tempo}},
+  {k:'tempo',sq:1,tip:'',t:'TEMPO · ปรับความเร็ว',d:'เลื่อนเฟดเดอร์ขึ้น-ลง (±10%) แล้วดูค่า BPM บนจอเปลี่ยน — ใช้ทำให้สองเพลงจังหวะตรงกันตอนต่อเพลง',done:function(){return F.tempo}},
   {k:'trst',tip:'กด RESET',t:'TEMPO RESET',d:'กดเพื่อคืนความเร็วเดิม (0.0%) ทันที',done:function(){return F.reset}},
   {k:'jog',tip:'ลากสแครช',t:'JOG · สแครช (โหมด VINYL)',d:'ลากจอกค้างไว้เหมือนจับแผ่นเสียง ลากไป-มาเพื่อสแครช เพลงจะเดินตามมือคุณ',done:function(){return F.scratch}},
   {k:'vinyl',sq:1,tip:'สลับโหมด',t:'VINYL / CDJ',d:'สลับโหมดจอก: VINYL สแครชได้ · CDJ ใช้ดันจังหวะเร็ว-ช้าชั่วคราว (pitch bend) ลองกดสลับดู',done:function(){return F.vinyl}},
