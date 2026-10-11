@@ -245,6 +245,8 @@ CSS = r"""
 .dm-ind{position:absolute;transform:translate(-50%,-50%);border:3px solid var(--brand-base);border-radius:50%;pointer-events:none;z-index:5;animation:dmp 1.6s ease-out infinite}
 .dm-ind::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 13px/1.4 var(--font-family-display);padding:4px 10px;border-radius:999px;box-shadow:0 6px 14px rgba(0,0,0,.3)}
 .dm-ind.sq{border-radius:10px}
+.dm-ind.tl::after{left:0;transform:none}
+.dm-ind.tr::after{left:auto;right:0;transform:none}
 .dm-info{position:absolute;z-index:8;width:62cqw;max-width:260px;background:#0F0F0F;color:#fff;border-radius:12px;padding:12px 14px 10px;box-shadow:0 14px 30px rgba(0,0,0,.4);pointer-events:none;animation:dmi .28s ease-out}
 .dm-info[hidden]{display:none}
 .dm-info b{display:block;font:700 15px/1.35 var(--font-family-display);color:#FFB443}
@@ -301,7 +303,7 @@ function point(k,tip,sq){
   var t=btn(k);if(!t){ind.hidden=true;return}
   ind.hidden=false;ind.style.left=t.style.left;ind.style.top=t.style.top;
   var w=parseFloat(t.style.width)*1.18;ind.style.width=w+'%';ind.style.aspectRatio=sq?'auto':'1';
-  ind.style.height=sq?(parseFloat(t.style.height)*1.3)+'%':'auto';ind.className='dm-ind'+(sq?' sq':'');ind.setAttribute('data-tip',tip||'')}
+  var lp=parseFloat(t.style.left);ind.style.height=sq?(parseFloat(t.style.height)*1.3)+'%':'auto';ind.className='dm-ind'+(sq?' sq':'')+(lp<24?' tl':lp>76?' tr':'');ind.setAttribute('data-tip',tip||'')}
 var F={},GI=0,shown=-1,info=$('#dm-info'),itl=$('#dm-it'),ipg=$('#dm-ip'),inum=$('#dm-in');
 /* guided tour: ordered so each step builds on the previous one (browse -> load -> play -> tempo -> jog -> cue -> hot cue -> loops -> jump -> sync -> next track -> back) */
 var GS=[
@@ -334,9 +336,12 @@ function placeCard(k,side){
   var left=cx<d.width*.5?cx+Math.min(r.width,d.width*.2)/2+22:cx-Math.min(r.width,d.width*.2)/2-22-w;
   left=Math.max(6,Math.min(d.width-w-6,left));var top=Math.max(6,Math.min(d.height-h-6,cy-h/2));
   if(side==='b'){left=Math.max(6,d.width-w-6);top=Math.min(d.height-h-6,cy+r.height/2+16)}   /* below the target (keeps the track list readable) */
-  if(d.width<460){   /* phone: full-width card, opposite half of the deck from the target so neither the target nor the screen is covered */
+  if(d.width<460){   /* phone: full-width card; take the slot (bottom / middle / top) that overlaps the target ring least */
     w=d.width-16;info.style.width=w+'px';h=info.offsetHeight;left=8;
-    top=cy<d.height*.48?d.height-h-8:Math.max(8,d.height*.38)}
+    var m=Math.max(10,Math.min(r.width,d.width*.36)*.6),tx0=cx-m,tx1=cx+m,ty0=cy-Math.max(m,r.height*.59),ty1=cy+Math.max(m,r.height*.59);
+    var slots=cy<d.height*.48?[d.height-h-8,Math.max(8,d.height*.38),8]:[Math.max(8,d.height*.38),d.height-h-8,8],bt=slots[0],bo=1e9;
+    slots.forEach(function(t){var ov=Math.max(0,Math.min(t+h,ty1)-Math.max(t,ty0));if(ov<bo){bo=ov;bt=t}});
+    top=bt}
   info.style.left=left+'px';info.style.top=top+'px'}
 function guide(){
   if(!S.usb||F.skip){if(!S.usb)hideGuide();else hideGuide();return}
