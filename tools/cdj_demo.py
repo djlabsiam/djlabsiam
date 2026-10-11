@@ -53,7 +53,8 @@ HOTSPOTS = [
 SCREEN = (440, 328, 525, 327)       # x, y, w, h of the display content (source px)
 USB_SLOT = (350, 452)               # centre of the USB 1 slot
 FADER = (1035, 1040, 1330)          # x, top y, bottom y of the tempo track
-JOG = (703, 1058, 420)              # centre x, y, diameter
+JOG = (702, 1048, 440)              # platter touch area: centre x, y, diameter
+IND = (702.3, 1043.2, 52.3)         # jog-display ring (fitted on the photo): centre x, y, radius
 
 
 def _pct(x, y):
@@ -73,7 +74,7 @@ def _hs_html():
     jl, jt = _pct(JOG[0], JOG[1])
     out.append(f'<div class="dkb jog" data-k="jog" role="application" aria-label="จอก Jog — ลากเพื่อสแครช/ดันจังหวะ" '
                f'style="left:{jl:.2f}%;top:{jt:.2f}%;width:{JOG[2] / DW * 100:.2f}%"></div>'
-               f'<div class="dm-jd" style="left:{jl:.2f}%;top:{jt:.2f}%"><i id="dm-jog"></i></div>')
+               f'<div class="dm-jd" style="left:{_pct(IND[0], IND[1])[0]:.3f}%;top:{_pct(IND[0], IND[1])[1]:.3f}%;width:{2 * IND[2] / DW * 100:.3f}%"><i id="dm-jog"></i></div>')
     return "".join(out)
 
 
@@ -96,6 +97,7 @@ def deck_html():
         '<canvas class="dm-cv" id="dm-cv" aria-hidden="true"></canvas></div>'
         f'<div class="dm-knob" id="dm-knob" style="left:{knob_l:.2f}%;top:{knob_t:.2f}%"><i id="dm-dial"></i></div>'
         f'<div class="dm-usbin" id="dm-usbin" style="left:{ul:.2f}%;top:{ut:.2f}%"><i></i></div>'
+        f'<div class="dm-usbv" style="left:{ul:.2f}%;top:{ut:.2f}%"><div class="dm-usbs" id="dm-usbs" aria-hidden="true"><b>DJ LAB</b><i></i></div></div>'
         + _hs_html() +
         '<div class="dm-ind" id="dm-ind" hidden></div>'
         '<div class="dm-toast" id="dm-toast" role="status" aria-live="polite"></div>'
@@ -202,6 +204,12 @@ CSS = r"""
 .dm-knob i::before{content:"";position:absolute;left:50%;top:4%;width:7%;height:24%;margin-left:-3.5%;border-radius:3px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7)}
 .dm-knob.act{box-shadow:0 0 0 .8cqw rgba(91,162,255,.55),0 0 3cqw rgba(91,162,255,.8);animation:dmk 1.6s ease-in-out infinite}
 @keyframes dmk{50%{box-shadow:0 0 0 1.4cqw rgba(91,162,255,.25),0 0 4cqw rgba(91,162,255,.9)}}
+.dm-usbv{position:absolute;width:0;height:0;pointer-events:none;z-index:6}
+.dm-usbs{position:absolute;left:-3.7cqw;bottom:0;width:7.4cqw;display:flex;flex-direction:column;align-items:center;opacity:0;transform-origin:50% 100%}
+.dm-usbs b{display:flex;align-items:center;justify-content:center;width:100%;height:15cqw;box-sizing:border-box;writing-mode:vertical-rl;transform:rotate(180deg);background:var(--brand-base);color:#fff;font:800 3.5cqw/1 var(--font-family-display);letter-spacing:.04em;border-radius:1cqw;box-shadow:inset 0 0 0 .3cqw rgba(0,0,0,.15)}
+.dm-usbs i{position:relative;width:52%;height:4.6cqw;background:linear-gradient(90deg,#B9C0CA,#EEF0F3 45%,#AEB5BF);border:.25cqw solid #7E8693;border-top:0;border-radius:0 0 .5cqw .5cqw}
+.dm-usbs i::before,.dm-usbs i::after{content:"";position:absolute;top:35%;width:.9cqw;height:1.3cqw;background:#4A515B;border-radius:.2cqw}
+.dm-usbs i::before{left:18%}.dm-usbs i::after{right:18%}
 .dm-usbin{position:absolute;width:6.6%;aspect-ratio:1/.9;transform:translate(-50%,-50%);border-radius:3px;background:#111418;border:1px solid #3A4048;display:none;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .dm-usbin.on{display:block}
 .dm-usbin i{position:absolute;left:12%;right:12%;top:38%;height:14%;background:#DD464C}
@@ -216,9 +224,9 @@ CSS = r"""
 .dkb.r.lit{background:none}
 .dkb.jog{aspect-ratio:1;height:auto!important;cursor:grab;touch-action:none;overflow:hidden}
 .dkb.jog:hover{outline:0}
-.dm-jd{position:absolute;width:12.4%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.dm-jd{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
 .dm-jd i{position:absolute;inset:0;border-radius:50%}
-.dm-jd i::after{content:"";position:absolute;left:50%;top:0;width:11%;aspect-ratio:1;margin-left:-5.5%;border-radius:50%;background:#FF9F1A;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.dm-jd i::after{content:"";position:absolute;left:50%;top:0;width:15%;aspect-ratio:1;margin-left:-7.5%;margin-top:-7.5%;border-radius:50%;background:#FF9F1A;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 .dkb.fd{cursor:ns-resize;touch-action:none;border-radius:6px}
 .dkb.fd:hover{outline:0}
 .fcap{position:absolute;left:50%;top:50%;width:72%;height:15.8%;transform:translate(-50%,-50%);border-radius:4px;background:linear-gradient(#41454B 0 31%,#17191C 31% 37%,#2C2F34 37% 63%,#17191C 63% 69%,#3A3E44 69%);box-shadow:0 3px 6px rgba(0,0,0,.55);pointer-events:none}
@@ -241,7 +249,7 @@ CSS = r"""
   .dm-steps{margin-top:18px}
   .dm-st{min-height:28vh;align-content:center}
   .dm-stage{position:sticky;top:84px;justify-content:flex-end;align-items:flex-start}
-  .dm-deck{width:min(100%,calc((100svh - 150px) * .7024))}
+  .dm-deck{width:min(100%,calc((100svh - 98px) * .7024))}
   .dm-inv-in{padding:64px 56px}
 }
 @media (min-width:1280px){.dm-inv h2{font-size:44px}}
@@ -331,25 +339,22 @@ function load(i){
 /* ---------- USB ---------- */
 function insertUsb(){
   if(S.usb||stick.disabled)return;stick.disabled=true;ac();stick.classList.remove('hintp');
-  var plug=stick.querySelector('.dm-plug'),a=stick.getBoundingClientRect(),pr=plug.getBoundingClientRect(),dr=deck.getBoundingClientRect();
-  var sx=dr.left+dr.width*parseFloat(usbin.style.left)/100,sy=dr.top+dr.height*parseFloat(usbin.style.top)/100;
-  var dx=sx-(pr.left+pr.width/2),dy=sy-(pr.top+pr.height/2),fly=null;
-  var done=function(){if(fly&&fly.parentNode)fly.parentNode.removeChild(fly);stick.style.visibility='';stick.classList.remove('usb');stick.style.cursor='default';
-    usbin.classList.add('on');S.usb=true;toast('USB 1 พร้อม — เลือกเพลงด้วยปุ่ม Browse');setMode('browse');
+  var usbs=$('#dm-usbs'),u=deck.clientWidth/100;
+  var done=function(){usbs.style.opacity='0';usbin.classList.add('on');S.usb=true;stick.classList.remove('usb');stick.style.cursor='default';
+    stick.getAnimations().forEach(function(an){an.cancel()});stick.style.opacity='';
+    if(stick.animate&&!RM)stick.animate([{opacity:0},{opacity:1}],{duration:380,easing:'ease-out'});
+    toast('USB 1 พร้อม — เลือกเพลงด้วยปุ่ม Browse');setMode('browse');
     TR.forEach(function(t,i){fetchTrack(i).catch(function(){})})};
-  if(RM||!stick.animate){done();return}
-  fly=stick.cloneNode(true);fly.removeAttribute('id');fly.className='lab dm-stick usb dm-fly';fly.setAttribute('aria-hidden','true');
-  fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=a.width+'px';fly.style.height=a.height+'px';
-  fly.style.transformOrigin=(pr.left+pr.width/2-a.left)+'px '+(pr.top+pr.height/2-a.top)+'px';
-  stick.parentNode.appendChild(fly);stick.style.visibility='hidden';
-  var sh=function(r,b){return 'drop-shadow(0 '+b+'px '+r+'px rgba(15,15,15,.38))'};
-  var an=fly.animate([
-    {transform:'rotate(-2.5deg)',filter:sh(3,3),offset:0},
-    {transform:'translate('+dx*.22+'px,'+(dy*.22-34)+'px) rotate(-9deg) scale(1.12)',filter:sh(14,26),offset:.28,easing:'cubic-bezier(.3,.1,.2,1)'},
-    {transform:'translate('+dx*.9+'px,'+(dy*.9-26)+'px) rotate(-1deg) scale(1.06)',filter:sh(12,22),offset:.62,easing:'cubic-bezier(.4,0,.3,1)'},
-    {transform:'translate('+dx+'px,'+(dy-14)+'px) rotate(0deg) scale(1)',filter:sh(8,12),offset:.78,easing:'ease-in'},
-    {transform:'translate('+dx+'px,'+dy+'px) rotate(0deg) scale(.34,.85)',filter:sh(2,2),offset:.92,easing:'ease-in'},
-    {transform:'translate('+dx+'px,'+dy+'px) rotate(0deg) scale(.12,.6)',filter:sh(0,0),offset:1}],{duration:1500,fill:'forwards'});
+  if(RM||!usbs.animate){done();return}
+  stick.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out',fill:'forwards'});             /* 1 · the headline badge fades out */
+  var up=-11*u,sh=function(r,y){return 'drop-shadow(0 '+y+'px '+r+'px rgba(15,15,15,.4))'};
+  var an=usbs.animate([                                                                                    /* 2 · a stick fades in above USB 1 · 3 · moves straight down */
+    {opacity:0,transform:'translateY('+(up-6*u)+'px)',filter:sh(2,2),offset:0},
+    {opacity:1,transform:'translateY('+up+'px)',filter:sh(8,14),offset:.2,easing:'ease-out'},
+    {opacity:1,transform:'translateY('+up+'px)',filter:sh(8,14),offset:.36,easing:'cubic-bezier(.5,0,.25,1)'},
+    {opacity:1,transform:'translateY('+(-1.6*u)+'px)',filter:sh(5,8),offset:.78,easing:'ease-in'},
+    {opacity:1,transform:'translateY(0) scale(.86)',filter:sh(1,1),offset:.92},
+    {opacity:0,transform:'translateY(0) scale(.74)',filter:sh(0,0),offset:1}],{duration:1900,fill:'forwards'});
   an.onfinish=done}
 stick.addEventListener('click',insertUsb);
 /* ---------- buttons ---------- */
