@@ -127,20 +127,20 @@ def section_html(line_btn_html):
                     for g, t, d in EDU)
     return (
         '<section class="hero dm" id="demo" aria-label="ลองเล่น CDJ-3000X">'
-        '<div class="dm-in"><div class="dm-txt">'
+        '<div class="dm-in"><div class="dm-head">'
         '<span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
         '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
-        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1>'
+        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1></div>'
+        '<div class="dm-stage">'
+        + deck_html() +
+        '</div><div class="dm-body">'
         '<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
         '<div class="dm-lead"><h2>เรียน DJ สำคัญยังไง? ลองเล่นดูก่อน</h2>'
-        '<p>ทางขวาคือ CDJ-3000X ที่ร้านมีให้เล่นจริง ลองเสียบ USB เลือกแนวเพลงที่ชอบ แล้วทำตามคำแนะนำที่ขึ้นบนเครื่องไปทีละขั้น ไม่ต้องติดตั้งอะไร</p></div>'
+        '<p>CDJ-3000X ตัวนี้ร้านมีให้เล่นจริง ลองเสียบ USB เลือกแนวเพลงที่ชอบ แล้วทำตามคำแนะนำที่ขึ้นบนเครื่องไปทีละขั้น ไม่ต้องติดตั้งอะไร</p></div>'
         f'<ol class="dm-steps" id="dm-steps">{steps}</ol>'
         '<a class="btn sec dm-skip" href="#invite">ข้ามไปส่วนถัดไป ↓</a>'
-        '</div>'
-        '<div class="dm-stage">'
-        + deck_html() +
         '</div></div></section>')
 
 
@@ -156,9 +156,9 @@ def invite_html(line_btn_html, n_teachers):
 
 CSS = r"""
 .dm{padding-top:36px!important}
-.dm-in{display:grid;gap:28px}
-.dm-txt h1{font-size:40px;line-height:1.3;max-width:15ch}
-.dm-txt .lede{max-width:34em}
+.dm-in{display:block}
+.dm-head h1{font-size:38px;line-height:1.3;max-width:15ch;margin-bottom:34px}
+.dm-body .lede{max-width:34em}
 .dm-lead{margin-top:36px}
 .dm-lead h2{font-size:28px}
 .dm-lead p{margin-top:8px;color:var(--text-secondary);max-width:44ch}
@@ -168,7 +168,9 @@ CSS = r"""
 .dm-st b{display:block;margin-top:2px;font:700 20px/1.4 var(--font-family-display)}
 .dm-st p{margin:6px 0 0;color:var(--text-secondary);font-size:15px}
 .dm-skip{margin-top:22px;position:sticky;bottom:16px;z-index:5;background:#fff}
-.dm-stage{position:relative;display:flex;justify-content:center}
+.dm-stage{position:sticky;top:68px;z-index:12;display:flex;justify-content:center;padding:6px 0 10px;margin:0 0 18px;background:#fff;box-shadow:0 14px 14px -14px rgba(15,15,15,.3)}
+.dm-tip{left:0!important;top:calc(100% + 6px)!important;transform:none!important}
+.dm-arr{transform:rotate(90deg)}
 .dm-stick{position:relative;font:inherit;cursor:pointer;border:0;margin-right:.62em;vertical-align:baseline}
 .dm-stick:focus-visible{outline:3px solid var(--text-primary);outline-offset:6px}
 .dm-stick.hintp{animation:dmb 1.7s ease-out infinite}
@@ -184,7 +186,7 @@ CSS = r"""
 .dm-stick.hintp .dm-tip{display:flex}
 .dm-fly{position:fixed;margin:0;z-index:70;pointer-events:none;animation:none!important}
 .dm-fly .dm-tip{display:none!important}
-.dm-deck{position:relative;width:min(100%,520px);aspect-ratio:800/1139;container-type:inline-size;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 26px 30px rgba(15,15,15,.32))}
+.dm-deck{position:relative;width:min(100%,calc((100svh - 150px) * .7024));aspect-ratio:800/1139;container-type:inline-size;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 26px 30px rgba(15,15,15,.32))}
 .dm-img{display:block;width:100%;height:100%;pointer-events:none}
 .dm-scr{position:absolute;background:#05070A;color:#E8ECF2;overflow:hidden;font-family:var(--font-family-body)}
 .dm-nm,.dm-bw{position:absolute;inset:0;display:none}
@@ -260,11 +262,15 @@ CSS = r"""
 .dm-inv .btn.sec{background:transparent;border-color:#fff;color:#fff}
 @media (min-width:960px){
   .dm{padding-top:44px!important}
-  .dm-txt h1{font-size:clamp(38px,4.1vw,54px);line-height:1.28;max-width:15ch}
-  .dm-in{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:40px;align-items:start}
+  .dm-head h1{font-size:clamp(38px,4.1vw,54px);line-height:1.28;max-width:15ch;margin-bottom:0}
+  .dm-in{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-areas:"head stage" "body stage";grid-template-rows:auto 1fr;column-gap:40px;align-items:start}
+  .dm-head{grid-area:head}
+  .dm-body{grid-area:body}
+  .dm-stage{grid-area:stage;position:sticky;top:84px;z-index:auto;justify-content:flex-end;align-items:flex-start;padding:0;margin:0;background:none;box-shadow:none}
+  .dm-tip{left:calc(100% + .78em)!important;top:50%!important;transform:translateY(-50%)!important}
+  .dm-arr{transform:none}
   .dm-steps{margin-top:18px}
-  .dm-st{min-height:24vh;display:flex;flex-direction:column;justify-content:center}
-  .dm-stage{position:sticky;top:84px;justify-content:flex-end;align-items:flex-start}
+  .dm-st{min-height:190px;display:flex;flex-direction:column;justify-content:center}
   .dm-deck{width:min(100%,calc((100svh - 98px) * .7024))}
   .dm-inv-in{padding:64px 56px}
 }
@@ -328,6 +334,9 @@ function placeCard(k,side){
   var left=cx<d.width*.5?cx+Math.min(r.width,d.width*.2)/2+22:cx-Math.min(r.width,d.width*.2)/2-22-w;
   left=Math.max(6,Math.min(d.width-w-6,left));var top=Math.max(6,Math.min(d.height-h-6,cy-h/2));
   if(side==='b'){left=Math.max(6,d.width-w-6);top=Math.min(d.height-h-6,cy+r.height/2+16)}   /* below the target (keeps the track list readable) */
+  if(d.width<460){   /* phone: full-width card, opposite half of the deck from the target so neither the target nor the screen is covered */
+    w=d.width-16;info.style.width=w+'px';h=info.offsetHeight;left=8;
+    top=cy<d.height*.48?d.height-h-8:Math.max(8,d.height*.38)}
   info.style.left=left+'px';info.style.top=top+'px'}
 function guide(){
   if(!S.usb||F.skip){if(!S.usb)hideGuide();else hideGuide();return}
