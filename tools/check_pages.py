@@ -64,7 +64,7 @@ for k, s in SRC.items():
     ok(bool(m) and m.group(1) == md5, f"{k}: built from a different courses.json (page {m.group(1) if m else 'no stamp'} vs now {md5}) — run tools/build_pages.py")
     # 2. structure
     ok(s.count("<h1") == 1, f"{k}: expected exactly one <h1>")
-    ok('<html lang="th">' in s, f"{k}: missing lang=th")
+    ok(bool(re.search(r'<html lang="th"[ >]', s)), f"{k}: missing lang=th")
     ok('rel="canonical"' in s, f"{k}: missing canonical")
     ok('class="skip"' in s and 'id="main"' in s, f"{k}: missing skip link / main landmark")
     ok(len(s.encode("utf-8")) < 80 * 1024, f"{k}: page is {len(s.encode('utf-8')) // 1024} KB (limit 80 KB)")
