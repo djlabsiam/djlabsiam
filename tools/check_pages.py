@@ -153,6 +153,7 @@ for t in TEACHERS:
     ok(("เกี่ยวกับ " + t["name"] in s) == bool(prof.get("bio")), f"{k}: bio section shown/hidden wrongly (bio data {'present' if prof.get('bio') else 'empty'})")
     ok(("<h2>ผลงาน</h2>" in s) == bool(prof.get("highlights")), f"{k}: highlights section shown/hidden wrongly")
     ok(("data-vid=" in s) == bool(prof.get("video_id")), f"{k}: video block shown/hidden wrongly")
+    ok(("data-pfs" in s) == bool(prof.get("portfolio")), f"{k}: portfolio slider shown/hidden wrongly")
     ok("ให้ร้านจัดอาจารย์ให้" in s, f"{k}: main CTA missing")
 
 # ---- FAQ: visible == JSON-LD ----

@@ -698,6 +698,26 @@ PRIVACY_NOTE = ('<details class="fc-priv"><summary>ข้อมูลควา�
                 'Google อาจเก็บข้อมูลการใช้งานตามนโยบายของ Google ร้านไม่ได้รับข้อมูลนั้น · <a href="/privacy.html">นโยบายความเป็นส่วนตัวของร้าน</a></p></details>')
 
 
+PFS_JS = """<script>
+(function(){document.querySelectorAll('[data-pfs]').forEach(function(w){var t=w.querySelector('.pfs-t'),p=w.querySelector('.pfs-b.p'),n=w.querySelector('.pfs-b.n');if(!p)return;
+function step(d){t.scrollBy({left:d*t.clientWidth*.9,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+p.addEventListener('click',function(){step(-1)});n.addEventListener('click',function(){step(1)});
+t.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){e.preventDefault();step(1)}else if(e.key==='ArrowLeft'){e.preventDefault();step(-1)}})})})();
+</script>
+"""
+PFS_CSS = """
+.pfs{position:relative;margin-top:12px}
+.pfs-t{display:flex;gap:12px;margin:0;padding:0 0 6px;list-style:none;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;border-radius:var(--radius-md)}
+.pfs-t:focus-visible{outline:3px solid var(--text-primary);outline-offset:3px}
+.pfs-t li{flex:0 0 min(86%,520px);scroll-snap-align:start}
+.pfs-t figure{margin:0}
+.pfs-t img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md);background:var(--lab-tint)}
+.pfs-t figcaption{margin-top:6px;font-size:14px;color:var(--text-secondary)}
+.pfs-b{position:absolute;top:calc(50% - 22px);width:44px;height:44px;border-radius:50%;border:1.5px solid var(--text-primary);background:#fff;font:700 24px/1 var(--font-family-display);cursor:pointer;box-shadow:0 6px 14px rgba(15,15,15,.18)}
+.pfs-b.p{left:8px}.pfs-b.n{right:8px}
+"""
+
+
 def teacher_page(t):
     name = t["name"]
     s = slug(name)
@@ -709,6 +729,21 @@ def teacher_page(t):
     if prof.get("highlights"):
         sections += f'<section><h2>ผลงาน</h2><ul class="bl">{"".join("<li>" + E(h) + "</li>" for h in prof["highlights"])}</ul></section>'
     script = ""
+    pf = prof.get("portfolio") or []
+    from PIL import Image as _Im
+    for it in pf:
+        fp = os.path.join(SITE, "assets", "img", "portfolio", it["img"])
+        if not os.path.exists(fp):
+            die(f"{name}: portfolio image missing: assets/img/portfolio/{it['img']}")
+        with _Im.open(fp) as _im:
+            it["_w"], it["_h"] = _im.size
+    if pf:
+        slides = "".join(f'<li><figure><img src="/assets/img/portfolio/{E(it["img"])}" width="{it["_w"]}" height="{it["_h"]}" alt="{E(it.get("alt") or "ผลงานของ " + name)}" loading="lazy" decoding="async">'
+                         + (f'<figcaption>{E(it["caption"])}</figcaption>' if it.get("caption") else "") + '</figure></li>' for it in pf)
+        sections += (f'<section><h2>Portfolio</h2><div class="pfs" data-pfs><ul class="pfs-t" tabindex="0" aria-label="สไลด์ผลงานของ {E(name)}">{slides}</ul>'
+                     + ('<button type="button" class="pfs-b p" aria-label="ภาพก่อนหน้า">‹</button><button type="button" class="pfs-b n" aria-label="ภาพถัดไป">›</button>' if len(pf) > 1 else "")
+                     + '</div></section>')
+        script += PFS_JS
     if prof.get("video_id"):
         sections += (f'<section><h2>วิดีโอแนะนำ</h2><div class="fc"><div class="fc-box" data-vid="{E(prof["video_id"])}" data-title="วิดีโอแนะนำ {E(name)}">'
                      f'<img src="/assets/img/{E(prof["poster"])}" width="1280" height="720" alt="" loading="lazy">'
@@ -716,7 +751,7 @@ def teacher_page(t):
                      f'<div class="fc-msg l" role="status">กำลังเชื่อมต่อ YouTube…</div>'
                      f'<div class="fc-msg e">{ic("alert")} เปิดวิดีโอในหน้านี้ไม่ได้<a class="btn sec sm" href="https://www.youtube.com/watch?v={E(prof["video_id"])}" rel="noopener">ดูบน YouTube {ic("ext", 16)}</a></div></div>'
                      f'{PRIVACY_NOTE}</div></section>')
-        script = VIDEO_JS
+        script += VIDEO_JS
     soc = t.get("social")
     if soc:
         host = urllib.parse.urlparse(soc).netloc.lower()
@@ -733,7 +768,8 @@ def teacher_page(t):
             f'<section class="others"><h2>อาจารย์ท่านอื่น</h2>{tiles(" s", True, exclude=name)}</section>')
     taught = ", ".join(teaches[name])
     return shell(f"/teachers/{s}/", f"{name} — อาจารย์ DJ LAB SIAM",
-                 f"{name} สอน {taught} แบบตัวต่อตัว ที่ DJ LAB SIAM สยามสแควร์", body, script=script, active="teachers")
+                 f"{name} สอน {taught} แบบตัวต่อตัว ที่ DJ LAB SIAM สยามสแควร์", body, script=script, active="teachers",
+                 css_extra=PFS_CSS if pf else "")
 
 
 # ───────── /content/ ─────────
