@@ -1,4 +1,4 @@
-"""Interactive CDJ-3000X demo for the home page (imported by build_pages.py).
+﻿"""Interactive CDJ-3000X demo for the home page (imported by build_pages.py).
 
 Everything is local: one device photo (assets/img/cdj-full.webp), five 16-bar cuts of the
 owner's own tracks (assets/audio/demo-*.mp3, made by tools/cut_demo_tracks.py) and Web Audio. No third-party service.
@@ -100,22 +100,31 @@ def deck_html():
         f'<div class="dm-usbv" style="left:{ul:.2f}%;top:{ut:.2f}%"><div class="dm-usbs" id="dm-usbs" aria-hidden="true"><b>DJ LAB</b><i></i></div></div>'
         + _hs_html() +
         '<div class="dm-ind" id="dm-ind" hidden></div>'
+        '<div class="dm-info" id="dm-info" role="status" aria-live="polite" hidden><b id="dm-it"></b><p id="dm-ip"></p>'
+        '<div class="dm-if"><span id="dm-in"></span><button type="button" id="dm-isk">ข้ามคำแนะนำ</button></div></div>'
         '<div class="dm-toast" id="dm-toast" role="status" aria-live="polite"></div>'
         '</div>')
 
 
-STEPS = [
-    ("เสียบ USB", "แตะที่แฟลชไดรฟ์ แล้วดูมันเสียบเข้าช่อง USB 1 ของ CDJ-3000X"),
-    ("หมุน Browse เลือกแนวเพลง", "เลื่อนล้อเมาส์บนปุ่ม Browse (มือถือให้ลากขึ้น-ลง) แล้วเลือกแนวเพลงที่ชอบ House, Hip-Hop, Trap, Techno หรือ Disco"),
-    ("กดปุ่ม Browse เพื่อ LOAD", "คลิกที่ปุ่ม Browse เหมือนกด Enter บนเครื่องจริง เพลงจะถูกโหลด และคลื่นเสียง (waveform) จะขึ้นที่จอ"),
-    ("กด PLAY และ CUE", "▶/II เล่น-หยุด · CUE ตั้งจุดกลับ (กดค้างเพื่อฟังตัวอย่าง) · ลากที่จอก Jog เพื่อสแครช"),
-    ("ลองฟังก์ชันอื่น", "HOT CUE A–H กดครั้งแรกเพื่อเก็บจุด กดอีกครั้งเพื่อกระโดดไป · IN / OUT / RELOOP ทำลูป · BEAT LOOP 4 / 8 · BEAT JUMP · เลื่อน TEMPO ที่เฟดเดอร์ขวา · TRACK SEARCH เปลี่ยนเพลง"),
+EDU = [  # (tag, title, text) — the left column: why learning DJ matters
+    ("ทำไมต้องเรียน DJ", "DJ ไม่ใช่แค่กดเพลงต่อกัน",
+     "ต้องฟังจังหวะ เลือกเพลงให้เข้ากับคนฟัง และควบคุมเครื่องให้เสียงลื่นไหลต่อเนื่อง การเรียนอย่างมีระบบช่วยให้พื้นฐานแน่นตั้งแต่ต้น ไม่ติดนิสัยผิดๆ ที่แก้ยากทีหลัง"),
+    ("อุปกรณ์", "เครื่องมีหลายแบบ หลายยี่ห้อ",
+     "CDJ / Player, Mixer, Controller, All-in-one และ Turntable หน้าตาและตำแหน่งปุ่มต่างกันตามรุ่น ถ้าเข้าใจหลักการจริงๆ ย้ายไปเล่นเครื่องไหนก็ไม่งง"),
+    ("ฟังก์ชัน", "ปุ่มเยอะ แต่ละปุ่มมีหน้าที่ของมัน",
+     "Cue, Hot Cue, Loop, Beat Jump, Tempo, Sync, EQ, Filter, Effect ... แต่ละอย่างแก้โจทย์คนละแบบ เดโมนี้พาลองส่วนที่อยู่บน CDJ ไล่ไปทีละขั้นให้ครับ"),
+    ("สถานการณ์", "ใช้ได้หลายรูปแบบ ต่างกันตามงาน",
+     "เล่นต่อเนื่องที่ปาร์ตี้หรือบาร์ ขึ้นเวทีแข่งขัน ไลฟ์สตรีม สแครชแบบ Turntablism ไปจนถึงทำคอนเทนต์ แต่ละสถานการณ์เลือกเครื่องมือและเทคนิคไม่เหมือนกัน"),
+    ("แนวเพลง", "เข้าใจแนวเพลง = เลือกเพลงต่อกันได้ลื่น",
+     "แต่ละแนวมีจังหวะและโครงสร้างต่างกัน เช่น House อยู่ราว 120–130 BPM, Hip-Hop ช้ากว่าราว 85–100 BPM และ Techno เร็วกว่า ลองเลือกแต่ละแนวในเดโมแล้วดูค่า BPM บนจอ"),
+    ("เรียนที่ DJ LAB SIAM", "ตัวต่อตัว บนอุปกรณ์จริงของโรงเรียน",
+     "ทุกคอร์สเรียนแบบตัวต่อตัวกับ Pro DJ เริ่มจากศูนย์ได้ เลือกสายที่อยากไปได้ ทั้ง DJ และสแครช"),
 ]
 
 
 def section_html(line_btn_html):
-    steps = "".join(f'<li class="dm-st" data-s="{i}"><i>{i + 1}</i><div><b>{_h.escape(t)}</b><p>{_h.escape(d)}</p></div></li>'
-                    for i, (t, d) in enumerate(STEPS))
+    steps = "".join(f'<li class="dm-st"><small>{_h.escape(g)}</small><b>{_h.escape(t)}</b><p>{_h.escape(d)}</p></li>'
+                    for g, t, d in EDU)
     return (
         '<section class="hero dm" id="demo" aria-label="ลองเล่น CDJ-3000X">'
         '<div class="dm-in"><div class="dm-txt">'
@@ -125,8 +134,8 @@ def section_html(line_btn_html):
         '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1>'
         '<p class="lede">ร้านอุปกรณ์ DJ ที่มีโรงเรียน ห้องซ้อม และคนที่รักดีเจ อยู่ใต้หลังคาเดียวกัน ทีมงานทุกคนเป็น DJ ที่ไม่ใช่แค่เล่นเป็น แต่รักในการดีเจจริงๆ</p>'
         f'<div class="cta">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
-        '<div class="dm-lead"><h2>ลองเล่น CDJ-3000X ตรงนี้ได้เลย</h2>'
-        '<p>นี่คือเครื่องที่ร้านเรามีให้เล่นจริง ลองเสียบ USB เลือกแนวเพลงที่ชอบ แล้วจับดูก่อนมาที่ร้าน ไม่ต้องติดตั้งอะไร</p></div>'
+        '<div class="dm-lead"><h2>เรียน DJ สำคัญยังไง? ลองเล่นดูก่อน</h2>'
+        '<p>ทางขวาคือ CDJ-3000X ที่ร้านมีให้เล่นจริง ลองเสียบ USB เลือกแนวเพลงที่ชอบ แล้วทำตามคำแนะนำที่ขึ้นบนเครื่องไปทีละขั้น ไม่ต้องติดตั้งอะไร</p></div>'
         f'<ol class="dm-steps" id="dm-steps">{steps}</ol>'
         '<a class="btn sec dm-skip" href="#invite">ข้ามไปส่วนถัดไป ↓</a>'
         '</div>'
@@ -154,13 +163,10 @@ CSS = r"""
 .dm-lead h2{font-size:28px}
 .dm-lead p{margin-top:8px;color:var(--text-secondary);max-width:44ch}
 .dm-steps{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:14px}
-.dm-st{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:16px 18px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);transition:border-color .25s,box-shadow .25s,transform .25s}
-.dm-st>i{font:800 28px/1.2 var(--font-family-display);font-style:normal;color:var(--text-muted)}
-.dm-st b{display:block;font:700 18px/1.4 var(--font-family-display)}
-.dm-st p{margin:4px 0 0;color:var(--text-secondary);font-size:15px}
-.dm-st.on{border-color:var(--text-primary);box-shadow:0 14px 28px rgba(15,15,15,.1)}
-.dm-st.on>i{color:var(--brand-base)}
-.dm-st.done>i{color:#1A8F4D}
+.dm-st{display:block;padding:18px 20px;background:#fff;border:1px solid var(--lab-line);border-left:4px solid var(--brand-base);border-radius:var(--radius-md)}
+.dm-st small{display:block;font:700 13px/1.4 var(--font-family-body);letter-spacing:.04em;color:var(--brand-base)}
+.dm-st b{display:block;margin-top:2px;font:700 20px/1.4 var(--font-family-display)}
+.dm-st p{margin:6px 0 0;color:var(--text-secondary);font-size:15px}
 .dm-skip{margin-top:22px;position:sticky;bottom:16px;z-index:5;background:#fff}
 .dm-stage{position:relative;display:flex;justify-content:center}
 .dm-stick{position:relative;font:inherit;cursor:pointer;border:0;margin-right:.62em;vertical-align:baseline}
@@ -237,6 +243,13 @@ CSS = r"""
 .dm-ind{position:absolute;transform:translate(-50%,-50%);border:3px solid var(--brand-base);border-radius:50%;pointer-events:none;z-index:5;animation:dmp 1.6s ease-out infinite}
 .dm-ind::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 13px/1.4 var(--font-family-display);padding:4px 10px;border-radius:999px;box-shadow:0 6px 14px rgba(0,0,0,.3)}
 .dm-ind.sq{border-radius:10px}
+.dm-info{position:absolute;z-index:8;width:62cqw;max-width:260px;background:#0F0F0F;color:#fff;border-radius:12px;padding:12px 14px 10px;box-shadow:0 14px 30px rgba(0,0,0,.4);pointer-events:none;animation:dmi .28s ease-out}
+.dm-info[hidden]{display:none}
+.dm-info b{display:block;font:700 15px/1.35 var(--font-family-display);color:#FFB443}
+.dm-info p{margin:4px 0 0;font:400 13px/1.55 var(--font-family-body);color:#E8ECF2}
+.dm-if{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font:600 11.5px/1.4 var(--font-family-body);color:#8FA0B5}
+.dm-if button{pointer-events:auto;background:none;border:0;padding:2px 0;color:#C6DBF7;font:inherit;text-decoration:underline;cursor:pointer}
+@keyframes dmi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes dmp{0%{box-shadow:0 0 0 0 rgba(221,70,76,.55)}100%{box-shadow:0 0 0 16px rgba(221,70,76,0)}}
 .dm-toast{position:absolute;left:50%;bottom:2%;transform:translateX(-50%) translateY(8px);opacity:0;background:#0F0F0F;color:#fff;font:600 13px/1.4 var(--font-family-body);padding:8px 14px;border-radius:999px;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;z-index:7}
 .dm-toast.on{opacity:1;transform:translateX(-50%)}
@@ -250,7 +263,7 @@ CSS = r"""
   .dm-txt h1{font-size:clamp(38px,4.1vw,54px);line-height:1.28;max-width:15ch}
   .dm-in{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:40px;align-items:start}
   .dm-steps{margin-top:18px}
-  .dm-st{min-height:28vh;align-content:center}
+  .dm-st{min-height:24vh;display:flex;flex-direction:column;justify-content:center}
   .dm-stage{position:sticky;top:84px;justify-content:flex-end;align-items:flex-start}
   .dm-deck{width:min(100%,calc((100svh - 98px) * .7024))}
   .dm-inv-in{padding:64px 56px}
@@ -283,16 +296,51 @@ function point(k,tip,sq){
   ind.hidden=false;ind.style.left=t.style.left;ind.style.top=t.style.top;
   var w=parseFloat(t.style.width)*1.18;ind.style.width=w+'%';ind.style.aspectRatio=sq?'auto':'1';
   ind.style.height=sq?(parseFloat(t.style.height)*1.3)+'%':'auto';ind.className='dm-ind'+(sq?' sq':'');ind.setAttribute('data-tip',tip||'')}
+var F={},GI=0,shown=-1,info=$('#dm-info'),itl=$('#dm-it'),ipg=$('#dm-ip'),inum=$('#dm-in');
+/* guided tour: ordered so each step builds on the previous one (browse -> load -> play -> tempo -> jog -> cue -> hot cue -> loops -> jump -> sync -> next track -> back) */
+var GS=[
+  {k:'browse',side:'b',tip:'เลือกแนวที่ชอบ',t:'เลือกแนวเพลงที่ชอบ',d:'หมุนปุ่ม Browse (เลื่อนล้อเมาส์บนปุ่ม หรือลากขึ้น-ลง) เพื่อดูแต่ละแนว — แต่ละแนวมีจังหวะ (BPM) ไม่เหมือนกัน',done:function(){return S.selMoved!==undefined||S.cur>=0}},
+  {k:'browse',side:'b',tip:'กดเพื่อ LOAD',t:'กดปุ่ม Browse = LOAD',d:'กดที่ปุ่ม Browse เหมือนกด Enter บนเครื่องจริง เพลงจะถูกโหลดเข้าเดค แล้วคลื่นเสียงขึ้นที่จอ',done:function(){return S.cur>=0}},
+  {k:'play',tip:'กด PLAY',t:'PLAY / PAUSE',d:'เริ่มเล่นเพลง กดอีกครั้งเพื่อหยุด — พื้นฐานแรกของการเล่น',done:function(){return S.played}},
+  {k:'tempo',sq:1,tip:'เลื่อน TEMPO',t:'TEMPO · ปรับความเร็ว',d:'เลื่อนเฟดเดอร์ขึ้น-ลง (±10%) แล้วดูค่า BPM บนจอเปลี่ยน — ใช้ทำให้สองเพลงจังหวะตรงกันตอนต่อเพลง',done:function(){return F.tempo}},
+  {k:'trst',tip:'กด RESET',t:'TEMPO RESET',d:'กดเพื่อคืนความเร็วเดิม (0.0%) ทันที',done:function(){return F.reset}},
+  {k:'jog',tip:'ลากสแครช',t:'JOG · สแครช (โหมด VINYL)',d:'ลากจอกค้างไว้เหมือนจับแผ่นเสียง ลากไป-มาเพื่อสแครช เพลงจะเดินตามมือคุณ',done:function(){return F.scratch}},
+  {k:'vinyl',sq:1,tip:'สลับโหมด',t:'VINYL / CDJ',d:'สลับโหมดจอก: VINYL สแครชได้ · CDJ ใช้ดันจังหวะเร็ว-ช้าชั่วคราว (pitch bend) ลองกดสลับดู',done:function(){return F.vinyl}},
+  {k:'jog',tip:'ลากดันจังหวะ',t:'PITCH BEND',d:'ในโหมด CDJ ลากจอกเพื่อดันจังหวะให้เพลงเร็ว/ช้าชั่วคราว ใช้ช่วยปรับบีตให้ตรงกันตอนผสมเพลง',done:function(){return F.bend}},
+  {k:'cue',tip:'กด CUE',t:'CUE · จุดกลับ',d:'กดตอนเพลงเล่นเพื่อกลับไปที่จุด CUE แล้วหยุด (ตอนหยุดอยู่ กดเพื่อตั้งจุดใหม่ · กดค้างเพื่อฟังตัวอย่าง)',done:function(){return F.cue}},
+  {k:'play',tip:'กด PLAY',t:'เล่นต่อ',d:'กด PLAY อีกครั้ง เพื่อไปเก็บ HOT CUE ในขั้นถัดไป',done:function(){return S.playing||F.hotset}},
+  {k:'hc0',sq:1,tip:'กดเก็บจุด',t:'HOT CUE · เก็บจุดที่ชอบ',d:'กดตอนเพลงเล่น เพื่อเก็บตำแหน่งนั้นไว้กับปุ่ม A–H (ปุ่มจะมีแถบสี) ใช้เก็บท่อนฮุกหรือจุดต่อเพลง',done:function(){return F.hotset}},
+  {k:'hc0',sq:1,tip:'กดอีกครั้ง',t:'กระโดดไป HOT CUE',d:'กดปุ่มเดิมอีกครั้งเพื่อกระโดดกลับไปจุดที่เก็บไว้ทันที — ใช้ซ้ำท่อนหรือทำจังหวะเพิ่ม',done:function(){return F.hotjump}},
+  {k:'in',tip:'กด IN',t:'IN · เริ่มลูป',d:'กดตอนเพลงเล่น เพื่อกำหนดจุดเริ่มต้นของลูป',done:function(){return F.in}},
+  {k:'out',tip:'กด OUT',t:'OUT · จบลูป',d:'กดอีกครั้งที่จุดจบ เพลงจะวนช่วงนั้นซ้ำๆ ทันที',done:function(){return F.out}},
+  {k:'reloop',tip:'ออกลูป',t:'RELOOP / EXIT',d:'กดเพื่อออกจากลูป (กดอีกครั้งจะกลับเข้าลูปเดิม)',done:function(){return F.exit}},
+  {k:'loop4',tip:'กด LOOP 4',t:'BEAT LOOP 4',d:'ลูป 4 บีตจากจุดปัจจุบันทันที ไม่ต้องกำหนดเอง — เหมาะตอนต่อเพลงและสร้างบิลด์',done:function(){return F.loop4}},
+  {k:'loop4',tip:'กดออกลูป',t:'ออกจากลูป',d:'กดปุ่มเดิมอีกครั้งเพื่อออกจากลูป เพลงเดินต่อตามปกติ',done:function(){return F.loop4off}},
+  {k:'bjf',tip:'กดข้าม',t:'BEAT JUMP',d:'กระโดดไปข้างหน้า 4 บีต (ปุ่ม ◄ ถอยหลัง) ใช้ข้ามท่อนหรือซ้ำท่อนให้ตรงจังหวะ',done:function(){return F.bj}},
+  {k:'sync',sq:1,tip:'กด SYNC',t:'BEAT SYNC',d:'บนเครื่องจริงใช้ปรับความเร็วและบีตให้ตรงกับเดคอื่น (หน้าที่หลักตอนผสมเพลง) ที่นี่จะคืนค่า TEMPO ให้',done:function(){return F.sync}},
+  {k:'tnext',tip:'เพลงถัดไป',t:'TRACK SEARCH',d:'กดปุ่ม ► เพื่อเปลี่ยนไปเพลงถัดไปในรายการ (◄ ก่อนหน้า) ลองฟังอีกแนวหนึ่ง',done:function(){return F.next}},
+  {k:'back',sq:1,tip:'กด BACK',t:'BACK · กลับไปเลือกเพลง',d:'กดเพื่อกลับหน้ารายการเพลง (เพลงที่เล่นอยู่ไม่หยุด) — ครบทุกฟังก์ชันหลักแล้ว ลองเล่นอิสระได้เลย',done:function(){return F.back}}
+];
+function hideGuide(){info.hidden=true;ind.hidden=true;shown=-1}
+function placeCard(k,side){
+  var t=btn(k),d=deck.getBoundingClientRect(),r=t.getBoundingClientRect();if(!r.width)return;
+  var w=Math.min(260,d.width*.62),cx=r.left+r.width/2-d.left,cy=r.top+r.height/2-d.top,h=info.offsetHeight;
+  var left=cx<d.width*.5?cx+Math.min(r.width,d.width*.2)/2+22:cx-Math.min(r.width,d.width*.2)/2-22-w;
+  left=Math.max(6,Math.min(d.width-w-6,left));var top=Math.max(6,Math.min(d.height-h-6,cy-h/2));
+  if(side==='b'){left=Math.max(6,d.width-w-6);top=Math.min(d.height-h-6,cy+r.height/2+16)}   /* below the target (keeps the track list readable) */
+  info.style.left=left+'px';info.style.top=top+'px'}
+function guide(){
+  if(!S.usb||F.skip){if(!S.usb)hideGuide();else hideGuide();return}
+  while(GI<GS.length&&GS[GI].done())GI++;
+  if(GI>=GS.length){hideGuide();return}
+  if(shown===GI)return;
+  var g=GS[GI];shown=GI;
+  itl.textContent=g.t;ipg.textContent=g.d;inum.textContent='ขั้นที่ '+(GI+1)+' / '+GS.length;
+  point(g.k,g.tip,!!g.sq);info.hidden=false;placeCard(g.k,g.side)}
 function stage(){
-  var st=!S.usb?0:(S.cur<0?(S.selMoved===undefined?1:2):(!S.played?3:4));
-  steps.forEach(function(e,i){e.classList.toggle('on',i===st);e.classList.toggle('done',i<st)});
   stick.classList.toggle('hintp',!S.usb);knob.classList.toggle('act',S.usb&&S.mode==='browse');
-  if(!S.hint){point(null);return}
-  if(!S.usb)point(null);
-  else if(S.mode==='browse')point('browse',S.selMoved===undefined?'เลื่อนล้อเมาส์ที่ปุ่มนี้':'กดเพื่อ LOAD',false);
-  else if(!S.played)point('play','กด PLAY',false);
-  else if(!S.hot.some(function(h){return h!==null}))point('hc0','ลองกดเก็บ HOT CUE',true);
-  else point(null)}
+  guide()}
+$('#dm-isk').addEventListener('click',function(){F.skip=true;hideGuide()});
 /* ---------- audio ---------- */
 function ac(){if(!S.ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;S.ctx=new C();S.gain=S.ctx.createGain();S.gain.gain.value=.9;S.gain.connect(S.ctx.destination)}
   if(S.ctx.state==='suspended')S.ctx.resume();return S.ctx}
@@ -371,27 +419,27 @@ function press(k){
   var i,L=S.loop;
   if(k==='browse'){if(!S.usb){toast('เสียบ USB ก่อน');return}
     if(S.mode==='browse'){load(S.sel)}else{setMode('browse')}return}
-  if(k==='back'||k==='top-browse'){if(!S.usb){toast('เสียบ USB ก่อน');return}setMode('browse');return}
+  if(k==='back'||k==='top-browse'){if(!S.usb){toast('เสียบ USB ก่อน');return}if(k==='back'&&S.cur>=0)F.back=true;setMode('browse');return}
   if(k.indexOf('x-')===0){toast('ปุ่มนี้ลองบนเครื่องจริงที่ร้านได้เลย');return}
   if(!need())return;
   if(k==='play'){S.playing?pause():play();return}
   if(k==='cue'){return}   /* handled with pointer events */
-  if(k.indexOf('hc')===0){i=+k.slice(2);if(S.hot[i]===null){S.hot[i]=curPos();lights();stage();toast('เก็บ HOT CUE '+'ABCDEFGH'[i])}else{seek(S.hot[i]);if(!S.playing)play()}return}
-  if(k==='in'){L.a=curPos();L.b=null;L.on=false;L.n=0;setLoop();return}
-  if(k==='out'){if(L.a===null)return;var p=curPos();if(p-L.a<.12)return;L.b=p;L.on=true;L.n=0;setLoop();return}
-  if(k==='reloop'){if(L.a!==null&&L.b!==null){L.on=!L.on;setLoop()}return}
-  if(k==='loop4'||k==='loop8'){var n=k==='loop4'?4:8;if(L.on&&L.n===n){L.on=false}else{L.a=curPos();L.b=L.a+n*beatLen();L.on=true;L.n=n}setLoop();return}
-  if(k==='bjb'||k==='bjf'){seek(curPos()+(k==='bjf'?1:-1)*4*beatLen());return}
-  if(k==='tprev'||k==='tnext'){load((S.cur+(k==='tnext'?1:TR.length-1))%TR.length);return}
-  if(k==='trst'||k==='sync'){S.tempo=0;S.bend=0;applyRate();capPos();if(k==='sync')toast('BEAT SYNC — ปรับกลับ 0.0%');return}
-  if(k==='vinyl'){S.vinyl=!S.vinyl;lights();toast(S.vinyl?'VINYL: จอกใช้สแครชได้':'CDJ: จอกใช้ดันจังหวะ (pitch bend)');return}}
+  if(k.indexOf('hc')===0){i=+k.slice(2);if(S.hot[i]===null){S.hot[i]=curPos();F.hotset=true;lights();stage();toast('เก็บ HOT CUE '+'ABCDEFGH'[i])}else{F.hotjump=true;seek(S.hot[i]);if(!S.playing)play()}return}
+  if(k==='in'){L.a=curPos();L.b=null;L.on=false;L.n=0;F.in=true;setLoop();return}
+  if(k==='out'){if(L.a===null)return;var p=curPos();if(p-L.a<.12)return;L.b=p;L.on=true;L.n=0;F.out=true;setLoop();return}
+  if(k==='reloop'){if(L.a!==null&&L.b!==null){L.on=!L.on;if(!L.on)F.exit=true;setLoop()}return}
+  if(k==='loop4'||k==='loop8'){var n=k==='loop4'?4:8;if(L.on&&L.n===n){L.on=false;if(n===4)F.loop4off=true}else{L.a=curPos();L.b=L.a+n*beatLen();L.on=true;L.n=n;if(n===4)F.loop4=true}setLoop();return}
+  if(k==='bjb'||k==='bjf'){F.bj=true;seek(curPos()+(k==='bjf'?1:-1)*4*beatLen());return}
+  if(k==='tprev'||k==='tnext'){F.next=true;load((S.cur+(k==='tnext'?1:TR.length-1))%TR.length);return}
+  if(k==='trst'||k==='sync'){if(k==='sync')F.sync=true;else F.reset=true;S.tempo=0;S.bend=0;applyRate();capPos();if(k==='sync')toast('BEAT SYNC — ปรับกลับ 0.0%');return}
+  if(k==='vinyl'){S.vinyl=!S.vinyl;F.vinyl=true;lights();toast(S.vinyl?'VINYL: จอกใช้สแครชได้':'CDJ: จอกใช้ดันจังหวะ (pitch bend)');return}}
 deck.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.dkb');if(!b||b.getAttribute('data-k')==='jog'||b.getAttribute('data-k')==='tempo'||b.getAttribute('data-k')==='cue')return;
   if(b.getAttribute('data-k')==='browse'&&S.dragged){S.dragged=false;return}
   S.hint=S.hint&&b.getAttribute('data-k')!=='hc0';press(b.getAttribute('data-k'))});
 /* CUE: set / return / hold-to-preview */
 var cb=btn('cue'),cueHold=false;
 cb.addEventListener('pointerdown',function(e){if(!need())return;try{cb.setPointerCapture(e.pointerId)}catch(x){}cb.classList.add('press');
-  if(S.playing){seek(S.cue);pause()}
+  if(S.playing){F.cue=true;pause();S.pos=S.cue}
   else if(Math.abs(S.pos-S.cue)<.03){cueHold=true;play()}
   else{S.cue=S.pos;toast('ตั้ง CUE ที่จุดนี้')}});
 function cueUp(){cb.classList.remove('press');if(cueHold){cueHold=false;pause();S.pos=S.cue}}
@@ -414,7 +462,7 @@ rows.forEach(function(r,i){r.addEventListener('click',function(){if(S.mode==='br
 var fd=btn('tempo'),FY=1;
 function capPos(){var f=(S.tempo/.1);capEl.style.top=(50+f*39.3)+'%';fd.setAttribute('aria-valuenow',Math.round(S.tempo*100))}
 function fdSet(e){var r=fd.getBoundingClientRect();var f=((e.clientY-r.top)/r.height-.5)/.393;f=Math.max(-1,Math.min(1,f));
-  if(Math.abs(f)<.03)f=0;S.tempo=f*.1;capPos();applyRate()}
+  if(Math.abs(f)<.03)f=0;S.tempo=f*.1;if(Math.abs(S.tempo)>=.02)F.tempo=true;capPos();applyRate()}
 fd.addEventListener('pointerdown',function(e){try{fd.setPointerCapture(e.pointerId)}catch(x){}FY=0;fdSet(e)});
 fd.addEventListener('pointermove',function(e){if(FY===0)fdSet(e)});
 ['pointerup','pointercancel'].forEach(function(t){fd.addEventListener(t,function(){FY=1})});
@@ -430,6 +478,7 @@ jg.addEventListener('pointerdown',function(e){if(!need())return;try{jg.setPointe
   if(S.vinyl&&S.playing){pause()}S.touch=true;jg.style.cursor='grabbing'});
 jg.addEventListener('pointermove',function(e){if(!jd)return;var a=jangle(e),d=a-jd.a;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;jd.a=a;
   var now=performance.now(),dt=Math.max(8,now-jd.t);jd.t=now;ang+=d*180/Math.PI;
+  if(Math.abs(d)>.01){if(jd.mode)F.scratch=true;else F.bend=true}
   if(jd.mode){S.pos=Math.max(0,Math.min(dur()-.2,S.pos+d/(2*Math.PI)*1.8));
     if(now-lastG>45){lastG=now;grain(S.pos)}}
   else{S.bend=Math.max(-.25,Math.min(.25,S.bend+d*3/dt*10));applyRate()}});
@@ -480,12 +529,12 @@ function frame(now){
   if(vis){
     if(S.bend){S.bend*=Math.pow(.88,dt/16);if(Math.abs(S.bend)<.003){S.bend=0}applyRate()}
     if(S.playing){ang+=200*(S.rate)*dt/1000;var p=curPos(),dd=dur();if(!S.loop.on&&p>=dd-.02){pause();S.pos=0;toast('จบเพลง')}}
-    jogI.style.transform='rotate('+ang+'deg)';
+    jogI.style.transform='rotate('+ang+'deg)';guide();
     if(S.mode==='play')draw()}
   requestAnimationFrame(frame)}
 if('IntersectionObserver' in window)new IntersectionObserver(function(en){vis=en[0].isIntersecting;if(!vis&&S.playing)pause()},{threshold:0}).observe(deck);
 document.addEventListener('visibilitychange',function(){if(document.hidden&&S.playing)pause()});
-window.addEventListener('resize',function(){if(S.mode==='browse')showList();W=0});
+window.addEventListener('resize',function(){if(S.mode==='browse')showList();W=0;shown=-1});
 lights();capPos();showList();stage();requestAnimationFrame(frame);
 })();
 </script>"""
