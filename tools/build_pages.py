@@ -301,6 +301,7 @@ img{display:block;max-width:100%;height:auto}
 .course h2{font-size:30px;line-height:1.25;display:inline}
 .course .chip{margin-left:12px;vertical-align:middle}
 .fit{margin-top:12px;color:var(--text-primary);font-size:17px}
+.c-t{margin:0 0 14px}
 .cimg{margin:0 0 20px}
 .cimg img{width:100%;height:auto;border-radius:var(--radius-md)}
 .spec{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;border:1px solid var(--lab-line);border-radius:var(--radius-md);background:var(--lab-paper);overflow:hidden}
@@ -352,6 +353,11 @@ img{display:block;max-width:100%;height:auto}
 .tp img,.pph img{filter:drop-shadow(0 10px 10px rgba(15,15,15,.22))}
 .tile b{font:700 18px/1.3 var(--font-family-display);padding:0 4px}
 .tile .tc{font-size:14px;line-height:1.5;color:var(--text-secondary);padding:0 4px}
+.team .tiles{margin-top:64px}
+.tile:not(.sm){overflow:visible}
+.tile:not(.sm) .tp{position:relative;overflow:visible}
+.tile:not(.sm) .tp img{transform:scale(1.16);transform-origin:50% 100%;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.tile:not(.sm):hover .tp img{transform:scale(1.2)}
 .tile.sm .tp{aspect-ratio:1/1}
 .tile.sm .tp img{object-position:50% 10%}
 /* faq */
@@ -574,7 +580,7 @@ def course_row(c, i):
         items = "".join(f'<li><b>{E(t["name"])}</b>{(" — " + E(t["detail"])) if t.get("detail") else ""}</li>' for t in c["tracks"])
         tracks = f'<h3>สายที่เลือกเรียนได้</h3><ul class="tracks">{items}</ul>'
     return (f'<article class="course" id="{cid(c["title"])}">'
-            f'<div class="c-a">{cimg(c)}<h2>{E(c["title"])}</h2>{rec}<p class="fit">{E(c["audience"])}</p>'
+            f'<div class="c-a"><div class="c-t"><h2>{E(c["title"])}</h2>{rec}</div>{cimg(c)}<p class="fit">{E(c["audience"])}</p>'
             f'<div class="spec"><div class="s1"><span class="k">เรียน</span><b>ตัวต่อตัว</b></div>'
             f'<div class="s2"><span class="k">เวลาเรียน</span><b>{f["sessions"]} ครั้ง × {f["per"]} ชม. = {f["learn"]} ชม.</b></div>'
             f'<div class="s3"><span class="k">ราคา</span><b class="price">{E(f["price"])}</b></div></div>{extra}</div>'
@@ -624,6 +630,22 @@ def tiles(cls="", small=False, exclude=None):
     return f'<div class="tiles{cls}">{out}</div>'
 
 
+COURSE_VIDEOS = [i for i in (load(os.path.join(SITE, "data", "course-videos.json")).get("items") or [])
+                  if str(i.get("src", "")).startswith("/assets/video/") and str(i["src"]).endswith(".mp4")] if os.path.exists(os.path.join(SITE, "data", "course-videos.json")) else []
+CVID_CSS = """
+.cvid{margin-top:22px;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 24px 48px rgba(15,15,15,.22)}
+.cvid video{display:block;width:100%;height:100%;object-fit:cover}
+@media (min-width:960px){.hero .cvid{position:absolute;top:44px;right:0;margin:0;width:min(36vw,500px)}}
+"""
+CVID_JS = """<script>
+(function(){var v=document.querySelector('.cvid video');if(!v)return;
+var L=JSON.parse(v.getAttribute('data-list')||'[]'),i=0,rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function go(n){i=(n+L.length)%L.length;v.src=L[i];if(!rm){var p=v.play();if(p&&p.catch)p.catch(function(){})}}
+v.muted=true;v.addEventListener('ended',function(){go(i+1)});go(0);
+if('IntersectionObserver' in window&&!rm)new IntersectionObserver(function(e){if(e[0].isIntersecting){var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()}).observe(v)})();
+</script>"""
+
+
 def courses_page():
     chooser = "".join(f'<li><span>{E(GOAL.get(c["title"], c["audience"]))}</span><a href="#{cid(c["title"])}">{E(c["title"])} {ic("arrow", 18)}</a></li>' for c in COURSES)
     shared = ""
@@ -631,9 +653,13 @@ def courses_page():
         shared = (f'<p class="shared"><b>ทุกคอร์สเรียนตัวต่อตัว</b> · {F0["sessions"]} ครั้ง × {F0["per"]} ชม. = {F0["learn"]} ชม. · {E(F0["price"])} '
                   f'· เลือกวัน/เวลาเรียนได้ตามสะดวก</p>')
     faq = "".join(f'<details class="q"{" open" if i == 0 else ""}><summary>{E(q)}</summary><p>{E(a)}</p></details>' for i, (q, a) in enumerate(FAQ_RENDERED))
-    body = (f'<section class="hero">{GEAR_HERO}<h1>คอร์สเรียน DJ ตัวต่อตัว</h1>'
+    cvid = ""
+    if COURSE_VIDEOS:
+        cvid = ('<div class="cvid"><video muted playsinline preload="metadata" aria-label="บรรยากาศการเรียนการสอนที่ DJ LAB SIAM" '
+                f'data-list=\'{json.dumps([i["src"] for i in COURSE_VIDEOS])}\'' + (f' poster="{E(COURSE_VIDEOS[0]["poster"])}"' if COURSE_VIDEOS[0].get("poster") else "") + '></video></div>')
+    body = (f'<section class="hero">{"" if cvid else GEAR_HERO}<h1>คอร์สเรียน DJ ตัวต่อตัว</h1>'
             f'<p class="lede">เรียน DJ จากมืออาชีพตัวจริง เลือกวัน เลือกเวลา เลือกอุปกรณ์ได้ตามสะดวก</p>'
-            f'<div class="cta">{line_btn("ขอคำแนะนำเลือกคอร์ส", "ทักหา LINE ให้ทีมช่วยเลือกคอร์ส")}<a class="btn sec" href="#compare">ดูตารางเทียบคอร์ส</a></div>{shared}</section>'
+            f'<div class="cta">{line_btn("ขอคำแนะนำเลือกคอร์ส", "ทักหา LINE ให้ทีมช่วยเลือกคอร์ส")}<a class="btn sec" href="#compare">ดูตารางเทียบคอร์ส</a></div>{shared}{cvid}</section>'
             f'<section class="choose" aria-labelledby="ch"><h2 id="ch">ไม่แน่ใจว่าเริ่มที่คอร์สไหน</h2><ul>{chooser}</ul></section>'
             f'<section class="courses" aria-label="คอร์สทั้งหมด">{"".join(course_row(c, i) for i, c in enumerate(COURSES))}</section>'
             f'<section class="cmpsec" id="compare"><h2>เทียบคอร์สทีละข้อ</h2>{compare_table()}</section>'
@@ -646,7 +672,8 @@ def courses_page():
             f'ที่ DJ LAB SIAM สยามสแควร์') if SHARED_ALL else "คอร์สเรียน DJ ตัวต่อตัว ที่ DJ LAB SIAM สยามสแควร์"
     ld = [{"@context": "https://schema.org", "@type": "FAQPage",
            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ_RENDERED]}]
-    return shell("/courses/", "คอร์สเรียน DJ ตัวต่อตัว — DJ LAB SIAM สยามสแควร์", desc, body, ld=ld, active="courses")
+    return shell("/courses/", "คอร์สเรียน DJ ตัวต่อตัว — DJ LAB SIAM สยามสแควร์", desc, body, ld=ld, active="courses",
+                 script=CVID_JS if cvid else "", css_extra=CVID_CSS if cvid else "")
 
 
 # the chooser's short labels: my own abbreviation of each audience text (the owner sees them in the wording list); falls back to the full audience text

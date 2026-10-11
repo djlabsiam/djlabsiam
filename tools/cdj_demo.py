@@ -270,16 +270,16 @@ CSS = r"""
 @media (min-width:960px){
   .dm{padding-top:44px!important}
   .dm-head h1{font-size:clamp(38px,4.1vw,54px);line-height:1.28;max-width:15ch;margin-bottom:0}
-  .dm-in{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-areas:"head stage" "body stage";grid-template-rows:auto 1fr;column-gap:40px;align-items:start}
+  .dm-in{display:grid;grid-template-columns:minmax(0,620px) auto;grid-template-areas:"head stage" "body stage";grid-template-rows:auto 1fr;column-gap:clamp(40px,5vw,88px);justify-content:center;align-items:start}
   .dm-head{grid-area:head}
   .dm-body{grid-area:body}
-  .dm-stage,.dm-stage.pin{grid-area:stage;position:sticky;top:84px;z-index:auto;flex-direction:row;justify-content:flex-end;align-items:flex-start;padding:0;margin:0;background:none;box-shadow:none}
+  .dm-stage,.dm-stage.pin{grid-area:stage;position:sticky;top:84px;z-index:auto;flex-direction:row;justify-content:center;align-items:flex-start;padding:0;margin:0;background:none;box-shadow:none}
   .dm-pin{display:none!important}
   .dm-tip{left:calc(100% + .78em)!important;top:50%!important;transform:translateY(-50%)!important}
   .dm-arr{transform:none}
   .dm-steps{margin-top:18px}
   .dm-st{min-height:190px;display:flex;flex-direction:column;justify-content:center}
-  .dm-deck{width:min(100%,calc((100svh - 98px) * .7024))}
+  .dm-deck{width:min(46vw,calc((100svh - 98px) * .7024))}
   .dm-inv-in{padding:64px 56px}
 }
 @media (min-width:1280px){.dm-inv h2{font-size:44px}}
