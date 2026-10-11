@@ -1,19 +1,19 @@
 """Interactive CDJ-3000X demo for the home page (imported by build_pages.py).
 
-Everything is local: one device photo (assets/img/cdj-full.webp), five original synthesised
-loops (assets/audio/demo-*.mp3, made by tools/gen_demo_tracks.py) and Web Audio. No third-party service.
+Everything is local: one device photo (assets/img/cdj-full.webp), five 16-bar cuts of the
+owner's own tracks (assets/audio/demo-*.mp3, made by tools/cut_demo_tracks.py) and Web Audio. No third-party service.
 """
 import html as _h
 
 # device crop origin / size inside the source photo (px) — see tools/make_cdj_demo_image.py
 OX, OY, DW, DH = 304, 240, 800, 1139
 
-TRACKS = [  # id, name shown on the deck, bpm, key, file
-    ("house", "House", 124, "Am"),
-    ("hiphop", "Hip-Hop", 92, "Am"),
-    ("techno", "Techno", 132, "Am"),
-    ("dnb", "Drum & Bass", 174, "Am"),
-    ("funk", "Disco / Funk", 112, "Am"),
+TRACKS = [  # id, name shown on the deck, bpm (measured on the owner's own tracks; the file is a 16-bar cut, beat grid starts at 0:00), key (unknown -> "")
+    ("house", "House", 126, ""),
+    ("hiphop", "Hip-Hop", 92, ""),
+    ("trap", "Trap", 100, ""),
+    ("techno", "Techno", 135, ""),
+    ("funk", "Disco", 120, ""),
 ]
 
 # id, aria-label, centre x, centre y (source px), width, height, round
@@ -83,7 +83,7 @@ def deck_html():
     sl, st = _pct(sx, sy)
     ul, ut = _pct(*USB_SLOT)
     rows = "".join(
-        f'<li data-i="{i}"><i>{i + 1:02d}</i><b>{_h.escape(n)}</b><small>{bpm} BPM · {k}</small><em>…</em></li>'
+        f'<li data-i="{i}"><i>{i + 1:02d}</i><b>{_h.escape(n)}</b><small>{bpm} BPM{(" · " + k) if k else ""}</small><em>…</em></li>'
         for i, (_id, n, bpm, k) in enumerate(TRACKS))
     knob_l, knob_t = _pct(1028, 533)
     return (
@@ -106,7 +106,7 @@ def deck_html():
 
 STEPS = [
     ("เสียบ USB", "แตะที่แฟลชไดรฟ์ แล้วดูมันเสียบเข้าช่อง USB 1 ของ CDJ-3000X"),
-    ("หมุน Browse เลือกแนวเพลง", "เลื่อนล้อเมาส์บนปุ่ม Browse (มือถือให้ลากขึ้น-ลง) แล้วเลือก House, Hip-Hop, Techno, Drum & Bass หรือ Disco / Funk ที่ชอบ"),
+    ("หมุน Browse เลือกแนวเพลง", "เลื่อนล้อเมาส์บนปุ่ม Browse (มือถือให้ลากขึ้น-ลง) แล้วเลือกแนวเพลงที่ชอบ House, Hip-Hop, Trap, Techno หรือ Disco"),
     ("กดปุ่ม Browse เพื่อ LOAD", "คลิกที่ปุ่ม Browse เหมือนกด Enter บนเครื่องจริง เพลงจะถูกโหลด และคลื่นเสียง (waveform) จะขึ้นที่จอ"),
     ("กด PLAY และ CUE", "▶/II เล่น-หยุด · CUE ตั้งจุดกลับ (กดค้างเพื่อฟังตัวอย่าง) · ลากที่จอก Jog เพื่อสแครช"),
     ("ลองฟังก์ชันอื่น", "HOT CUE A–H กดครั้งแรกเพื่อเก็บจุด กดอีกครั้งเพื่อกระโดดไป · IN / OUT / RELOOP ทำลูป · BEAT LOOP 4 / 8 · BEAT JUMP · เลื่อน TEMPO ที่เฟดเดอร์ขวา · TRACK SEARCH เปลี่ยนเพลง"),
@@ -344,7 +344,7 @@ function insertUsb(){
     stick.getAnimations().forEach(function(an){an.cancel()});stick.style.opacity='';
     if(stick.animate&&!RM)stick.animate([{opacity:0},{opacity:1}],{duration:380,easing:'ease-out'});
     toast('USB 1 พร้อม — เลือกเพลงด้วยปุ่ม Browse');setMode('browse');
-    TR.forEach(function(t,i){fetchTrack(i).catch(function(){})})};
+    fetchTrack(0).catch(function(){})};
   if(RM||!usbs.animate){done();return}
   stick.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out',fill:'forwards'});             /* 1 · the headline badge fades out */
   var up=-11*u,sh=function(r,y){return 'drop-shadow(0 '+y+'px '+r+'px rgba(15,15,15,.4))'};
@@ -469,7 +469,7 @@ function draw(){
   cx.fillStyle='#fff';cx.font='700 '+(H*.14)+'px '+FONT;cx.textBaseline='alphabetic';cx.fillText(mmss(pos,true),W*.03,H*.93);
   cx.font='500 '+(H*.06)+'px '+FONT;cx.fillStyle='#8FA0B5';cx.fillText('REMAIN -'+mmss(Math.max(0,d-pos),false),W*.03,H*.99);
   cx.textAlign='right';cx.fillStyle='#fff';cx.font='700 '+(H*.12)+'px '+FONT;cx.fillText(bpm.toFixed(1),W*.97,H*.9);
-  cx.font='500 '+(H*.06)+'px '+FONT;cx.fillStyle='#8FA0B5';cx.fillText('BPM  '+(S.tempo>=0?'+':'')+(S.tempo*100).toFixed(1)+'%  ·  '+t.key,W*.97,H*.99);cx.textAlign='left'}
+  cx.font='500 '+(H*.06)+'px '+FONT;cx.fillStyle='#8FA0B5';cx.fillText('BPM  '+(S.tempo>=0?'+':'')+(S.tempo*100).toFixed(1)+'%'+(t.key?'  ·  '+t.key:''),W*.97,H*.99);cx.textAlign='left'}
 /* ---------- frame loop ---------- */
 var last=performance.now(),vis=true;
 function frame(now){
