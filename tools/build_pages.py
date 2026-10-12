@@ -709,9 +709,9 @@ PFS_CSS = """
 .pfs{position:relative;margin-top:12px}
 .pfs-t{display:flex;gap:12px;margin:0;padding:0 0 6px;list-style:none;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;border-radius:var(--radius-md)}
 .pfs-t:focus-visible{outline:3px solid var(--text-primary);outline-offset:3px}
-.pfs-t li{flex:0 0 min(86%,520px);scroll-snap-align:start}
+.pfs-t li{flex:0 0 auto;max-width:100%;scroll-snap-align:start}
 .pfs-t figure{margin:0}
-.pfs-t img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md);background:var(--lab-tint)}
+.pfs-t img{display:block;width:min(calc(var(--r) * min(58vh,440px)),calc(100vw - 48px));height:auto;aspect-ratio:var(--r);object-fit:contain;border-radius:var(--radius-md);background:var(--lab-tint)}
 .pfs-t figcaption{margin-top:6px;font-size:14px;color:var(--text-secondary)}
 .pfs-b{position:absolute;top:calc(50% - 22px);width:44px;height:44px;border-radius:50%;border:1.5px solid var(--text-primary);background:#fff;font:700 24px/1 var(--font-family-display);cursor:pointer;box-shadow:0 6px 14px rgba(15,15,15,.18)}
 .pfs-b.p{left:8px}.pfs-b.n{right:8px}
@@ -738,7 +738,7 @@ def teacher_page(t):
         with _Im.open(fp) as _im:
             it["_w"], it["_h"] = _im.size
     if pf:
-        slides = "".join(f'<li><figure><img src="/assets/img/portfolio/{E(it["img"])}" width="{it["_w"]}" height="{it["_h"]}" alt="{E(it.get("alt") or "ผลงานของ " + name)}" loading="lazy" decoding="async">'
+        slides = "".join(f'<li><figure><img src="/assets/img/portfolio/{E(it["img"])}" width="{it["_w"]}" height="{it["_h"]}" style="--r:{it["_w"] / it["_h"]:.4f}" alt="{E(it.get("alt") or "ผลงานของ " + name)}" loading="lazy" decoding="async">'
                          + (f'<figcaption>{E(it["caption"])}</figcaption>' if it.get("caption") else "") + '</figure></li>' for it in pf)
         sections += (f'<section><h2>Portfolio</h2><div class="pfs" data-pfs><ul class="pfs-t" tabindex="0" aria-label="สไลด์ผลงานของ {E(name)}">{slides}</ul>'
                      + ('<button type="button" class="pfs-b p" aria-label="ภาพก่อนหน้า">‹</button><button type="button" class="pfs-b n" aria-label="ภาพถัดไป">›</button>' if len(pf) > 1 else "")
