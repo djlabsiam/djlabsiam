@@ -635,7 +635,7 @@ COURSE_VIDEOS = [i for i in (load(os.path.join(SITE, "data", "course-videos.json
 CVID_CSS = """
 .cvid{margin-top:22px;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 24px 48px rgba(15,15,15,.22)}
 .cvid video{display:block;width:100%;height:100%;object-fit:cover}
-@media (min-width:960px){.hero .cvid{position:absolute;top:44px;right:0;margin:0;width:min(36vw,500px)}}
+@media (min-width:960px){.pgm>.hero.hasvid{padding-right:calc(min(48vw,860px) + 40px);min-height:calc(min(48vw,860px) * .5625 + 100px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}.hero.hasvid .shared{max-width:36em}.hero .cvid{position:absolute;top:44px;right:0;margin:0;width:min(48vw,860px)}}
 """
 CVID_JS = """<script>
 (function(){var v=document.querySelector('.cvid video');if(!v)return;
@@ -657,7 +657,7 @@ def courses_page():
     if COURSE_VIDEOS:
         cvid = ('<div class="cvid"><video muted playsinline preload="metadata" aria-label="บรรยากาศการเรียนการสอนที่ DJ LAB SIAM" '
                 f'data-list=\'{json.dumps([i["src"] for i in COURSE_VIDEOS])}\'' + (f' poster="{E(COURSE_VIDEOS[0]["poster"])}"' if COURSE_VIDEOS[0].get("poster") else "") + '></video></div>')
-    body = (f'<section class="hero">{"" if cvid else GEAR_HERO}<h1>คอร์สเรียน DJ ตัวต่อตัว</h1>'
+    body = (f'<section class="hero{" hasvid" if cvid else ""}">{"" if cvid else GEAR_HERO}<h1>คอร์สเรียน DJ ตัวต่อตัว</h1>'
             f'<p class="lede">เรียน DJ จากมืออาชีพตัวจริง เลือกวัน เลือกเวลา เลือกอุปกรณ์ได้ตามสะดวก</p>'
             f'<div class="cta">{line_btn("ขอคำแนะนำเลือกคอร์ส", "ทักหา LINE ให้ทีมช่วยเลือกคอร์ส")}<a class="btn sec" href="#compare">ดูตารางเทียบคอร์ส</a></div>{shared}{cvid}</section>'
             f'<section class="choose" aria-labelledby="ch"><h2 id="ch">ไม่แน่ใจว่าเริ่มที่คอร์สไหน</h2><ul>{chooser}</ul></section>'
