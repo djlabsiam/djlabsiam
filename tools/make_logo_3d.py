@@ -46,6 +46,11 @@ def polys(mask, simplify=0.8, min_area=6):
     return shapes
 
 
+def _lin(c):   # glTF baseColorFactor is LINEAR; the colours above are sRGB 0-255
+    c = c / 255.0
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
 def mesh_for(mask, depth, z0, color):
     parts = []
     for shp in polys(mask):
@@ -59,7 +64,11 @@ def mesh_for(mask, depth, z0, color):
     if not parts:
         return None
     m = trimesh.util.concatenate(parts)
-    m.visual.face_colors = np.tile(np.array(color, dtype=np.uint8), (len(m.faces), 1))
+    m.unmerge_vertices()          # hard edges: every face gets its own vertices and a flat normal
+    _ = m.vertex_normals          # cache normals so they are written to the GLB (needed for lighting in AR viewers)
+    # real PBR material (baseColorFactor), NOT vertex colours: iOS Quick Look / Android Scene Viewer ignore vertex colours and render white
+    m.visual = trimesh.visual.TextureVisuals(material=trimesh.visual.material.PBRMaterial(
+        baseColorFactor=[_lin(c) for c in color[:3]] + [1.0], metallicFactor=0.0, roughnessFactor=0.8, doubleSided=True))
     return m
 
 
