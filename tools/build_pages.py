@@ -511,7 +511,7 @@ CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเด�
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
 NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book")]  # Shop is appended below when --shop /shop/ ; Members when that page exists
 if A.shop == "/shop/":
-    NAV.insert(1, ("ร้านอุปกรณ์", "/shop/", "shop"))
+    NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
 GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data-depth="14">'
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
@@ -1218,6 +1218,17 @@ SHOP_CSS = r"""
 .m3-arh{display:none}
 .m3-arh.on{display:block;margin-top:4px}
 .m3-st{display:grid;place-items:center;height:min(66vh,520px);color:var(--text-secondary)}
+.demo3d{margin-top:28px}
+.d3-go{position:relative;display:block;width:100%;padding:0;border:0;background:none;cursor:pointer}
+.d3-go img{display:block;width:100%;height:auto;filter:drop-shadow(0 22px 22px rgba(15,15,15,.28));transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.d3-go:hover img{transform:translateY(-6px) rotate(-1deg)}
+.d3-go:focus-visible{outline:3px solid var(--text-primary);outline-offset:6px;border-radius:12px}
+.d3-t{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);padding:12px 20px;border-radius:999px;box-shadow:0 10px 20px rgba(15,15,15,.3)}
+.d3-live{position:relative;aspect-ratio:388/200;border-radius:var(--radius-lg);overflow:hidden;background:linear-gradient(#F4F2EC,#fff);border:1px solid var(--lab-line)}
+.d3-live model-viewer{width:100%;height:100%;display:block}
+.d3-ar{position:absolute;right:12px;bottom:12px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 14px/1 var(--font-family-display);cursor:pointer;box-shadow:0 8px 16px rgba(15,15,15,.28)}
+.d3-n{margin:8px 0 0;font-size:13px;color:var(--text-muted)}
+@media (min-width:960px){.shead{padding-right:calc(min(40vw,560px) + 48px)!important;min-height:calc(min(40vw,560px) * .56 + 70px)}.shead .demo3d{position:absolute;top:56px;right:0;width:min(40vw,560px);margin:0}}
 .snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
 .serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
 @media (min-width:960px){.sgrid{grid-template-columns:repeat(4,1fr);gap:18px}.stools{justify-content:flex-start}}
@@ -1232,6 +1243,13 @@ var CATMAP={'cdj':'player','เครื่องเล่น':'player','มิ�
 var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE,M3={},M3BASE='@@M3@@',MV_LOADED=false;
 function mvLoad(){if(MV_LOADED)return;MV_LOADED=true;var s=document.createElement('script');s.type='module';s.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(s)}
 var m3=null;
+(function(){var go=document.getElementById('d3-go');if(!go)return;
+  go.addEventListener('click',function(){var box=document.getElementById('demo3d'),live=el('div','d3-live');mvLoad();
+    var v=document.createElement('model-viewer');v.setAttribute('src','/assets/models/djlabsiam-logo.glb');v.setAttribute('alt','โลโก้ DJ LAB SIAM แบบ 3 มิติ');
+    v.setAttribute('camera-controls','');v.setAttribute('auto-rotate','');v.setAttribute('shadow-intensity','1');v.setAttribute('camera-orbit','-24deg 78deg auto');
+    v.setAttribute('ar','');v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','auto');v.setAttribute('ar-placement','floor');
+    var b=document.createElement('button');b.type='button';b.slot='ar-button';b.className='d3-ar';b.textContent='วางในห้องของคุณ (AR)';v.appendChild(b);
+    live.appendChild(v);box.replaceChild(live,go)})})();
 function open3d(p,m){
   if(!m3){m3=el('div','m3');m3.setAttribute('role','dialog');m3.setAttribute('aria-modal','true');
     m3.addEventListener('click',function(e){if(e.target===m3)close3d()});
@@ -1336,7 +1354,11 @@ def shop_page():
     body = (SHOP_SYMBOLS +
             f'<section class="hero shead"><h1>Showroom อุปกรณ์ DJ</h1>'
             f'<p class="lede">ราคาอ่านสดจากระบบร้าน รวม VAT 7% แล้ว เลือกดูตามประเภท แล้วแวะมาลองเครื่องจริงที่ร้านได้เลย</p>'
-            f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></section>'
+            f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
+            f'<div class="demo3d" id="demo3d"><button type="button" class="d3-go" id="d3-go" aria-label="ลองหมุนโลโก้ DJ LAB SIAM แบบ 3 มิติ และวางในห้องด้วย AR">'
+            f'<img src="/assets/img/demo3d-poster.webp" width="388" height="183" alt="โลโก้ DJ LAB SIAM แบบ 3 มิติ" decoding="async">'
+            f'<span class="d3-t">ลองหมุน 3D · วางในห้องด้วย AR</span></button>'
+            f'<p class="d3-n">ตัวอย่างฟังก์ชัน 3D: โลโก้ DJ LAB SIAM แบบ 3 มิติ ลองหมุน ซูม หรือวางในห้องของคุณด้วย AR (สินค้าจริงจะมีโมเดลทยอยเพิ่ม)</p></div></section>'
             f'<section id="catalog" aria-label="รายการสินค้า"><div class="sbar"><div class="schips" role="group" aria-label="ประเภทสินค้า">{chips}</div>'
             f'<div class="stools"><label><input type="checkbox" id="sstock"> เฉพาะที่มีของ</label>'
             f'<label>เรียงตาม <select id="ssort"><option value="p-desc">ราคาสูง → ต่ำ</option><option value="p-asc">ราคาต่ำ → สูง</option><option value="m">ชื่อรุ่น</option></select></label></div></div>'
