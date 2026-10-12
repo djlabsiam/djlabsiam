@@ -1213,6 +1213,10 @@ SHOP_CSS = r"""
 .m3-x{min-width:44px;min-height:44px;border:1.5px solid var(--text-primary);border-radius:50%;background:#fff;font:700 20px/1 var(--font-family-display);cursor:pointer}
 .m3 model-viewer{display:block;width:100%;height:min(66vh,520px);background:linear-gradient(#F4F2EC,#fff)}
 .m3-f{padding:10px 16px 14px;font-size:13px;color:var(--text-secondary)}
+.m3-ar{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);cursor:pointer;box-shadow:0 10px 20px rgba(15,15,15,.3)}
+.m3-ar:focus-visible{outline:3px solid #fff;box-shadow:0 0 0 6px var(--text-primary)}
+.m3-arh{display:none}
+.m3-arh.on{display:block;margin-top:4px}
 .m3-st{display:grid;place-items:center;height:min(66vh,520px);color:var(--text-secondary)}
 .snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
 .serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
@@ -1236,9 +1240,12 @@ function open3d(p,m){
   var box=el('div','m3-box'),h=el('div','m3-h'),t=el('b','',p.name),x=el('button','m3-x','×');x.type='button';x.setAttribute('aria-label','ปิด');x.addEventListener('click',close3d);
   h.appendChild(t);h.appendChild(x);box.appendChild(h);
   mvLoad();var v=document.createElement('model-viewer');v.setAttribute('src',M3BASE+m.file);v.setAttribute('alt','โมเดล 3 มิติของ '+p.name);
-  v.setAttribute('camera-controls','');v.setAttribute('auto-rotate','');v.setAttribute('shadow-intensity','1');v.setAttribute('ar','');v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','auto');
+  v.setAttribute('camera-controls','');v.setAttribute('auto-rotate','');v.setAttribute('shadow-intensity','1');v.setAttribute('ar','');v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','fixed');v.setAttribute('ar-placement','floor');
+  var arb=document.createElement('button');arb.type='button';arb.slot='ar-button';arb.className='m3-ar';arb.textContent='วางเครื่องในห้องของคุณ (AR)';v.appendChild(arb);
   if(m.poster)v.setAttribute('poster',M3BASE+m.poster);
-  box.appendChild(v);box.appendChild(el('p','m3-f','ลากเพื่อหมุน · บีบ/เลื่อนล้อเมาส์เพื่อซูม'+(m.credit?' · '+m.credit:'')));
+  var f=el('p','m3-f','ลากเพื่อหมุน · บีบ/เลื่อนล้อเมาส์เพื่อซูม'+(m.credit?' · '+m.credit:'')),h=el('span','m3-arh','ต้องการดูขนาดจริงในห้อง: เปิดหน้านี้บนมือถือหรือแท็บเล็ต แล้วกด "วางเครื่องในห้องของคุณ (AR)" ชี้กล้องไปที่พื้นหรือโต๊ะ');
+  v.addEventListener('load',function(){if(!v.canActivateAR)h.classList.add('on')});
+  box.appendChild(v);box.appendChild(f);f.appendChild(h);
   m3.appendChild(box);m3.classList.add('on');x.focus();document.body.style.overflow='hidden'}
 function close3d(){if(!m3)return;m3.classList.remove('on');m3.textContent='';document.body.style.overflow=''}
 function load3d(){   /* optional manifest in the public bucket: {"<product id>": {"file":"x.glb","poster":"x.webp","credit":"..."}} — absent/invalid = no 3D buttons */
