@@ -1224,11 +1224,11 @@ SHOP_CSS = r"""
 .d3-go:hover img{transform:translateY(-6px) rotate(-1deg)}
 .d3-go:focus-visible{outline:3px solid var(--text-primary);outline-offset:6px;border-radius:12px}
 .d3-t{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);white-space:nowrap;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);padding:12px 20px;border-radius:999px;box-shadow:0 10px 20px rgba(15,15,15,.3)}
-.d3-live{position:relative;aspect-ratio:388/200;border-radius:var(--radius-lg);overflow:hidden;background:linear-gradient(#F4F2EC,#fff);border:1px solid var(--lab-line)}
+.d3-live{position:relative;aspect-ratio:969/500;border-radius:var(--radius-lg);overflow:hidden;background:linear-gradient(#F4F2EC,#fff);border:1px solid var(--lab-line)}
 .d3-live model-viewer{width:100%;height:100%;display:block}
 .d3-ar{position:absolute;right:12px;bottom:12px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 14px/1 var(--font-family-display);cursor:pointer;box-shadow:0 8px 16px rgba(15,15,15,.28)}
 .d3-n{margin:8px 0 0;font-size:13px;color:var(--text-muted)}
-@media (min-width:960px){.shead{padding-right:calc(min(40vw,560px) + 48px)!important;min-height:calc(min(40vw,560px) * .56 + 70px)}.shead .demo3d{position:absolute;top:56px;right:0;width:min(40vw,560px);margin:0}}
+@media (min-width:960px){.shead{padding-right:calc(min(54vw,980px) + 6vw)!important;min-height:calc(min(54vw,980px) * .47 + 90px)}.shead .demo3d{position:absolute;top:40px;right:5vw;width:min(54vw,980px);margin:0}.shead .d3-n{max-width:60ch}}
 .snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
 .serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
 @media (min-width:960px){.sgrid{grid-template-columns:repeat(4,1fr);gap:18px}.stools{justify-content:flex-start}}
@@ -1356,7 +1356,7 @@ def shop_page():
             f'<p class="lede">ราคาอ่านสดจากระบบร้าน รวม VAT 7% แล้ว เลือกดูตามประเภท แล้วแวะมาลองเครื่องจริงที่ร้านได้เลย</p>'
             f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div>'
             f'<div class="demo3d" id="demo3d"><button type="button" class="d3-go" id="d3-go" aria-label="ลองหมุนโลโก้ DJ LAB SIAM แบบ 3 มิติ และวางในห้องด้วย AR">'
-            f'<img src="/assets/img/demo3d-poster.webp" width="388" height="183" alt="โลโก้ DJ LAB SIAM แบบ 3 มิติ" decoding="async">'
+            f'<img src="/assets/img/demo3d-poster.webp" width="969" height="456" alt="โลโก้ DJ LAB SIAM แบบ 3 มิติ" decoding="async">'
             f'<span class="d3-t">ลองหมุน 3D · วางในห้องด้วย AR</span></button>'
             f'<p class="d3-n">ตัวอย่างฟังก์ชัน 3D: โลโก้ DJ LAB SIAM แบบ 3 มิติ ลองหมุน ซูม หรือวางในห้องของคุณด้วย AR (สินค้าจริงจะมีโมเดลทยอยเพิ่ม)</p></div></section>'
             f'<section id="catalog" aria-label="รายการสินค้า"><div class="sbar"><div class="schips" role="group" aria-label="ประเภทสินค้า">{chips}</div>'
