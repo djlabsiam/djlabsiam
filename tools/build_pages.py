@@ -1203,6 +1203,17 @@ SHOP_CSS = r"""
 .pc .pr{font:800 22px/1.4 var(--font-family-display);margin-top:2px}
 .pc .btn{margin-top:auto;align-self:flex-start}
 .pc .bwrap{margin-top:auto;padding-top:10px}
+.pc .acts3{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}
+.pc .acts3 .btn{margin:0}
+.m3{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(15,15,15,.72)}
+.m3.on{display:flex}
+.m3-box{position:relative;width:min(100%,860px);background:#fff;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.m3-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--lab-line)}
+.m3-h b{font:700 18px/1.3 var(--font-family-display)}
+.m3-x{min-width:44px;min-height:44px;border:1.5px solid var(--text-primary);border-radius:50%;background:#fff;font:700 20px/1 var(--font-family-display);cursor:pointer}
+.m3 model-viewer{display:block;width:100%;height:min(66vh,520px);background:linear-gradient(#F4F2EC,#fff)}
+.m3-f{padding:10px 16px 14px;font-size:13px;color:var(--text-secondary)}
+.m3-st{display:grid;place-items:center;height:min(66vh,520px);color:var(--text-secondary)}
 .snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
 .serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
 @media (min-width:960px){.sgrid{grid-template-columns:repeat(4,1fr);gap:18px}.stools{justify-content:flex-start}}
@@ -1214,7 +1225,28 @@ SHOP_JS = r"""<script>
 var REST='@@REST@@',KEY='@@KEY@@',IMG='@@IMG@@',LINE='https://line.me/R/oaMessage/%40djlabsiam/?',PAGE=24;
 var LABEL={player:'CDJ / Player',mixer:'Mixer','all-in-one':'All-in-one',controller:'Controller',turntable:'Turntable',headphones:'หูฟัง',speaker:'ลำโพง',cable:'สาย',accessory:'อุปกรณ์เสริม'};
 var CATMAP={'cdj':'player','เครื่องเล่น':'player','มิกซ์เซอร์':'mixer','mixer':'mixer','all in one':'all-in-one','คอนโทลเลอร์':'controller','คอนโทรลเลอร์':'controller','midi':'controller','หูฟัง':'headphones','ลำโพง':'speaker','cable':'cable','deck cover':'accessory','flash drive':'accessory'};
-var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE;
+var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE,M3={},M3BASE='@@M3@@',MV_LOADED=false;
+function mvLoad(){if(MV_LOADED)return;MV_LOADED=true;var s=document.createElement('script');s.type='module';s.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(s)}
+var m3=null;
+function open3d(p,m){
+  if(!m3){m3=el('div','m3');m3.setAttribute('role','dialog');m3.setAttribute('aria-modal','true');
+    m3.addEventListener('click',function(e){if(e.target===m3)close3d()});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m3.classList.contains('on'))close3d()});document.body.appendChild(m3)}
+  m3.textContent='';m3.setAttribute('aria-label','โมเดล 3 มิติ '+p.name);
+  var box=el('div','m3-box'),h=el('div','m3-h'),t=el('b','',p.name),x=el('button','m3-x','×');x.type='button';x.setAttribute('aria-label','ปิด');x.addEventListener('click',close3d);
+  h.appendChild(t);h.appendChild(x);box.appendChild(h);
+  mvLoad();var v=document.createElement('model-viewer');v.setAttribute('src',M3BASE+m.file);v.setAttribute('alt','โมเดล 3 มิติของ '+p.name);
+  v.setAttribute('camera-controls','');v.setAttribute('auto-rotate','');v.setAttribute('shadow-intensity','1');v.setAttribute('ar','');v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','auto');
+  if(m.poster)v.setAttribute('poster',M3BASE+m.poster);
+  box.appendChild(v);box.appendChild(el('p','m3-f','ลากเพื่อหมุน · บีบ/เลื่อนล้อเมาส์เพื่อซูม'+(m.credit?' · '+m.credit:'')));
+  m3.appendChild(box);m3.classList.add('on');x.focus();document.body.style.overflow='hidden'}
+function close3d(){if(!m3)return;m3.classList.remove('on');m3.textContent='';document.body.style.overflow=''}
+function load3d(){   /* optional manifest in the public bucket: {"<product id>": {"file":"x.glb","poster":"x.webp","credit":"..."}} — absent/invalid = no 3D buttons */
+  return fetch(M3BASE+'manifest.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{}}).then(function(j){
+    var o={};Object.keys(j||{}).forEach(function(k){var m=j[k];
+      if(/^[0-9a-f-]{36}$/i.test(k)&&m&&typeof m.file==='string'&&/^[A-Za-z0-9._-]{3,120}\.glb$/.test(m.file)&&m.file.indexOf('..')<0)
+        o[k]={file:m.file,poster:(typeof m.poster==='string'&&/^[A-Za-z0-9._-]{3,120}\.(webp|jpg|png)$/.test(m.poster))?m.poster:'',credit:(typeof m.credit==='string')?m.credit.slice(0,140):''}});
+    return o}).catch(function(){return {}})}
 var grid=document.getElementById('sgrid'),count=document.getElementById('scount'),more=document.getElementById('smore'),NS='http://www.w3.org/2000/svg';
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function baht(n){return '฿'+Number(n).toLocaleString('en-US')}
@@ -1244,7 +1276,11 @@ function card(p){
   else art.appendChild(icon(p.g));
   var st=el('span','stk '+(p.in_stock?'in':'out'),p.in_stock?'มีของ':'สอบถามสต็อก');art.appendChild(st);a.appendChild(art);
   var b=el('div','b');b.appendChild(el('span','br',brand(p.brand)));b.appendChild(el('h3','',p.name));b.appendChild(el('span','pr',baht(p.price)));
-  var w=el('div','bwrap'),l=el('a','btn sec sm','ถามทาง LINE');l.href=LINE+encodeURIComponent('สนใจ '+p.name);l.rel='noopener';w.appendChild(l);b.appendChild(w);a.appendChild(b);return a}
+  var w=el('div','bwrap'),l=el('a','btn sec sm','ถามทาง LINE');l.href=LINE+encodeURIComponent('สนใจ '+p.name);l.rel='noopener';
+  if(M3[p.id]){var d=el('div','acts3'),b3=el('button','btn pri sm','ดู 3D');b3.type='button';b3.setAttribute('aria-label','ดูโมเดล 3 มิติของ '+p.name);
+    (function(pp,mm){b3.addEventListener('click',function(){open3d(pp,mm)})})(p,M3[p.id]);d.appendChild(b3);d.appendChild(l);w.appendChild(d)}
+  else w.appendChild(l);
+  b.appendChild(w);a.appendChild(b);return a}
 function render(){
   var rows=ROWS.filter(function(p){return (cat==='all'||p.g===cat)&&(!only||p.in_stock)});
   rows.sort(function(a,b){return sort==='p-desc'?b.price-a.price:sort==='p-asc'?a.price-b.price:a.name.localeCompare(b.name)});
@@ -1256,10 +1292,10 @@ document.getElementById('ssort').addEventListener('change',function(e){sort=e.ta
 document.getElementById('sstock').addEventListener('change',function(e){only=e.target.checked;shown=PAGE;render()});
 more.addEventListener('click',function(){shown+=PAGE;render()});
 function load(){count.textContent='กำลังโหลดรายการสินค้า…';
-  fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  load3d().then(function(o){M3=o;return fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
   .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
   .then(function(d){if(!Array.isArray(d))throw new Error('bad');ROWS=d.filter(function(p){return p&&typeof p.name==='string'&&p.name&&Number(p.price)>0}).map(function(p){p.price=Number(p.price);p.g=group(p);return p});render()})
-  .catch(function(){count.textContent='';var e=el('div','serr');e.setAttribute('role','alert');e.appendChild(el('p','','โหลดรายการสินค้าไม่สำเร็จ ลองใหม่อีกครั้ง หรือถามทีมงานทาง LINE @djlabsiam'));
+  })  .catch(function(){count.textContent='';var e=el('div','serr');e.setAttribute('role','alert');e.appendChild(el('p','','โหลดรายการสินค้าไม่สำเร็จ ลองใหม่อีกครั้ง หรือถามทีมงานทาง LINE @djlabsiam'));
     var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',function(){e.remove();load()});e.appendChild(r);count.parentNode.insertBefore(e,grid)})}
 load();
 })();
@@ -1300,7 +1336,7 @@ def shop_page():
             f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
             f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
             f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
-    js = SHOP_JS.replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img)
+    js = SHOP_JS.replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
     desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
     return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
                  active="shop", script=js, css_extra=SHOP_CSS)

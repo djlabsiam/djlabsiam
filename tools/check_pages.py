@@ -203,7 +203,11 @@ if sh:
     ok("service_role" not in sh, "shop: a service key must never be on a public page")
     ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function", scr), "shop: the page script must never turn database text into HTML")
     ok("รวม VAT 7%" in vis_sh, "shop: the VAT wording is missing")
-    ok("product-images" in scr and ".glb" not in sh and "model-viewer" not in sh, "shop: product photos come from the public bucket and no 3D files/viewer may be on the page")
+    ok("product-images" in scr, "shop: product photos come from the public bucket")
+    # 3D: the viewer is only loaded on click from a self-hosted file; the page itself must not reference any real model file, a CDN viewer or an inline <model-viewer>
+    ok(not re.search(r"https?://[^'\"]*\.glb|<model-viewer|unpkg\.com|cdn\.jsdelivr|ajax\.googleapis", sh), "shop: a 3D model file or CDN viewer is hard-coded on the page")
+    ok("/assets/vendor/model-viewer.min.js" in scr and "product-3d/" in scr, "shop: the 3D viewer must be the self-hosted file and models must come from the product-3d bucket")
+    ok(os.path.exists(os.path.join(SITE, "assets", "vendor", "model-viewer.min.js")) and os.path.exists(os.path.join(SITE, "assets", "vendor", "LICENSE-model-viewer.txt")), "shop: self-hosted model-viewer or its licence file is missing")
     ok(sh.count("<h1") == 1 and "สอบถามโปรโมชัน" in vis_sh, "shop: h1 / promotion note missing")
     _bk = read(os.path.join(SITE, "book", "index.html"))
     b_key2 = re.search(r"const KEY='([^']+)'", _bk)
