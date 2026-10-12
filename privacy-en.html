@@ -120,7 +120,7 @@
 
 <main class="wrap">
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 6 October 2026</p>
+  <p class="updated">Last updated: 12 October 2026</p>
   <p class="lede">
     This document explains what personal data DJ LAB SIAM collects, when we collect it, what we use it for,
     who we pass it to, and what rights you have under Thailand's Personal Data Protection Act B.E. 2562 (2019) (PDPA).
@@ -152,12 +152,21 @@
     <table>
       <thead><tr><th>Service</th><th>What it does</th></tr></thead>
       <tbody>
-        <tr><td>Meta (Facebook)</td><td><strong>Meta Pixel</strong> — measures the shop's advertising; it starts as soon as a page opens (except the practice room booking page) and sets Meta cookies; you can turn it off, see section 8.<br>A Facebook video embedded in the page — when the page loads this video, Meta receives your technical data and may set Meta cookies.</td></tr>
-        <tr><td>Google Fonts</td><td>Loads the fonts used to display the page.</td></tr>
-        <tr><td>jsDelivr</td><td>Loads a library for the motion effects on the page.</td></tr>
+        <tr><td>Meta (Facebook)</td><td><strong>Meta Pixel</strong> — measures the shop's advertising; it starts as soon as a page opens (except the practice room booking page) and sets Meta cookies; you can turn it off, see section 8.</td></tr>
+        <tr><td>Google Fonts</td><td>Only this privacy policy page (Thai and English) loads its fonts from Google Fonts — the other pages of the website use fonts stored on the shop's own website.</td></tr>
         <tr><td>LINE</td><td>The practice room booking page loads LINE's script so that it can be used inside the LINE app (loaded only when you open the booking page inside the LINE app).</td></tr>
-        <tr><td>Supabase</td><td>The practice room booking page calls the shop's database on Supabase to show free times and to send your booking, and the video page (djlabsiam.com/content) calls the same database to fetch the list of clips — Supabase receives your technical data.</td></tr>
+        <tr><td>Supabase</td><td>The practice room booking page calls the shop's database on Supabase to show free times and to send your booking; the video page (djlabsiam.com/content) calls the same database to fetch the list of clips; and the shop page (djlabsiam.com/shop) fetches the product list, prices and product pictures live from Supabase's database and file storage (as soon as the page opens, including a check for the list of 3D models). Supabase receives your technical data, such as your IP address, browser type and the pages you open. These requests do not send your name, phone number or anything you type.</td></tr>
         <tr><td>YouTube (Google)</td><td>The video page (djlabsiam.com/content) plays clips only after you press play — before you press "Play here" your browser does not connect to YouTube. When you press play, it connects in YouTube's enhanced privacy mode (youtube-nocookie.com); Google receives your technical data and may keep usage data under Google's policy.</td></tr>
+        <tr><td>3D models and AR (shop page)</td><td>
+          When you press "View 3D" or the 3D logo demo, the page loads the model viewer (the model-viewer library, stored on the shop's own website and not fetched from an outside service) and the 3D model file — product model files load from Supabase file storage, and the 3D logo loads from the shop's website.
+          <br><strong>When you press "Place the device in your room (AR)"</strong>, what happens depends on your device:
+          <br>• Android — may open <strong>Google Scene Viewer</strong> (a Google app), passing <strong>the address of the model file</strong> (and possibly the address of the page you are on, used to return you if it fails to open) to Google, which downloads and displays the model under Google's policy.
+          <br>• iPhone / iPad — opens with Apple's <strong>AR Quick Look</strong>, an iOS system feature.
+          <br>• Browsers that support WebXR — shows AR directly in the browser.
+          <br>Your browser or operating system asks for camera permission itself. <strong>Our website does not record, upload or send your camera images anywhere</strong>, and it does not ask for your location.
+        </td></tr>
+        <tr><td>CDJ player demo sound (home page)</td><td>The demo's sample audio files are stored on the shop's own website, not on an outside music-streaming service. A file loads when you choose a track in the demo, and the sound is processed on your own device. The website does not use your microphone.</td></tr>
+        <tr><td>Classroom video (courses page)</td><td>The video files are stored on the shop's own website, not on an outside video provider (for people shown in the videos, see section 2.6).</td></tr>
       </tbody>
     </table>
   </div>
@@ -226,10 +235,10 @@
     <table>
       <thead><tr><th>Provider</th><th>What it is used for</th></tr></thead>
       <tbody>
-        <tr><td>Meta Platforms</td><td>Facebook page · Instagram account · Facebook video embedded in the website · advertising system · Meta Pixel (ad measurement on this website)</td></tr>
+        <tr><td>Meta Platforms</td><td>Facebook page · Instagram account · advertising system · Meta Pixel (ad measurement on this website)</td></tr>
         <tr><td>LINE</td><td>The shop's official account · linking accounts to membership numbers · sending practice room booking confirmations</td></tr>
-        <tr><td>Google</td><td>Google Workspace · membership data sheets · teaching schedule calendar · web fonts · YouTube videos on the video page</td></tr>
-        <tr><td>Supabase</td><td>Database of members, products, and bookings</td></tr>
+        <tr><td>Google</td><td>Google Workspace · membership data sheets · teaching schedule calendar · web fonts on this policy page · YouTube videos on the video page · Google Scene Viewer (AR on Android when you press the place-in-your-room button)</td></tr>
+        <tr><td>Supabase</td><td>Database of members, products, and bookings · product pictures and 3D model files shown on the shop page</td></tr>
         <tr><td>Discord</td><td>The shop's online community and member verification system</td></tr>
         <tr><td>GitHub</td><td>Hosts this website</td></tr>
       </tbody>
@@ -293,7 +302,7 @@
     <li>Set your browser to block third-party cookies, or use a browser extension that blocks tracking scripts</li>
     <li>Adjust the ad settings in your own Facebook or Instagram account</li>
   </ul>
-  <p>The Facebook video embedded in the page may set Meta's own cookies, and if you press "Play here" on the video page, YouTube (youtube-nocookie.com) may keep data in your browser under Google's policy; the button above does not cover these two. Use the browser setting or extension described above.</p>
+  <p>If you press "Play here" on the video page, YouTube (youtube-nocookie.com) may keep data in your browser under Google's policy, and if you use AR on Android through Google Scene Viewer, processing inside the Google app follows Google's policy; the button above does not cover these two. Use the browser setting or extension described above.</p>
 
   <h2>9. Data security</h2>
   <p>
