@@ -516,7 +516,7 @@ GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
 
-def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra=""):
+def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra="", head_extra=""):
     li = "".join(f'<a href="{h}"{" class=on aria-current=page" if k == active else ""}>{t}</a>' for t, h, k in NAV)
     strip = ('<div class="topbar"><div><span><b>ตัวแทนจำหน่ายอย่างเป็นทางการ</b> Pioneer DJ · AlphaTheta · NEO by OYAIDE</span>'
              '<span>Lido Connect ชั้น 2 สยามสแควร์ · เปิดทุกวัน 12:00–20:00</span></div></div>')
@@ -550,7 +550,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<link rel="icon" href="/favicon.ico" sizes="any">\n<link rel="icon" href="/favicon-512.png" type="image/png" sizes="512x512">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
-            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
+            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
             f'{fader}<script src="/assets/js/decor.js" defer></script>\n{script}</body>\n</html>\n')
 
 
@@ -1084,6 +1084,12 @@ if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].is
 </script>"""
 
 
+def _pcsz(f):
+    from PIL import Image
+    with Image.open(os.path.join(SITE, "assets", "img", f + ".webp")) as im:
+        return im.size
+
+
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
@@ -1108,7 +1114,7 @@ def home_page():
         (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
     gear = "".join(f'<li style="--w:{mm}"><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
                    f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h, mm in GEAR_SZ)
-    eq = "".join(f'<article class="pcard"><div class="pa"><img src="/assets/img/{f}.webp" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
+    eq = "".join(f'<article class="pcard"><div class="pa"><img src="/assets/img/{f}.webp" width="{_pcsz(f)[0]}" height="{_pcsz(f)[1]}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
                  f'<span class="pk">{E(t)}</span></div><div class="pb"><span class="pbr">{E(b)}</span><h3>{E(n)}</h3>'
                  f'<a class="btn sec sm" href="{LINE_ADD}" rel="noopener">ถามราคา LINE</a></div></article>' for f, t, b, n in PRODUCTS)
     body = (
@@ -1151,7 +1157,19 @@ def home_page():
            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}]
     title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
     desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
-    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="", script=cdj_demo.js_html() + COV_JS, css_extra=HOME_CSS)
+    # the interactive demo's CSS/JS are large: serve them as cached static files (page HTML stays small), cache-busted by content hash
+    js_src = re.sub(r"</?script>", "", cdj_demo.js_html() + COV_JS)
+    css_src = minify_css(HOME_CSS)
+    ver = {}
+    for rel, txt in (("assets/js/home.js", js_src), ("assets/css/home.css", css_src)):
+        fp = os.path.join(A.out, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        with io.open(fp, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(txt)
+        ver[rel] = hashlib.md5(txt.encode("utf-8")).hexdigest()[:8]
+    return shell(A.home, title, desc, body, robots=None if live else "noindex,follow", ld=ld, active="",
+                 script='<script src="/assets/js/home.js?v=' + ver["assets/js/home.js"] + '" defer></script>\n',
+                 head_extra='<link rel="stylesheet" href="/assets/css/home.css?v=' + ver["assets/css/home.css"] + '">\n')
 
 
 
