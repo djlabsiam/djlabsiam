@@ -635,7 +635,7 @@ COURSE_VIDEOS = [i for i in (load(os.path.join(SITE, "data", "course-videos.json
 CVID_CSS = """
 .cvid{margin-top:22px;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 24px 48px rgba(15,15,15,.22)}
 .cvid video{display:block;width:100%;height:100%;object-fit:cover}
-@media (min-width:960px){.pgm>.hero.hasvid{padding-right:calc(min(48vw,860px) + 40px);min-height:calc(min(48vw,860px) * .5625 + 100px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}.hero.hasvid .shared{max-width:36em}.hero .cvid{position:absolute;top:44px;right:0;margin:0;width:min(48vw,860px)}}
+@media (min-width:960px){.pgm>.hero.hasvid{padding-right:calc(min(46vw,840px) + min(7vw,140px) + 40px);min-height:calc(min(46vw,840px) * .5625 + 190px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}.hero.hasvid .shared{max-width:36em}.hero .cvid{position:absolute;top:104px;right:min(7vw,140px);margin:0;width:min(46vw,840px)}}
 """
 CVID_JS = """<script>
 (function(){var v=document.querySelector('.cvid video');if(!v)return;
