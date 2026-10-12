@@ -1242,7 +1242,8 @@ function open3d(p,m){
   m3.appendChild(box);m3.classList.add('on');x.focus();document.body.style.overflow='hidden'}
 function close3d(){if(!m3)return;m3.classList.remove('on');m3.textContent='';document.body.style.overflow=''}
 function load3d(){   /* optional manifest in the public bucket: {"<product id>": {"file":"x.glb","poster":"x.webp","credit":"..."}} — absent/invalid = no 3D buttons */
-  return fetch(M3BASE+'manifest.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{}}).then(function(j){
+  /* the bucket only accepts model/octet-stream types, so the list is a JSON text file named manifest.bin (manifest.json is tried too if the bucket is ever opened to it) */
+  return fetch(M3BASE+'manifest.bin',{cache:'no-cache'}).then(function(r){return r.ok?r.text():fetch(M3BASE+'manifest.json',{cache:'no-cache'}).then(function(q){return q.ok?q.text():'{}'})}).then(function(t){try{return JSON.parse(t)}catch(e){return {}}}).then(function(j){
     var o={};Object.keys(j||{}).forEach(function(k){var m=j[k];
       if(/^[0-9a-f-]{36}$/i.test(k)&&m&&typeof m.file==='string'&&/^[A-Za-z0-9._-]{3,120}\.glb$/.test(m.file)&&m.file.indexOf('..')<0)
         o[k]={file:m.file,poster:(typeof m.poster==='string'&&/^[A-Za-z0-9._-]{3,120}\.(webp|jpg|png)$/.test(m.poster))?m.poster:'',credit:(typeof m.credit==='string')?m.credit.slice(0,140):''}});

@@ -5,9 +5,9 @@ What it does (nothing is uploaded; it only reads the public `web_products` view 
   2. matches each file to a shop product by NAME or SKU taken from the file name:
         "CDJ-3000X.glb"  ·  "DJM-A9.glb"  ·  "Pioneer DDJ-REV5.glb"   (case/space/dash-insensitive)
      optional side files with the same base name:  CDJ-3000X.webp|.jpg|.png = poster (shown while loading) · CDJ-3000X.txt = credit line
-  3. writes an upload folder:  <out>/ <product-id>.glb  <product-id>.webp  manifest.json  REPORT.md
+  3. writes an upload folder:  <out>/ <product-id>.glb  manifest.bin  REPORT.md
      -> upload ALL files of <out> into the bucket `product-3d` (Supabase dashboard > Storage > product-3d > Upload).
-        The shop reads manifest.json by itself; a "ดู 3D" button appears on those products. No website push needed.
+        The shop reads manifest.bin by itself; a "ดู 3D" button appears on those products. No website push needed.
 
 Usage (from the website folder):
     python tools/prepare_3d.py <folder-with-glb> [--out <folder>] [--limit-mb 30]
@@ -128,15 +128,22 @@ for fn in sorted(os.listdir(A.src)):
     manifest[pid] = entry
     rows.append((fn, "✓", f"→ {prod['name']} ({prod.get('brand') or '-'})", f"{info['size'] / 1048576:.1f} MB · {info['triangles']:,} tris · {info['textures']} tex", "; ".join(notes)))
 
-io.open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8", newline="\n").write(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+# the bucket accepts only model/gltf-binary, model/gltf+json and application/octet-stream -> the list is a JSON text file called manifest.bin
+# (posters are .webp/.jpg/.png, which the bucket rejects too, so they are NOT used until the bucket's allowed types are extended)
+for _v in manifest.values():
+    _v.pop("poster", None)
+for _fn in os.listdir(OUT):
+    if _fn.lower().endswith((".webp", ".jpg", ".png", ".json")):
+        os.remove(os.path.join(OUT, _fn))
+io.open(os.path.join(OUT, "manifest.bin"), "w", encoding="utf-8", newline="\n").write(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
 rep = ["# รายงานเตรียมอัปโหลดโมเดล 3D", "", f"ต้นทาง: `{os.path.abspath(A.src)}`  ·  พร้อมอัปโหลด **{len(manifest)}** ไฟล์  ·  ต้องแก้ **{bad}** ไฟล์", "",
        "| ไฟล์ | สถานะ | ผลจับคู่/ปัญหา | ขนาด | ข้อสังเกต |", "|---|---|---|---|---|"]
 rep += [f"| {a} | {b} | {c} | {d} | {e} |" for a, b, c, d, e in rows]
 rep += ["", "## ขั้นตอนอัปโหลด",
         "1. เปิด Supabase › Storage › ถัง `product-3d` (โปรเจกต์ระบบร้าน)",
-        f"2. อัปโหลด **ทุกไฟล์ในโฟลเดอร์** `{OUT}` (รวม `manifest.json`)",
+        f"2. อัปโหลด **ทุกไฟล์ในโฟลเดอร์** `{OUT}` (รวม `manifest.bin` — ไฟล์ข้อความ JSON นามสกุล .bin เพราะถังรับเฉพาะ .glb/.gltf/.bin)",
         "3. รีเฟรชหน้า https://djlabsiam.com/shop/ — ปุ่ม 'ดู 3D' ขึ้นที่สินค้าเหล่านั้นเอง ไม่ต้อง push เว็บ",
-        "4. ถ้าแก้โมเดลภายหลัง: อัปโหลดทับไฟล์เดิม (ชื่อ = รหัสสินค้า) แล้วเพิ่ม/แก้ `manifest.json`"]
+        "4. ถ้าแก้โมเดลภายหลัง: อัปโหลดทับไฟล์เดิม (ชื่อ = รหัสสินค้า) แล้วแก้ `manifest.bin`"]
 io.open(os.path.join(OUT, "REPORT.md"), "w", encoding="utf-8", newline="\n").write("\n".join(rep) + "\n")
 print(f"พร้อมอัปโหลด {len(manifest)} · ต้องแก้ {bad}\nโฟลเดอร์: {OUT}")
 for r in rows:
