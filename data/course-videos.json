@@ -1,21 +1,9 @@
 {
-  "_about": "คลิปบรรยากาศการเรียนการสอนแบบไม่มีเสียง แสดงที่หัวหน้า /courses/ — mp4 H.264 ไม่มีเสียง 960x540 ยาว ~8 วิ ใน assets/video/ (ทำจากคลิปที่เจ้าของให้ 12 ต.ค. 2569) · เพิ่ม/ลบ/สลับลำดับที่ items · ว่าง = ใช้ภาพเครื่อง DJ เดิม",
+  "_about": "วิดีโอโปรโมทคอร์สไม่มีเสียง แสดงที่หัวหน้า /courses/ — mp4 H.264 ไม่มีเสียง 1280x720 ยาว 37 วิ ใน assets/video/ (motion graphic ทำจากคลิปที่เจ้าของให้ · ต้นฉบับ 1920x1080 อยู่ฝั่ง Content Creator) · เพิ่ม/ลบ/สลับลำดับที่ items (ถ้ามีหลายรายการจะเล่นต่อกันวน, รายการเดียวจะวนซ้ำเอง) · ว่าง = ใช้ภาพเครื่อง DJ เดิม",
   "items": [
     {
-      "src": "/assets/video/class-1.mp4",
-      "poster": "/assets/video/class-1.jpg"
-    },
-    {
-      "src": "/assets/video/class-2.mp4",
-      "poster": "/assets/video/class-2.jpg"
-    },
-    {
-      "src": "/assets/video/class-3.mp4",
-      "poster": "/assets/video/class-3.jpg"
-    },
-    {
-      "src": "/assets/video/class-4.mp4",
-      "poster": "/assets/video/class-4.jpg"
+      "src": "/assets/video/course-promo.mp4",
+      "poster": "/assets/video/course-promo.jpg"
     }
   ]
 }

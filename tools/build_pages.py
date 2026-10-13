@@ -655,7 +655,7 @@ def courses_page():
     faq = "".join(f'<details class="q"{" open" if i == 0 else ""}><summary>{E(q)}</summary><p>{E(a)}</p></details>' for i, (q, a) in enumerate(FAQ_RENDERED))
     cvid = ""
     if COURSE_VIDEOS:
-        cvid = ('<div class="cvid"><video muted playsinline preload="metadata" aria-label="บรรยากาศการเรียนการสอนที่ DJ LAB SIAM" '
+        cvid = ('<div class="cvid"><video muted playsinline preload="metadata"' + (" loop" if len(COURSE_VIDEOS) == 1 else "") + ' aria-label="วิดีโอแนะนำคอร์สเรียนของ DJ LAB SIAM" '
                 f'data-list=\'{json.dumps([i["src"] for i in COURSE_VIDEOS])}\'' + (f' poster="{E(COURSE_VIDEOS[0]["poster"])}"' if COURSE_VIDEOS[0].get("poster") else "") + '></video></div>')
     body = (f'<section class="hero{" hasvid" if cvid else ""}">{"" if cvid else GEAR_HERO}<h1>คอร์สเรียน DJ ตัวต่อตัว</h1>'
             f'<p class="lede">เรียน DJ จากมืออาชีพตัวจริง เลือกวัน เลือกเวลา เลือกอุปกรณ์ได้ตามสะดวก</p>'
