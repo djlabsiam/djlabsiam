@@ -287,3 +287,12 @@ c.addEventListener('mouseenter',stop);c.addEventListener('mouseleave',auto);c.ad
 var sx=null;c.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;stop()},{passive:true});
 c.addEventListener('touchend',function(e){if(sx===null)return;var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)go(i+(d<0?1:-1));sx=null;auto()});
 if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].isIntersecting?auto():stop()}).observe(c);else auto()})();
+
+(function(){var b=document.getElementById('h3d-go');if(!b)return;
+b.addEventListener('click',function(){var s=document.getElementById('h3d-s'),sc=document.createElement('script');sc.type='module';sc.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(sc);
+var v=document.createElement('model-viewer');v.setAttribute('src','https://vvtefgjseihadsmvuntd.supabase.co/storage/v1/object/public/product-3d/b919dcc5-187e-4d4c-b3d8-b4b9d3b084d1.glb');v.setAttribute('alt','โมเดล 3 มิติของ DDJ-FLX4');
+['camera-controls','auto-rotate','ar'].forEach(function(a){v.setAttribute(a,'')});v.setAttribute('shadow-intensity','1');v.setAttribute('camera-orbit','-30deg 70deg 85%');
+v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','fixed');v.setAttribute('ar-placement','floor');
+var a=document.createElement('button');a.type='button';a.slot='ar-button';a.className='h3d-ar';a.textContent='วางเครื่องในห้องของคุณ (AR)';v.appendChild(a);
+v.addEventListener('error',function(){v.remove();b.hidden=false;b.textContent='เปิดดู 3D ที่ SHOP';b.onclick=function(){location.href='/shop/'}});
+b.hidden=true;s.appendChild(v)})})();

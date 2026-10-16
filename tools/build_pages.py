@@ -943,6 +943,23 @@ HOME_CSS = r"""
 .hevent{display:grid;gap:14px;padding:26px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
 .hevent h3{font-size:24px;line-height:1.35}
 .hevent p{color:var(--text-secondary);max-width:60ch}
+.h3d{display:grid;gap:22px;align-items:center}
+.h3d-t{display:grid;gap:14px;align-content:center}
+.h3d-t p{color:var(--text-secondary);max-width:56ch}
+.h3d-t ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-weight:600}
+.h3d-t li::before{content:"✓ ";color:var(--brand-base)}
+.h3d-t .acts{display:flex;flex-wrap:wrap;gap:12px}
+.h3d-s{position:relative;aspect-ratio:5/3;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--lab-line);background-color:#FAF9F6;
+  background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
+.h3d-s img{width:100%;height:100%;object-fit:contain;padding:3%;mix-blend-mode:multiply}
+.h3d-s .btn{position:absolute;left:50%;bottom:16px;transform:translateX(-50%)}
+.h3d-s model-viewer{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(#F4F2EC,#fff)}
+.h3d-ar{position:absolute;right:14px;bottom:14px;min-height:48px;padding:0 18px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);cursor:pointer;box-shadow:0 10px 20px rgba(15,15,15,.3)}
+.hpod{display:grid;gap:16px;padding:28px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
+.hpod h2{font-size:30px}
+.hpod .tag{font:700 13px/1 var(--font-family-display);letter-spacing:.12em;color:var(--brand-base)}
+.hpod p{color:var(--text-secondary);max-width:58ch}
+.hpod .acts{display:flex;flex-wrap:wrap;gap:12px}
 .hlive{display:grid;gap:18px;padding:28px;background:#0F0F0F;color:#fff;border-radius:var(--radius-lg)}
 .hlive h2{font-size:30px}
 .hlive p{color:#D8D6CF;max-width:58ch}
@@ -979,6 +996,8 @@ HOME_CSS = r"""
   .hsteps{grid-template-columns:repeat(4,1fr)}
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
+  .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
+  .hpod{grid-template-columns:1.3fr 1fr;align-items:center;padding:36px}
   .hvisit{grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
 }
@@ -1084,6 +1103,18 @@ if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].is
 </script>"""
 
 
+H3D_JS = """<script>
+(function(){var b=document.getElementById('h3d-go');if(!b)return;
+b.addEventListener('click',function(){var s=document.getElementById('h3d-s'),sc=document.createElement('script');sc.type='module';sc.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(sc);
+var v=document.createElement('model-viewer');v.setAttribute('src','@@M3@@b919dcc5-187e-4d4c-b3d8-b4b9d3b084d1.glb');v.setAttribute('alt','โมเดล 3 มิติของ DDJ-FLX4');
+['camera-controls','auto-rotate','ar'].forEach(function(a){v.setAttribute(a,'')});v.setAttribute('shadow-intensity','1');v.setAttribute('camera-orbit','-30deg 70deg 85%');
+v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','fixed');v.setAttribute('ar-placement','floor');
+var a=document.createElement('button');a.type='button';a.slot='ar-button';a.className='h3d-ar';a.textContent='วางเครื่องในห้องของคุณ (AR)';v.appendChild(a);
+v.addEventListener('error',function(){v.remove();b.hidden=false;b.textContent='เปิดดู 3D ที่ SHOP';b.onclick=function(){location.href='/shop/'}});
+b.hidden=true;s.appendChild(v)})})();
+</script>"""
+
+
 def _pcsz(f):
     from PIL import Image
     with Image.open(os.path.join(SITE, "assets", "img", f + ".webp")) as im:
@@ -1117,6 +1148,8 @@ def home_page():
     eq = "".join(f'<article class="pcard"><div class="pa"><img src="/assets/img/{f}.webp" width="{_pcsz(f)[0]}" height="{_pcsz(f)[1]}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
                  f'<span class="pk">{E(t)}</span></div><div class="pb"><span class="pbr">{E(b)}</span><h3>{E(n)}</h3>'
                  f'<a class="btn sec sm" href="{LINE_ADD}" rel="noopener">ถามราคา LINE</a></div></article>' for f, t, b, n in PRODUCTS)
+    pod = next(x for x in PROGRAMS if x["name"] == "DJ LAB Podcast")
+    pod_btns = "".join(f'<a class="btn {"pri" if i == 0 else "sec"}" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for i, x in enumerate(LISTEN))
     body = (
         cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
@@ -1126,6 +1159,12 @@ def home_page():
         f'<div class="pcards">{eq}</div>'
         f'<div class="brands"><div>Pioneer DJ <span>Authorized</span></div><div>AlphaTheta <span>Authorized</span></div><div>NEO by OYAIDE <span>Official</span></div></div>'
         f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}</div></section>'
+        f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
+        f'<p>เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
+        f'<ul><li>หมุนและซูมดูรายละเอียดเครื่อง</li><li>วางด้วย AR ในห้องหรือสตูดิโอของคุณ</li><li>ดูราคาและสถานะสินค้าในหน้าเดียว</li></ul>'
+        f'<div class="acts"><a class="btn pri" href="/shop/">ไปที่ SHOP</a></div></div>'
+        f'<div class="h3d-s" id="h3d-s"><img src="/assets/img/pc-ddj-flx4.webp" width="640" height="384" alt="Pioneer DJ DDJ-FLX4" loading="lazy" decoding="async">'
+        f'<button type="button" class="btn sec" id="h3d-go">ลองหมุน 3D</button></div></div></section>'
         f'<section class="hsec" id="courses"><h2>เรียน DJ ตัวต่อตัวกับ Pro DJ</h2>'
         f'<p class="lede">ทุกคอร์สเรียนตัวต่อตัว {F0["sessions"]} ครั้ง × {F0["per"]} ชม. = {F0["learn"]} ชม. เลือกวันและเวลาเรียนได้ตามสะดวก</p>'
         f'<div class="hcards">{cards}</div></section>'
@@ -1137,6 +1176,8 @@ def home_page():
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
         f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div></section>'
+        f'<section class="hsec" id="podcast"><div class="hpod"><div><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2></div>'
+        f'<div><p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div></div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
         f'<div><h2>แวะมาที่ร้านได้เลย</h2><dl><dt>ที่อยู่</dt><dd>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330</dd>'
         f'<dt>เปิด</dt><dd>ทุกวัน 12:00–20:00 น.</dd><dt>โทร</dt><dd><a href="tel:022525868">02-252-5868</a> · <a href="tel:0886560464">088-656-0464</a></dd></dl>'
@@ -1158,7 +1199,7 @@ def home_page():
     title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
     desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
     # the interactive demo's CSS/JS are large: serve them as cached static files (page HTML stays small), cache-busted by content hash
-    js_src = re.sub(r"</?script>", "", cdj_demo.js_html() + COV_JS)
+    js_src = re.sub(r"</?script>", "", cdj_demo.js_html() + COV_JS + H3D_JS.replace("@@M3@@", re.match(r"https://[a-z0-9.-]+\.supabase\.co", book_backend()[0]).group(0) + "/storage/v1/object/public/product-3d/"))
     css_src = minify_css(HOME_CSS)
     ver = {}
     for rel, txt in (("assets/js/home.js", js_src), ("assets/css/home.css", css_src)):
