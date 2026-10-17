@@ -1,0 +1,7 @@
+{
+  "_about": "ชุดอุปกรณ์ 3D บนหน้า /shop/ — ไฟล์โมเดลสร้างด้วย tools/make_set_3d.py ไปไว้ที่ assets/models/sets/ · items[].name ต้องตรงชื่อรุ่นในตาราง web_products เพื่อดึงราคาสด · ราคารวม = ราคาแยกชิ้นรวมกัน (ไม่ใช่ราคาโปรโมชันชุด) · ไม่ผ่านตาราง products (ตามที่ผู้จัดการข้อมูลภายในกำหนด)",
+  "sets": [
+    {"id": "cdj2-a9", "title": "CDJ-3000X ×2 + DJM-A9", "mixer": "DJM-A9", "file": "set-cdj3000x-x2-djm-a9.glb", "items": [{"name": "CDJ-3000X", "qty": 2}, {"name": "DJM-A9", "qty": 1}]},
+    {"id": "cdj2-s11", "title": "CDJ-3000X ×2 + DJM-S11", "mixer": "DJM-S11", "file": "set-cdj3000x-x2-djm-s11.glb", "items": [{"name": "CDJ-3000X", "qty": 2}, {"name": "DJM-S11", "qty": 1}]}
+  ]
+}

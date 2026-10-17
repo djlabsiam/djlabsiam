@@ -1168,6 +1168,21 @@ SHOP_CSS = r"""
 .d3-live model-viewer{width:100%;height:100%;display:block}
 .d3-ar{position:absolute;right:12px;bottom:12px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 14px/1 var(--font-family-display);cursor:pointer;box-shadow:0 8px 16px rgba(15,15,15,.28)}
 .d3-n{margin:8px 0 0;font-size:13px;color:var(--text-muted)}
+.sets{margin-top:44px}
+.sets h2{font-size:28px}
+.sets .lede{margin-top:8px}
+.set-g{display:grid;gap:18px;margin-top:20px;align-items:start}
+.set-s{position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--lab-line);background:linear-gradient(#F4F2EC,#fff);display:grid;place-items:center}
+.set-s model-viewer{position:absolute;inset:0;width:100%;height:100%}
+.set-s .btn{z-index:1}
+.set-ar{position:absolute;right:14px;bottom:14px;min-height:48px;padding:0 18px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);cursor:pointer;box-shadow:0 10px 20px rgba(15,15,15,.3)}
+.set-i{display:grid;gap:12px}
+.set-i ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.set-i li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--lab-line)}
+.set-i li b{font-family:var(--font-family-display)}
+.set-t{font:800 26px/1.3 var(--font-family-display)}
+.set-n{font-size:13px;color:var(--text-muted)}
+@media (min-width:960px){.set-g{grid-template-columns:1.6fr 1fr;gap:32px}}
 @media (min-width:960px){.shead{padding-right:calc(min(54vw,980px) + 6vw)!important;min-height:calc(min(54vw,980px) * .47 + 90px)}.shead .demo3d{position:absolute;top:40px;right:5vw;width:min(54vw,980px);margin:0}.shead .d3-n{max-width:60ch}}
 .snote{margin-top:24px;color:var(--text-secondary);font-size:15px;max-width:70ch}
 .serr{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md);margin-top:14px}
@@ -1180,6 +1195,7 @@ SHOP_JS = r"""<script>
 var REST='@@REST@@',KEY='@@KEY@@',IMG='@@IMG@@',LINE='https://line.me/R/oaMessage/%40djlabsiam/?',PAGE=24;
 var LABEL={player:'CDJ / Player',mixer:'Mixer','all-in-one':'All-in-one',controller:'Controller',turntable:'Turntable',headphones:'หูฟัง',speaker:'ลำโพง',cable:'สาย',accessory:'อุปกรณ์เสริม'};
 var CATMAP={'cdj':'player','เครื่องเล่น':'player','มิกซ์เซอร์':'mixer','mixer':'mixer','all in one':'all-in-one','คอนโทลเลอร์':'controller','คอนโทรลเลอร์':'controller','midi':'controller','หูฟัง':'headphones','ลำโพง':'speaker','cable':'cable','deck cover':'accessory','flash drive':'accessory'};
+var SETS=@@SETS@@,setI=0,setV=null,SETBASE='/assets/models/sets/';
 var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE,M3={},M3BASE='@@M3@@',MV_LOADED=false;
 function mvLoad(){if(MV_LOADED)return;MV_LOADED=true;var s=document.createElement('script');s.type='module';s.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(s)}
 var m3=null;
@@ -1247,6 +1263,21 @@ function card(p){
     (function(pp,mm){b3.addEventListener('click',function(){open3d(pp,mm)})})(p,M3[p.id]);d.appendChild(b3);d.appendChild(l);w.appendChild(d)}
   else w.appendChild(l);
   b.appendChild(w);a.appendChild(b);return a}
+function setRender(){var s=SETS[setI],ul=document.getElementById('set-items'),tot=document.getElementById('set-total'),ask=document.getElementById('set-ask'),sum=0,miss=false;ul.textContent='';
+  s.items.forEach(function(it){var p=ROWS.filter(function(r){return r.name.toUpperCase()===it.name.toUpperCase()})[0],li=el('li','');
+    li.appendChild(el('span','',(it.qty>1?it.qty+' × ':'')+it.name));
+    if(p){sum+=p.price*it.qty;li.appendChild(el('b','',baht(p.price*it.qty)))}else{miss=true;li.appendChild(el('b','','สอบถามราคา'))}ul.appendChild(li)});
+  tot.textContent=ROWS.length&&!miss?'รวม '+baht(sum):'สอบถามราคารวมของชุดทาง LINE';
+  ask.href=LINE+encodeURIComponent('สนใจชุด '+s.title);
+  if(setV){setV.setAttribute('src',SETBASE+s.file);setV.setAttribute('alt','โมเดล 3 มิติของชุด '+s.title)}}
+Array.prototype.forEach.call(document.querySelectorAll('.set-chip'),function(c){c.addEventListener('click',function(){
+  setI=+c.getAttribute('data-set');Array.prototype.forEach.call(document.querySelectorAll('.set-chip'),function(x){x.setAttribute('aria-pressed',x===c?'true':'false')});setRender()})});
+(function(){var go=document.getElementById('set-go');if(!go)return;go.addEventListener('click',function(){
+  mvLoad();var box=go.parentNode,v=document.createElement('model-viewer');setV=v;
+  ['camera-controls','auto-rotate','ar'].forEach(function(a){v.setAttribute(a,'')});v.setAttribute('shadow-intensity','1');v.setAttribute('camera-orbit','-25deg 62deg auto');
+  v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','fixed');v.setAttribute('ar-placement','floor');
+  var a=document.createElement('button');a.type='button';a.slot='ar-button';a.className='set-ar';a.textContent='วางชุดในห้องของคุณ (AR)';v.appendChild(a);
+  box.replaceChild(v,go);setRender()})})();
 function render(){
   var rows=ROWS.filter(function(p){return (cat==='all'||p.g===cat)&&(!only||p.in_stock)});
   rows.sort(function(a,b){return sort==='p-desc'?b.price-a.price:sort==='p-asc'?a.price-b.price:a.name.localeCompare(b.name)});
@@ -1260,7 +1291,7 @@ more.addEventListener('click',function(){shown+=PAGE;render()});
 function load(){count.textContent='กำลังโหลดรายการสินค้า…';
   load3d().then(function(o){M3=o;return fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
   .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
-  .then(function(d){if(!Array.isArray(d))throw new Error('bad');ROWS=d.filter(function(p){return p&&typeof p.name==='string'&&p.name&&Number(p.price)>0}).map(function(p){p.price=Number(p.price);p.g=group(p);return p});render()})
+  .then(function(d){if(!Array.isArray(d))throw new Error('bad');ROWS=d.filter(function(p){return p&&typeof p.name==='string'&&p.name&&Number(p.price)>0}).map(function(p){p.price=Number(p.price);p.g=group(p);return p});render();setRender()})
   })  .catch(function(){count.textContent='';var e=el('div','serr');e.setAttribute('role','alert');e.appendChild(el('p','','โหลดรายการสินค้าไม่สำเร็จ ลองใหม่อีกครั้ง หรือถามทีมงานทาง LINE @djlabsiam'));
     var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',function(){e.remove();load()});e.appendChild(r);count.parentNode.insertBefore(e,grid)})}
 load();
@@ -1290,6 +1321,8 @@ def shop_page():
     img = origin + "/storage/v1/object/public/product-images/"
     cats = [("all", "ทั้งหมด"), ("player", "CDJ / Player"), ("mixer", "Mixer"), ("all-in-one", "All-in-one"), ("controller", "Controller"),
             ("turntable", "Turntable"), ("headphones", "หูฟัง"), ("speaker", "ลำโพง"), ("cable", "สาย"), ("accessory", "อุปกรณ์เสริม")]
+    sets = load(os.path.join(SITE, "data", "shop-sets.json"))["sets"]
+    set_chips = "".join(f'<button class="schip set-chip" type="button" data-set="{i}" aria-pressed="{"true" if i == 0 else "false"}">{E(x["mixer"])}</button>' for i, x in enumerate(sets))
     chips = "".join(f'<button class="schip" type="button" data-cat="{k}" aria-pressed="{"true" if k == "all" else "false"}">{E(t)}</button>' for k, t in cats)
     body = (SHOP_SYMBOLS +
             f'<section class="hero shead"><h1>Showroom อุปกรณ์ DJ</h1>'
@@ -1299,6 +1332,13 @@ def shop_page():
             f'<img src="/assets/img/demo3d-poster.webp" width="969" height="456" alt="โลโก้ DJ LAB SIAM แบบ 3 มิติ" decoding="async">'
             f'<span class="d3-t">ลองหมุน 3D · วางในห้องด้วย AR</span></button>'
             f'<p class="d3-n">ตัวอย่างฟังก์ชัน 3D: โลโก้ DJ LAB SIAM แบบ 3 มิติ ลองหมุน ซูม หรือวางในห้องของคุณด้วย AR (สินค้าจริงจะมีโมเดลทยอยเพิ่ม)</p></div></section>'
+            f'<section class="sets" id="sets" aria-label="ชุดอุปกรณ์ 3 มิติ"><h2>ชุดอุปกรณ์ 3D · CDJ-3000X ×2 + มิกเซอร์</h2>'
+            f'<p class="lede">เลือกมิกเซอร์ แล้วหมุนดูทั้งชุดหรือวางด้วย AR บนโต๊ะจริงของคุณ ราคารวมคำนวณจากราคาปกติแยกชิ้น</p>'
+            f'<div class="schips" role="group" aria-label="เลือกมิกเซอร์" style="margin-top:16px">{set_chips}</div>'
+            f'<div class="set-g"><div class="set-s"><button type="button" class="btn pri" id="set-go">ลองหมุน 3D ทั้งชุด</button></div>'
+            f'<div class="set-i"><ul id="set-items"></ul><div class="set-t" id="set-total" aria-live="polite"></div>'
+            f'<p class="set-n">ราคาปกติรวม VAT 7% แล้ว ไม่รวมโปรโมชัน ราคาชุดจริงและสต็อกสอบถามทีมงาน</p>'
+            f'<a class="btn sec" id="set-ask" href="{LINE_ADD}" rel="noopener">ขอใบเสนอราคาทั้งชุดทาง LINE</a></div></div></section>'
             f'<section id="catalog" aria-label="รายการสินค้า"><div class="sbar"><div class="schips" role="group" aria-label="ประเภทสินค้า">{chips}</div>'
             f'<div class="stools"><label><input type="checkbox" id="sstock"> เฉพาะที่มีของ</label>'
             f'<label>เรียงตาม <select id="ssort"><option value="p-desc">ราคาสูง → ต่ำ</option><option value="p-asc">ราคาต่ำ → สูง</option><option value="m">ชื่อรุ่น</option></select></label></div></div>'
@@ -1306,7 +1346,7 @@ def shop_page():
             f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
             f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
             f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
-    js = SHOP_JS.replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
+    js = SHOP_JS.replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
     desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
     return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
                  active="shop", script=js, css_extra=SHOP_CSS)
