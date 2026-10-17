@@ -877,31 +877,9 @@ HOME_CSS = r"""
 .htag small{display:block;font:400 13px/1.4 var(--font-family-body);color:var(--text-muted)}
 .htag.a{left:-2%;bottom:10%;transform:rotate(-3deg)}
 .htag.b{right:-2%;top:-6%;transform:rotate(2.5deg)}
-.gearrow{margin:36px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 4px;align-items:end}
-.gearrow li{margin:0}
-.gearrow figure{margin:0;transition:transform .35s cubic-bezier(.16,1,.3,1)}
-.gearrow figure:hover{transform:translateY(-6px)}
-.gearrow img{display:block;width:100%;height:auto;filter:drop-shadow(0 16px 18px rgba(15,15,15,.28))}
-.gearrow figcaption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .pgm>section.dm-inv{padding:0}
-.pcards{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
-.pcard{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .2s}
-.pcard:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
-.pcard .pa{position:relative;aspect-ratio:4/3;overflow:hidden;background-color:#FAF9F6;background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
-.pcard .pa img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:28px 8px 8px;mix-blend-mode:multiply}
-.pcard .pk{position:absolute;left:10px;top:10px;z-index:2;font:600 13px/1.4 var(--font-family-body);padding:3px 10px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
-.pcard .pb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
-.pcard .pbr{font:600 13px/1.4 var(--font-family-body);color:var(--text-muted)}
-.pcard h3{font-size:18px;line-height:1.35}
-.pcard .btn{margin-top:auto;align-self:flex-start}
-.pcard .pb h3+.btn{margin-top:12px}
-@media (min-width:960px){.pcards{grid-template-columns:repeat(3,1fr);gap:18px}}
-@media (min-width:1360px){.pcards{grid-template-columns:repeat(6,1fr)}}
-@media (max-width:420px){.pcards{grid-template-columns:1fr}}
 @media (min-width:960px){
   .pgm>.hero.dm{padding-right:0}
-  .gearrow{display:flex;gap:0;padding:0 4px}
-  .gearrow li{flex:var(--w) 1 0;min-width:0}
 }
 .rackband.lt{padding:32px 0 0}
 .rackband.lt .rack *{stroke:#0F0F0F;fill:#fff}
@@ -909,12 +887,6 @@ HOME_CSS = r"""
 .rackband.lt .rack .rk-g{fill:none}
 .rackband.lt .rack .rk-r{stroke:var(--brand-base)}
 .rackband.lt .rack .rk-rf{fill:var(--brand-base);stroke:var(--brand-base)}
-.zones{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
-.zone{display:flex;flex-direction:column;gap:6px;padding:20px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .3s}
-.zone:hover{transform:translateY(-4px);border-color:var(--text-primary);box-shadow:0 16px 28px rgba(15,15,15,.1)}
-.zone b{font:800 24px/1.3 var(--font-family-display)}
-.zone span{font-size:15px;color:var(--text-secondary);flex:1}
-.zone i{font:600 15px/1.5 var(--font-family-display);font-style:normal;color:var(--brand-base)}
 .hsec h2{font-size:30px}
 .hsec .lede{margin-top:10px}
 .eqgrid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:28px}
@@ -923,26 +895,11 @@ HOME_CSS = r"""
 .eq svg{width:100%;max-width:118px;height:auto;margin:10px auto 6px;stroke:var(--text-primary);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .eq svg .r{stroke:var(--brand-base)}
 .eq b{display:block;font:700 18px/1.4 var(--font-family-display)}
-.brands{display:grid;gap:0;margin-top:28px;border-top:1px solid var(--text-primary)}
-.brands div{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--text-primary);font:800 24px/1.4 var(--font-family-display)}
-.brands span{font:600 14px/1.4 var(--font-family-body);color:var(--text-secondary)}
-.hcards{display:grid;gap:18px;margin-top:28px}
-.hc{display:grid;gap:12px;padding:20px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);box-shadow:0 18px 36px rgba(15,15,15,.06)}
-.hc h3{font-size:24px;line-height:1.3}
-.hc .fit{margin:0;color:var(--text-secondary);font-size:15px}
-.hc .cimg{margin:0}
-.hc .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:15px;color:var(--text-secondary)}
-.hc .meta b{font:800 24px/1.3 var(--font-family-display);color:var(--text-primary)}
-.hc .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
-.hsteps{display:grid;gap:16px;margin-top:28px}
-.hs{position:relative;padding:22px 18px 18px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md)}
-.hs::before{content:"";position:absolute;left:14px;right:14px;top:-7px;height:14px;background:var(--brand-base);transform:rotate(-1.4deg);border-radius:2px}
-.hs i{font:800 40px/1.3 var(--font-family-display);font-style:normal}
-.hs h3{margin:2px 0 4px;font-size:22px}
-.hs p{color:var(--text-secondary);font-size:15px}
 .hevent{display:grid;gap:14px;padding:26px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
 .hevent h3{font-size:24px;line-height:1.35}
 .hevent p{color:var(--text-secondary);max-width:60ch}
+.hev-m{margin:0;grid-column:1/-1}
+.hev-m img{display:block;width:100%;height:auto;border-radius:var(--radius-md)}
 .h3d{display:grid;gap:22px;align-items:center}
 .h3d-t{display:grid;gap:14px;align-content:center}
 .h3d-t p{color:var(--text-secondary);max-width:56ch}
@@ -989,11 +946,8 @@ HOME_CSS = r"""
   .hhero{grid-template-columns:1.05fr 1fr;gap:64px}
   .hhero h1{font-size:58px;line-height:1.28;max-width:17ch}
   .pgm>.hero.hhero{padding-right:0}
-  .zones{grid-template-columns:repeat(4,1fr)}
   .eqgrid{grid-template-columns:repeat(6,1fr)}
   .hsec h2{font-size:38px}
-  .hcards{grid-template-columns:repeat(2,1fr)}
-  .hsteps{grid-template-columns:repeat(4,1fr)}
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
@@ -1001,7 +955,6 @@ HOME_CSS = r"""
   .hvisit{grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
 }
-@media (min-width:1360px){.hcards{grid-template-columns:repeat(4,1fr)}}
 """
 
 HOME_CSS += cdj_demo.CSS
@@ -1051,24 +1004,16 @@ def home_faq_pairs():
     return pairs
 
 
-GEAR = [("xdj-az", "Pioneer DJ", "XDJ-AZ", 895), ("ddj-rev5", "Pioneer DJ", "DDJ-REV5", 736), ("ddj-flx10", "Pioneer DJ", "DDJ-FLX10", 716),
-        ("vm-80", "Pioneer DJ", "VM-80", 544), ("djm-a9", "Pioneer DJ", "DJM-A9", 407), ("cdj-3000x", "Pioneer DJ", "CDJ-3000X", 329)]   # name, brand, model, width mm (VM-80 = the pair); the shop's own product photos
-# equipment cards: real shop products (photo + name), no price
-PRODUCTS = [("pc-cdj-3000x", "CDJ / Player", "Pioneer DJ", "CDJ-3000X"), ("pc-djm-a9", "Mixer", "Pioneer DJ", "DJM-A9"),
-            ("pc-ddj-flx4", "Controller", "Pioneer DJ", "DDJ-FLX4"), ("pc-dm-50d", "ลำโพงมอนิเตอร์", "Pioneer DJ", "DM-50D"),
-            ("pc-hdj-x5k", "หูฟัง", "Pioneer DJ", "HDJ-X5K"), ("pc-djset-typec", "สายสัญญาณ", "NEO by OYAIDE", "DJSET TYPE-C 1.0")]
+CONTEST = load(os.path.join(SITE, "data", "contest.json")) if os.path.exists(os.path.join(SITE, "data", "contest.json")) else {}
 
 
-def _gear_sz():
-    from PIL import Image
-    out = []
-    for f, b, n, mm in GEAR:
-        with Image.open(os.path.join(SITE, "assets", "img", f"cut-{f}.webp")) as im:
-            out.append((f, b, n, im.width, im.height, mm))
-    return out
-
-
-GEAR_SZ = _gear_sz()
+def contest_media():
+    if not CONTEST.get("img"):
+        return ""
+    img = f'<img src="/assets/img/{E(CONTEST["img"])}" width="1280" height="720" alt="{E(CONTEST.get("alt", ""))}" loading="lazy" decoding="async">'
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", CONTEST.get("yt", "")):
+        img = f'<a href="https://www.youtube.com/watch?v={CONTEST["yt"]}" target="_blank" rel="noopener">{img}</a>'
+    return f'<figure class="hev-m">{img}</figure>'
 
 
 SUNDAY = (load(os.path.join(SITE, "data", "sunday-covers.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "sunday-covers.json")) else []
@@ -1115,63 +1060,23 @@ b.hidden=true;s.appendChild(v)})})();
 </script>"""
 
 
-def _pcsz(f):
-    from PIL import Image
-    with Image.open(os.path.join(SITE, "assets", "img", f + ".webp")) as im:
-        return im.size
-
-
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
     faq = "".join(f'<details class="q"{" open" if i == 0 else ""}><summary>{E(q)}</summary><p>{E(a)}</p></details>' for i, (q, a) in enumerate(pairs))
-    zones = ("".join(f'<a class="zone" href="{h}"><b>{t}</b><span>{d}</span><i>{cta} →</i></a>' for t, h, d, cta in (
-        ("คอร์สเรียน", "/courses/", f"{len(COURSES)} คอร์ส ตัวต่อตัว เริ่มจากศูนย์ก็เรียนได้", "ดูคอร์ส"),
-        ("ทีมครู", "/courses/#teachers", f"Pro DJ {len(TEACHERS)} คน เลือกอาจารย์ตามสายที่อยากไป", "ดูทีมครู"),
-        ("จองห้องซ้อม", "/book/", "ซ้อมกับเครื่องจริง จองเวลาออนไลน์ได้", "จองห้อง"),
-        ("วิดีโอและรายการ", "/content/", "Sunday Live พอดแคสต์ และคลิปสอน", "ดูรายการ"))))
-    cards = ""
-    for c in COURSES:
-        f = F[c["title"]]
-        plus = f'<p class="fit"><b>รวมห้องซ้อมและอุปกรณ์ {f["practice"]} ชม.</b></p>' if f["practice"] else ""
-        cards += (f'<article class="hc">{cimg(c)}<h3>{E(c["title"])}</h3><p class="fit">{E(GOAL.get(c["title"], c["audience"]))}</p>{plus}'
-                  f'<p class="meta"><span>{f["sessions"]} ครั้ง × {f["per"]} ชม. = {f["learn"]} ชม.</span><b>{E(f["price"])}</b></p>'
-                  f'<div class="acts"><a class="btn sec sm" href="/courses/#{cid(c["title"])}">ดูรายละเอียด</a>'
-                  f'{line_btn("สนใจคอร์ส " + c["title"], "สอบถาม", "pri sm")}</div></article>')
-    steps = "".join(f'<div class="hs"><i>{n}</i><h3>{E(t)}</h3><p>{E(d)}</p></div>' for n, t, d in (
-        (1, "ทักมาคุย", "ทัก LINE @djlabsiam แจ้งระดับและเป้าหมาย ทีมงานจะแนะนำคอร์สที่เหมาะสม"),
-        (2, "เลือกคอร์ส", "เลือกคอร์สที่ตรงกับระดับและเวลาที่มี"),
-        (3, "นัดวันเรียน", "จัดตารางให้ตรงกับเวลาที่ว่าง เรียนที่ DJ LAB SIAM Lido Connect สยามสแควร์"),
-        (4, "เริ่มเล่น", "เรียนบนอุปกรณ์จริงของโรงเรียน มีทีม Pro DJ ดูแลตลอดคอร์ส")))
-    gear = "".join(f'<li style="--w:{mm}"><figure><img src="/assets/img/cut-{f}.webp" width="{w}" height="{h}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
-                   f'<figcaption><small>{E(b)}</small>{E(n)}</figcaption></figure></li>' for f, b, n, w, h, mm in GEAR_SZ)
-    eq = "".join(f'<article class="pcard"><div class="pa"><img src="/assets/img/{f}.webp" width="{_pcsz(f)[0]}" height="{_pcsz(f)[1]}" alt="{E(b + " " + n)}" loading="lazy" decoding="async">'
-                 f'<span class="pk">{E(t)}</span></div><div class="pb"><span class="pbr">{E(b)}</span><h3>{E(n)}</h3>'
-                 f'<a class="btn sec sm" href="{LINE_ADD}" rel="noopener">ถามราคา LINE</a></div></article>' for f, t, b, n in PRODUCTS)
     pod = next(x for x in PROGRAMS if x["name"] == "DJ LAB Podcast")
     pod_btns = "".join(f'<a class="btn {"pri" if i == 0 else "sec"}" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for i, x in enumerate(LISTEN))
     body = (
         cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
-        f'<section><ul class="gearrow" aria-label="ตัวอย่างอุปกรณ์ที่ร้านมีจำหน่าย">{gear}</ul><div class="zones">{zones}</div></section>'
-        f'<section class="hsec" id="equipment"><h2>อุปกรณ์ DJ ตัวแทนจำหน่ายอย่างเป็นทางการ</h2>'
-        f'<p class="lede">สินค้าครบ ทั้ง CDJ Player, DJM Mixer, Controller, หูฟัง และสายสัญญาณคุณภาพสูง พร้อมรับประกันจากผู้ผลิต ถามรุ่นและราคาได้ทาง LINE</p>'
-        f'<div class="pcards">{eq}</div>'
-        f'<div class="brands"><div>Pioneer DJ <span>Authorized</span></div><div>AlphaTheta <span>Authorized</span></div><div>NEO by OYAIDE <span>Official</span></div></div>'
-        f'<div class="cta">{line_btn("สนใจอุปกรณ์ DJ ขอรุ่นและราคา", "ถามรุ่นและราคาทาง LINE")}</div></section>'
         f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
-        f'<p>เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
+        f'<p>ตัวแทนจำหน่ายอย่างเป็นทางการของ Pioneer DJ, AlphaTheta และ NEO by OYAIDE · เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
         f'<ul><li>หมุนและซูมดูรายละเอียดเครื่อง</li><li>วางด้วย AR ในห้องหรือสตูดิโอของคุณ</li><li>ดูราคาและสถานะสินค้าในหน้าเดียว</li></ul>'
         f'<div class="acts"><a class="btn pri" href="/shop/">ไปที่ SHOP</a></div></div>'
         f'<div class="h3d-s" id="h3d-s"><img src="/assets/img/pc-ddj-flx4.webp" width="640" height="384" alt="Pioneer DJ DDJ-FLX4" loading="lazy" decoding="async">'
         f'<button type="button" class="btn sec" id="h3d-go">ลองหมุน 3D</button></div></div></section>'
-        f'<section class="hsec" id="courses"><h2>เรียน DJ ตัวต่อตัวกับ Pro DJ</h2>'
-        f'<p class="lede">ทุกคอร์สเรียนตัวต่อตัว {F0["sessions"]} ครั้ง × {F0["per"]} ชม. = {F0["learn"]} ชม. เลือกวันและเวลาเรียนได้ตามสะดวก</p>'
-        f'<div class="hcards">{cards}</div></section>'
-        f'<section class="hsec" id="steps"><h2>เริ่มต้นง่ายใน 4 ขั้นตอน</h2><div class="hsteps">{steps}</div></section>'
-        f'<section class="hsec team" id="teachers"><h2>ทีมครูผู้สอน</h2><p class="lede">{E(D["instructors"]["intro"])}</p>{tiles()}</section>'
         f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
-        f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p></div></section>'
+        f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p>{contest_media()}</div></section>'
         f'<section class="hsec"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
@@ -1187,12 +1092,6 @@ def home_page():
         f'<section class="endcta"><h2>อยากได้เครื่อง หรืออยากเริ่มเรียน ทักมาคุยได้เลย</h2><div class="cta">{line_btn("ขอคำแนะนำจาก DJ LAB SIAM", "ทักหา LINE @djlabsiam")}'
         f'<a class="btn sec" href="tel:022525868">{ic("phone", 18)} โทร 02-252-5868</a></div></section>')
     graph = [SITE_ORG, SITE_LOCAL, SITE_WEB]
-    for c in COURSES:
-        f = F[c["title"]]
-        graph.append({"@type": "Course", "@id": f"{ORIGIN}/#{COURSE_LD_ID.get(c['title'], cid(c['title']))}", "name": c["title"],
-                      "description": f'{c["audience"]} · เรียนตัวต่อตัว {f["sessions"]} ครั้ง × {f["per"]} ชม. = {f["learn"]} ชม.',
-                      "provider": {"@id": ORIGIN + "/#org"},
-                      "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "Onsite", "location": {"@id": ORIGIN + "/#local"}}})
     ld = [{"@context": "https://schema.org", "@graph": graph},
           {"@context": "https://schema.org", "@type": "FAQPage", "@id": ORIGIN + "/#faqpage",
            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}]

@@ -190,7 +190,6 @@ if "home" in SRC:
     graph = next((x for x in hld if "@graph" in x), {"@graph": []})["@graph"]
     types = [n.get("@type") for n in graph]
     ok("Organization" in types and ["MusicSchool", "Store"] in types and "WebSite" in types, "home: JSON-LD Organization / MusicSchool+Store / WebSite missing")
-    ok(sorted(n["name"] for n in graph if n.get("@type") == "Course") == sorted(c["title"] for c in COURSES), "home: JSON-LD Course names differ from courses.json")
     ok("02-252-5868" in hs and "https://maps.google.com/?cid=14947686714332238791" in hs, "home: phone / map link missing")
     ok(hs.count("<h1") == 1 and "ซื้อ เรียน ซ้อม พร้อม DJ" in hs, "home: h1 missing")
 
