@@ -1,0 +1,7 @@
+{
+  "_about": "โมเดล 3D ที่เสิร์ฟจากเว็บเอง (assets/models/product/<product id>.glb) สำหรับรุ่นที่ยังไม่ได้อัปขึ้นถัง Supabase product-3d · คีย์ = id สินค้าใน web_products · ถ้าถัง product-3d มีรุ่นเดียวกันใน manifest.bin ถังชนะไฟล์ในนี้ · ใช้เฉพาะรุ่นที่เจ้าของอนุญาตและมีในตารางสินค้า (ห้ามเพิ่มสินค้าปลอม)",
+  "models": {
+    "1d019775-4c8c-4b0b-9ecc-d95bc3f042bb": {"name": "DDJ-REV7", "file": "/assets/models/product/1d019775-4c8c-4b0b-9ecc-d95bc3f042bb.glb"},
+    "04c99524-8959-4da3-af6d-103bbeb3e0bb": {"name": "XDJ-RX3", "file": "/assets/models/product/04c99524-8959-4da3-af6d-103bbeb3e0bb.glb"}
+  }
+}
