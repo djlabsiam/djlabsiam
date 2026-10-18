@@ -1227,7 +1227,7 @@ function open3d(p,m){
   var sets=SETS.filter(function(q){return q.items.some(function(it){return it.name.toUpperCase()===p.name.toUpperCase()})});
   if(sets.length){box.classList.add('hs');
     var bar=el('div','m3-sw'),inf=el('div','m3-si');inf.hidden=true;
-    [{t:'เดี่ยว',s:null}].concat(sets.map(function(q){return {t:'ชุด CDJ ×2 + '+q.mixer,s:q}})).forEach(function(o,i){
+    [{t:'เดี่ยว',s:null}].concat(sets.map(function(q){return {t:'ชุด '+q.title,s:q}})).forEach(function(o,i){
       var b=el('button','schip',o.t);b.type='button';b.setAttribute('aria-pressed',i?'false':'true');
       b.addEventListener('click',function(){Array.prototype.forEach.call(bar.children,function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
         v.removeAttribute('poster');v.setAttribute('src',o.s?SETBASE+o.s.file:m3src(m));v.setAttribute('alt',o.s?'โมเดล 3 มิติของชุด '+o.s.title:'โมเดล 3 มิติของ '+p.name);
