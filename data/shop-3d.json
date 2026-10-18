@@ -65,6 +65,14 @@
     "ad9d559e-309f-4895-8cae-1250cfa0911c": {
       "name": "PLX-CRSS12",
       "file": "/assets/models/product/ad9d559e-309f-4895-8cae-1250cfa0911c.glb"
+    },
+    "4f0a4e5b-8778-47df-9757-93f2197d446e": {
+      "name": "DJM-V10",
+      "file": "/assets/models/product/4f0a4e5b-8778-47df-9757-93f2197d446e.glb"
+    },
+    "6ed05e0a-735d-4bd9-872d-b028b6a85dd8": {
+      "name": "DJM-V5",
+      "file": "/assets/models/product/6ed05e0a-735d-4bd9-872d-b028b6a85dd8.glb"
     }
   }
 }
