@@ -1,7 +1,50 @@
 {
-  "_about": "โมเดล 3D ที่เสิร์ฟจากเว็บเอง (assets/models/product/<product id>.glb) สำหรับรุ่นที่ยังไม่ได้อัปขึ้นถัง Supabase product-3d · คีย์ = id สินค้าใน web_products · ถ้าถัง product-3d มีรุ่นเดียวกันใน manifest.bin ถังชนะไฟล์ในนี้ · ใช้เฉพาะรุ่นที่เจ้าของอนุญาตและมีในตารางสินค้า (ห้ามเพิ่มสินค้าปลอม)",
+  "_about": "โมเดล 3D ที่เสิร์ฟจากเว็บเอง (assets/models/product/<product id>.glb) สำหรับรุ่นที่ยังไม่ได้อัปขึ้นถัง Supabase product-3d · คีย์ = id สินค้าใน web_products · ถ้าถัง product-3d มีรุ่นเดียวกันใน manifest.bin ถังชนะไฟล์ในนี้ · ใช้เฉพาะรุ่นที่เจ้าของอนุญาตและมีในตารางสินค้า (ห้ามเพิ่มสินค้าปลอม) · override:true = ไฟล์ในเว็บชนะถัง (ใช้เมื่อโมเดลถูกอัปเดตแล้วแต่ในถังยังเป็นฉบับเก่า)",
   "models": {
-    "1d019775-4c8c-4b0b-9ecc-d95bc3f042bb": {"name": "DDJ-REV7", "file": "/assets/models/product/1d019775-4c8c-4b0b-9ecc-d95bc3f042bb.glb"},
-    "04c99524-8959-4da3-af6d-103bbeb3e0bb": {"name": "XDJ-RX3", "file": "/assets/models/product/04c99524-8959-4da3-af6d-103bbeb3e0bb.glb"}
+    "1d019775-4c8c-4b0b-9ecc-d95bc3f042bb": {
+      "name": "DDJ-REV7",
+      "file": "/assets/models/product/1d019775-4c8c-4b0b-9ecc-d95bc3f042bb.glb"
+    },
+    "04c99524-8959-4da3-af6d-103bbeb3e0bb": {
+      "name": "XDJ-RX3",
+      "file": "/assets/models/product/04c99524-8959-4da3-af6d-103bbeb3e0bb.glb"
+    },
+    "96947981-3226-43ed-92ca-14ddf4fed66d": {
+      "name": "DDJ-FLX10",
+      "file": "/assets/models/product/96947981-3226-43ed-92ca-14ddf4fed66d.glb"
+    },
+    "03d2c888-6135-483c-831a-5d8f7f8b54ee": {
+      "name": "DDJ-GRV6",
+      "file": "/assets/models/product/03d2c888-6135-483c-831a-5d8f7f8b54ee.glb"
+    },
+    "4e9372d8-e2db-4509-bfd7-1aac981e5eaf": {
+      "name": "DDJ-REV5",
+      "file": "/assets/models/product/4e9372d8-e2db-4509-bfd7-1aac981e5eaf.glb"
+    },
+    "fac099f1-be1f-4f15-bb02-95b1fc682c4d": {
+      "name": "EUPHONIA",
+      "file": "/assets/models/product/fac099f1-be1f-4f15-bb02-95b1fc682c4d.glb"
+    },
+    "11446434-7e32-48e1-9df4-cbad5c478fd6": {
+      "name": "HDJ-F10-TX",
+      "file": "/assets/models/product/11446434-7e32-48e1-9df4-cbad5c478fd6.glb"
+    },
+    "5c49ff8c-9d20-4c63-8048-7a3279ab4134": {
+      "name": "RMX-IGNITE",
+      "file": "/assets/models/product/5c49ff8c-9d20-4c63-8048-7a3279ab4134.glb"
+    },
+    "8d1bee81-2c9a-41fd-bb0c-8cc19f719a54": {
+      "name": "SLAB",
+      "file": "/assets/models/product/8d1bee81-2c9a-41fd-bb0c-8cc19f719a54.glb"
+    },
+    "2e3fa2ca-d960-40a1-8411-c69562918937": {
+      "name": "XDJ-AZ",
+      "file": "/assets/models/product/2e3fa2ca-d960-40a1-8411-c69562918937.glb"
+    },
+    "ecd0d532-f080-494c-9794-64f88cf397e1": {
+      "name": "XDJ-AN",
+      "file": "/assets/models/product/ecd0d532-f080-494c-9794-64f88cf397e1.glb",
+      "override": true
+    }
   }
 }

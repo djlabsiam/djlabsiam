@@ -1237,7 +1237,7 @@ function load3d(){   /* optional manifest in the public bucket: {"<product id>":
       if(/^[0-9a-f-]{36}$/i.test(k)&&m&&typeof m.file==='string'&&/^[A-Za-z0-9._-]{3,120}\.glb$/.test(m.file)&&m.file.indexOf('..')<0)
         o[k]={file:m.file,poster:(typeof m.poster==='string'&&/^[A-Za-z0-9._-]{3,120}\.(webp|jpg|png)$/.test(m.poster))?m.poster:'',credit:(typeof m.credit==='string')?m.credit.slice(0,140):''}});
     return o}).catch(function(){return {}}).then(function(o){   /* models served from this site (data/shop-3d.json); the bucket wins when it lists the same product */
-    Object.keys(LOCAL3D).forEach(function(k){if(!o[k]&&/^[0-9a-f-]{36}$/i.test(k))o[k]={file:LOCAL3D[k],poster:'',credit:'',local:true}});return o})}
+    Object.keys(LOCAL3D).forEach(function(k){var l=LOCAL3D[k];if((!o[k]||l.o)&&/^[0-9a-f-]{36}$/i.test(k))o[k]={file:l.f,poster:'',credit:'',local:true}});return o})}
 function m3src(m){return m.local?m.file:M3BASE+m.file}
 var grid=document.getElementById('sgrid'),count=document.getElementById('scount'),more=document.getElementById('smore'),NS='http://www.w3.org/2000/svg';
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -1333,7 +1333,7 @@ def shop_page():
             f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
             f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
             f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
-    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: v["file"] for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
+    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: {"f": v["file"], "o": bool(v.get("override"))} for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
     desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
     return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
                  active="shop", script=js, css_extra=SHOP_CSS)
