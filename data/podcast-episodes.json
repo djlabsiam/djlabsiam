@@ -1,9 +1,10 @@
 {
-  "_about": "ปกตอน DJ LAB Podcast ที่วนเป็นสไลด์ในส่วน Podcast หน้าแรก — เรียงตอนล่าสุดก่อน (ตอนใหม่ใส่บนสุดของ items) · img = ไฟล์ใน assets/img/podcast/ (960x540 .webp) · alt = ชื่อตอน · yt = รหัสวิดีโอ YouTube 11 ตัว (ถ้ามี ปกจะลิงก์ไปดู) แล้วรัน tools/build_pages.py --home / · EP2 ยังไม่มีลิงก์ รอเจ้าของ",
+  "_about": "ปกตอน DJ LAB Podcast ที่วนเป็นสไลด์ในส่วน Podcast หน้าแรก — เรียงตอนล่าสุดก่อน (ตอนใหม่ใส่บนสุดของ items) · img = ไฟล์ใน assets/img/podcast/ (960x540 .webp) · alt = ชื่อตอน · yt = รหัสวิดีโอ YouTube 11 ตัว (ถ้ามี ปกจะลิงก์ไปดู) แล้วรัน tools/build_pages.py --home /",
   "items": [
     {
       "img": "podcast-ep2.webp",
-      "alt": "DJ LAB Podcast EP2: DJ CCK เล่นแบบที่ชอบ? ชอบแบบที่เล่น?"
+      "alt": "DJ LAB Podcast EP2: DJ CCK เล่นแบบที่ชอบ? ชอบแบบที่เล่น?",
+      "yt": "bVXjdqupSyg"
     },
     {
       "img": "podcast-ep1.webp",
