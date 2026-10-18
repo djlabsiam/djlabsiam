@@ -1283,9 +1283,12 @@ Array.prototype.forEach.call(document.querySelectorAll('.schip'),function(c){c.a
 document.getElementById('ssort').addEventListener('change',function(e){sort=e.target.value;shown=PAGE;render()});
 document.getElementById('sstock').addEventListener('change',function(e){only=e.target.checked;shown=PAGE;render()});
 more.addEventListener('click',function(){shown+=PAGE;render()});
-function load(){count.textContent='กำลังโหลดรายการสินค้า…';
-  load3d().then(function(o){M3=o;return fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+function fetchAll(off,acc){   /* the API returns at most 100 rows per request: read pages until a short page */
+  return fetch(REST+'?select=id,name,brand,category,bot_category,price,in_stock,image_path&price=gt.0&order=price.desc,id.asc&limit=100&offset='+off,{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
   .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
+  .then(function(d){if(!Array.isArray(d))throw new Error('bad');acc=acc.concat(d);return d.length<100||off>=900?acc:fetchAll(off+100,acc)})}
+function load(){count.textContent='กำลังโหลดรายการสินค้า…';
+  load3d().then(function(o){M3=o;return fetchAll(0,[])
   .then(function(d){if(!Array.isArray(d))throw new Error('bad');ROWS=d.filter(function(p){return p&&typeof p.name==='string'&&p.name&&Number(p.price)>0}).map(function(p){p.price=Number(p.price);p.g=group(p);return p});render()})
   })  .catch(function(){count.textContent='';var e=el('div','serr');e.setAttribute('role','alert');e.appendChild(el('p','','โหลดรายการสินค้าไม่สำเร็จ ลองใหม่อีกครั้ง หรือถามทีมงานทาง LINE @djlabsiam'));
     var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',function(){e.remove();load()});e.appendChild(r);count.parentNode.insertBefore(e,grid)})}
