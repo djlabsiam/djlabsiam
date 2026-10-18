@@ -53,6 +53,18 @@
     "9e900af2-4064-4db9-b7eb-02cae1d9e8df": {
       "name": "DDJ-FLX2",
       "file": "/assets/models/product/9e900af2-4064-4db9-b7eb-02cae1d9e8df.glb"
+    },
+    "65a69632-a8e8-4094-9207-a95afc9e3df7": {
+      "name": "CDJ-1500X",
+      "file": "/assets/models/product/65a69632-a8e8-4094-9207-a95afc9e3df7.glb"
+    },
+    "0bdf5704-1d10-48fc-8a9c-3d39d8896cea": {
+      "name": "DJM-S7",
+      "file": "/assets/models/product/0bdf5704-1d10-48fc-8a9c-3d39d8896cea.glb"
+    },
+    "ad9d559e-309f-4895-8cae-1250cfa0911c": {
+      "name": "PLX-CRSS12",
+      "file": "/assets/models/product/ad9d559e-309f-4895-8cae-1250cfa0911c.glb"
     }
   }
 }

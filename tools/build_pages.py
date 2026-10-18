@@ -1266,7 +1266,7 @@ function card(p){
     im.addEventListener('load',function(){fit(im)});
     im.addEventListener('error',function(){im.remove();art.appendChild(icon(p.g))});art.appendChild(im)}
   else art.appendChild(icon(p.g));
-  var st=el('span','stk '+(p.in_stock?'in':'out'),p.in_stock?'มีของ':'สอบถามสต็อก');art.appendChild(st);a.appendChild(art);
+  var st=el('span','stk '+(p.in_stock?'in':'out'),p.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก');art.appendChild(st);a.appendChild(art);
   var b=el('div','b');b.appendChild(el('span','br',brand(p.brand)));b.appendChild(el('h3','',p.name));b.appendChild(el('span','pr',baht(p.price)));
   var w=el('div','bwrap'),l=el('a','btn sec sm','ถามทาง LINE');l.href=LINE+encodeURIComponent('สนใจ '+p.name);l.rel='noopener';
   if(M3[p.id]){var d=el('div','acts3'),b3=el('button','btn pri sm','ดู 3D');b3.type='button';b3.setAttribute('aria-label','ดูโมเดล 3 มิติของ '+p.name);
