@@ -45,6 +45,10 @@
       "name": "XDJ-AN",
       "file": "/assets/models/product/ecd0d532-f080-494c-9794-64f88cf397e1.glb",
       "override": true
+    },
+    "bec49f40-9d17-489d-be83-2e667878472e": {
+      "name": "HERCULES T10 (พร้อมกระเป๋า)",
+      "file": "/assets/models/product/bec49f40-9d17-489d-be83-2e667878472e.glb"
     }
   }
 }
