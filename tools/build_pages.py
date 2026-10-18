@@ -912,7 +912,8 @@ HOME_CSS = r"""
 .h3d-s .btn{position:absolute;left:50%;bottom:16px;transform:translateX(-50%)}
 .h3d-s model-viewer{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(#F4F2EC,#fff)}
 .h3d-ar{position:absolute;right:14px;bottom:14px;min-height:48px;padding:0 18px;border:0;border-radius:999px;background:var(--brand-base);color:#fff;font:700 15px/1 var(--font-family-display);cursor:pointer;box-shadow:0 10px 20px rgba(15,15,15,.3)}
-.hpod{display:grid;gap:16px;padding:28px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
+.hp-t{display:grid;gap:12px;align-content:center}
+.hpod{display:grid;gap:22px;padding:28px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
 .hpod h2{font-size:30px}
 .hpod .tag{font:700 13px/1 var(--font-family-display);letter-spacing:.12em;color:var(--brand-base)}
 .hpod p{color:var(--text-secondary);max-width:58ch}
@@ -951,7 +952,7 @@ HOME_CSS = r"""
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
-  .hpod{grid-template-columns:1.3fr 1fr;align-items:center;padding:36px}
+  .hpod{grid-template-columns:1fr 1.2fr;align-items:center;gap:40px;padding:36px}
   .hvisit{grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
 }
@@ -1019,23 +1020,27 @@ def contest_media():
 SUNDAY = (load(os.path.join(SITE, "data", "sunday-covers.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "sunday-covers.json")) else []
 
 
-def cover_slider():
-    if not SUNDAY:
+PODCAST_EPS = (load(os.path.join(SITE, "data", "podcast-episodes.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "podcast-episodes.json")) else []
+
+
+def cover_slider(items=None, folder="sunday", label="ปกรายการและวิดีโอจาก DJ LAB SIAM"):
+    items = SUNDAY if items is None else items
+    if not items:
         return ""
     sl = ""
-    for k, it in enumerate(SUNDAY):
-        img = (f'<img src="/assets/img/sunday/{E(it["img"])}" width="960" height="540" alt="{E(it["alt"])}"'
+    for k, it in enumerate(items):
+        img = (f'<img src="/assets/img/{folder}/{E(it["img"])}" width="960" height="540" alt="{E(it["alt"])}"'
                + (' fetchpriority="low" loading="lazy"' if k else ' loading="lazy"') + ' decoding="async">')
         if it.get("yt") and re.fullmatch(r"[A-Za-z0-9_-]{11}", it["yt"]):
             img = f'<a href="https://www.youtube.com/watch?v={it["yt"]}" target="_blank" rel="noopener" tabindex="-1">{img}</a>'
         sl += f'<li class="cv{" on" if k == 0 else ""}">{img}</li>'
-    return (f'<div class="cov" id="cov" role="group" aria-roledescription="carousel" aria-label="ปกรายการและวิดีโอจาก DJ LAB SIAM"><ul>{sl}</ul>'
+    return (f'<div class="cov" role="group" aria-roledescription="carousel" aria-label="{E(label)}"><ul>{sl}</ul>'
             f'<button type="button" class="cv-b p" aria-label="ปกก่อนหน้า">‹</button><button type="button" class="cv-b n" aria-label="ปกถัดไป">›</button>'
-            f'<div class="cv-n" aria-live="off"><span id="cv-i">1</span> / {len(SUNDAY)}</div></div>')
+            f'<div class="cv-n" aria-live="off"><span class="cv-i">1</span> / {len(items)}</div></div>')
 
 
 COV_JS = """<script>
-(function(){var c=document.getElementById('cov');if(!c)return;var L=[].slice.call(c.querySelectorAll('.cv')),i=0,n=document.getElementById('cv-i'),t=null,
+[].forEach.call(document.querySelectorAll('.cov'),function(c){var L=[].slice.call(c.querySelectorAll('.cv')),i=0,n=c.querySelector('.cv-i'),t=null,
 rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 function go(k){L[i].classList.remove('on');i=(k+L.length)%L.length;L[i].classList.add('on');n.textContent=i+1;
   var a=L[i].querySelector('a');L.forEach(function(x){var q=x.querySelector('a');if(q)q.tabIndex=x===L[i]?0:-1})}
@@ -1044,7 +1049,7 @@ c.querySelector('.cv-b.p').addEventListener('click',function(){go(i-1);auto()});
 c.addEventListener('mouseenter',stop);c.addEventListener('mouseleave',auto);c.addEventListener('focusin',stop);c.addEventListener('focusout',auto);
 var sx=null;c.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;stop()},{passive:true});
 c.addEventListener('touchend',function(e){if(sx===null)return;var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)go(i+(d<0?1:-1));sx=null;auto()});
-if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].isIntersecting?auto():stop()}).observe(c);else auto()})();
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].isIntersecting?auto():stop()}).observe(c);else auto()});
 </script>"""
 
 
@@ -1081,8 +1086,8 @@ def home_page():
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
         f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div></section>'
-        f'<section class="hsec" id="podcast"><div class="hpod"><div><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2></div>'
-        f'<div><p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div></div></section>'
+        f'<section class="hsec" id="podcast"><div class="hpod"><div class="hp-t"><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2>'
+        f'<p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div>{cover_slider(PODCAST_EPS, "podcast", "ปกตอนของ DJ LAB Podcast เรียงจากตอนล่าสุด")}</div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
         f'<div><h2>แวะมาที่ร้านได้เลย</h2><dl><dt>ที่อยู่</dt><dd>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330</dd>'
         f'<dt>เปิด</dt><dd>ทุกวัน 12:00–20:00 น.</dd><dt>โทร</dt><dd><a href="tel:022525868">02-252-5868</a> · <a href="tel:0886560464">088-656-0464</a></dd></dl>'
