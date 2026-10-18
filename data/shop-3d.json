@@ -73,6 +73,22 @@
     "6ed05e0a-735d-4bd9-872d-b028b6a85dd8": {
       "name": "DJM-V5",
       "file": "/assets/models/product/6ed05e0a-735d-4bd9-872d-b028b6a85dd8.glb"
+    },
+    "fff87be9-8c51-4bab-9a1c-49fedc339472": {
+      "name": "DDJ-REV1",
+      "file": "/assets/models/product/fff87be9-8c51-4bab-9a1c-49fedc339472.glb"
+    },
+    "4d271cc6-7ad2-4dfa-b3ff-e291c9bbe4d2": {
+      "name": "VM-80",
+      "file": "/assets/models/product/4d271cc6-7ad2-4dfa-b3ff-e291c9bbe4d2.glb"
+    },
+    "45e580cb-f89c-446b-8e0d-d00b3baaa88b": {
+      "name": "DM-40D-BT",
+      "file": "/assets/models/product/45e580cb-f89c-446b-8e0d-d00b3baaa88b.glb"
+    },
+    "0d61404b-86c3-472e-a2a7-d648d76cb90e": {
+      "name": "DM-50D-W",
+      "file": "/assets/models/product/0d61404b-86c3-472e-a2a7-d648d76cb90e.glb"
     }
   }
 }
