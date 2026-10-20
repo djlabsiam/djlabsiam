@@ -157,6 +157,27 @@ for t in TEACHERS:
     ok(("data-pfs" in s) == bool(prof.get("portfolio")), f"{k}: portfolio slider shown/hidden wrongly")
     ok("ให้ร้านจัดอาจารย์ให้" in s, f"{k}: main CTA missing")
 
+    # live profile script (data from view web_teacher_profiles): fixed address, per-field fallback hooks, DOM written with textContent only, link/video/image guards present
+    tp = re.findall(r"<script>\s*\(function\(\)\{\s*/\* live teacher profile.*?</script>", s, re.S)
+    ok(len(tp) == 1, f"{k}: expected exactly one live-profile script, found {len(tp)}")
+    js = tp[0] if tp else ""
+    ok("@@" not in js, f"{k}: live-profile script has an unfilled placeholder")
+    ok(f"var SLUG='{slug(t['name'])}'" in js, f"{k}: live-profile script SLUG is not '{slug(t['name'])}'")
+    ok(re.search(r"REST='https://[a-z0-9]+\.supabase\.co/rest/v1/web_teacher_profiles'", js) is not None, f"{k}: live-profile script must read only the view web_teacher_profiles")
+    ok(re.search(r"IMG='https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/teacher-portfolio/'", js) is not None, f"{k}: live-profile image base must be the public teacher-portfolio bucket")
+    ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function|srcdoc|setAttribute\('(on[a-z]+|style|href|src)'", js), f"{k}: live-profile script must not use innerHTML/outerHTML/insertAdjacentHTML/document.write/eval/inline handlers")
+    ok("textContent" in js, f"{k}: live-profile script must write text with textContent")
+    ok(all(h in js for h in ("instagram.com", "facebook.com", "tiktok.com", "youtube.com")) and "a.protocol!=='https:'" in js and "a.username||a.password||a.port" in js
+       and "rel='noopener noreferrer'" in js, f"{k}: live-profile script lost the social-link host / https / rel guard")
+    ok(r"/^[A-Za-z0-9_-]{11}$/.test(v)" in js and "youtube-nocookie.com/embed/" in js, f"{k}: live-profile video id guard (11 chars) or nocookie embed missing")
+    ok(r"'^'+SLUG+'/[A-Za-z0-9_-]{1,60}\\.(jpg|webp)$'" in js, f"{k}: live-profile image path must be pinned to the page's own slug folder and jpg/webp")
+    ok(s.count('<template id="tp-note">') == 1 and "fc-priv" in s, f"{k}: video privacy note template missing (needed when the video comes from the database)")
+    hooks = re.findall(r'<section data-tp="([a-z]+)"', s)
+    ok(hooks == [x for x in ("bio", "hl", "pf", "vid", "soc") if x in hooks], f"{k}: data-tp section hooks out of order or unknown: {hooks}")
+    for hk, cond in (("bio", prof.get("bio")), ("hl", prof.get("highlights")), ("pf", prof.get("portfolio")), ("vid", prof.get("video_id")), ("soc", t.get("social"))):
+        ok((hk in hooks) == bool(cond), f"{k}: static section '{hk}' hook shown/hidden wrongly (the static fallback must stay intact)")
+    ok(s.rfind('<div class="stick">') > s.rfind('<section data-tp='), f"{k}: sticky CTA must come after every profile section")
+
 # ---- FAQ: visible == JSON-LD ----
 s = SRC.get("courses", "")
 vis_faq = [(html.unescape(re.sub(r"<[^>]+>", "", q)), html.unescape(re.sub(r"<[^>]+>", "", a))) for q, a in re.findall(r'<details class="q"[^>]*><summary>(.*?)</summary><p>(.*?)</p></details>', s, re.S)]

@@ -718,6 +718,56 @@ PFS_CSS = """
 """
 
 
+TP_JS = r"""<script>
+(function(){
+/* live teacher profile: view web_teacher_profiles (anon, read-only). Field by field: empty in the database = the static text stays. Offline/failed = whole static page. DOM only via textContent / setAttribute. */
+var SLUG='@@SLUG@@',REST='@@REST@@',KEY='@@KEY@@',IMG='@@IMG@@',ORDER=['bio','hl','pf','vid','soc'];
+var main=document.querySelector('.pbody');if(!main||!/^[a-z][a-z0-9-]{1,29}$/.test(SLUG))return;
+var NAME=(main.querySelector('.pname h1')||{}).textContent||'';
+var HOSTS={instagram:['instagram.com','www.instagram.com'],facebook:['facebook.com','www.facebook.com'],tiktok:['tiktok.com','www.tiktok.com'],youtube:['youtube.com','www.youtube.com']};
+var LABEL={instagram:'Instagram',facebook:'Facebook',youtube:'YouTube',tiktok:'TikTok'};
+var PATH=new RegExp('^'+SLUG+'/[A-Za-z0-9_-]{1,60}\\.(jpg|webp)$');
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function sec(kind,title){var s=el('section');s.setAttribute('data-tp',kind);s.appendChild(el('h2','',title));return s}
+function put(kind,s){var old=main.querySelector('section[data-tp="'+kind+'"]');if(old){old.replaceWith(s);return}
+  var ref=null;for(var j=ORDER.indexOf(kind)+1;j<ORDER.length&&!ref;j++)ref=main.querySelector('section[data-tp="'+ORDER[j]+'"]');
+  main.insertBefore(s,ref||main.querySelector('.stick'))}
+function safeSocial(k,u){if(!HOSTS[k]||typeof u!=='string'||u.length>200)return null;var a;try{a=new URL(u)}catch(e){return null}
+  if(a.protocol!=='https:'||a.username||a.password||a.port||HOSTS[k].indexOf(a.hostname)<0)return null;return a.href}
+function bio(v){if(typeof v!=='string'||!v.trim()||v.length>1200)return;var s=sec('bio','เกี่ยวกับ '+NAME),p=el('p','bio',v);p.style.whiteSpace='pre-line';s.appendChild(p);put('bio',s)}
+function hl(v){if(!Array.isArray(v))return;var a=v.filter(function(x){return typeof x==='string'&&x.trim()&&x.length<=200}).slice(0,6);if(!a.length)return;
+  var s=sec('hl','ผลงาน'),ul=el('ul','bl');a.forEach(function(x){ul.appendChild(el('li','',x))});s.appendChild(ul);put('hl',s)}
+function soc(v){if(!v||typeof v!=='object'||Array.isArray(v))return;var s=sec('soc','ติดตาม'),d=el('div'),n=0;
+  Object.keys(HOSTS).forEach(function(k){var h=safeSocial(k,v[k]);if(!h)return;var a=el('a','btn sec sm',LABEL[k]);a.href=h;a.target='_blank';a.rel='noopener noreferrer';d.appendChild(a);d.appendChild(document.createTextNode(' '));n++});
+  if(n){s.appendChild(d);put('soc',s)}}
+function vid(v){if(typeof v!=='string'||!/^[A-Za-z0-9_-]{11}$/.test(v))return;var cur=main.querySelector('.fc-box[data-vid]');if(cur&&cur.getAttribute('data-vid')===v)return;
+  var s=sec('vid','วิดีโอแนะนำ'),fc=el('div','fc'),box=el('div','fc-box'),b=el('button','fc-btn'),NS='http://www.w3.org/2000/svg',sv=document.createElementNS(NS,'svg'),tri=document.createElementNS(NS,'path');
+  b.type='button';b.setAttribute('aria-label','เล่นวิดีโอแนะนำของ '+NAME);sv.setAttribute('viewBox','0 0 24 24');sv.setAttribute('aria-hidden','true');tri.setAttribute('d','M8 5v14l11-7z');tri.setAttribute('fill','currentColor');sv.appendChild(tri);b.appendChild(sv);
+  var l=el('div','fc-msg l','กำลังเชื่อมต่อ YouTube…');l.setAttribute('role','status');var e=el('div','fc-msg e','เปิดวิดีโอในหน้านี้ไม่ได้ '),a=el('a','btn sec sm','ดูบน YouTube');a.href='https://www.youtube.com/watch?v='+v;a.rel='noopener';e.appendChild(a);
+  box.appendChild(b);box.appendChild(l);box.appendChild(e);fc.appendChild(box);
+  var note=document.getElementById('tp-note');if(note)fc.appendChild(note.content.cloneNode(true));s.appendChild(fc);
+  b.addEventListener('click',function(){box.classList.add('loading');var f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+v+'?autoplay=1&rel=0';f.title='วิดีโอแนะนำ '+NAME;
+    f.allow='autoplay; encrypted-media; picture-in-picture';f.referrerPolicy='strict-origin-when-cross-origin';f.setAttribute('allowfullscreen','');
+    var t=setTimeout(function(){box.classList.remove('loading');box.classList.add('failed')},10000);f.addEventListener('load',function(){clearTimeout(t);box.classList.remove('loading')});box.appendChild(f)});
+  put('vid',s)}
+function pf(v){if(!Array.isArray(v))return;var a=v.filter(function(x){return x&&typeof x.path==='string'&&PATH.test(x.path)&&typeof x.alt==='string'&&x.alt.trim()}).slice(0,8);if(!a.length)return;
+  var s=sec('pf','Portfolio'),w=el('div','pfs'),ul=el('ul','pfs-t');ul.tabIndex=0;ul.setAttribute('aria-label','สไลด์ผลงานของ '+NAME);
+  a.forEach(function(x){var li=el('li'),fg=el('figure'),im=document.createElement('img');im.src=IMG+x.path;im.setAttribute('alt',x.alt);im.loading='lazy';im.decoding='async';im.style.setProperty('--r','1.5');
+    im.addEventListener('load',function(){if(im.naturalWidth&&im.naturalHeight)im.style.setProperty('--r',String(im.naturalWidth/im.naturalHeight))});fg.appendChild(im);li.appendChild(fg);ul.appendChild(li)});
+  w.appendChild(ul);
+  if(a.length>1){var p=el('button','pfs-b p','‹'),n=el('button','pfs-b n','›');p.type='button';n.type='button';p.setAttribute('aria-label','ภาพก่อนหน้า');n.setAttribute('aria-label','ภาพถัดไป');
+    var step=function(d){ul.scrollBy({left:d*ul.clientWidth*.9,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})};
+    p.addEventListener('click',function(){step(-1)});n.addEventListener('click',function(){step(1)});
+    ul.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){e.preventDefault();step(1)}else if(e.key==='ArrowLeft'){e.preventDefault();step(-1)}});w.appendChild(p);w.appendChild(n)}
+  s.appendChild(w);put('pf',s)}
+function apply(r){if(!r||r.slug!==SLUG)return;[[bio,r.bio],[hl,r.highlights],[pf,r.portfolio],[vid,r.video_id],[soc,r.socials]].forEach(function(x){try{x[0](x[1])}catch(e){}})}
+var ctl=new AbortController(),to=setTimeout(function(){ctl.abort()},8000);
+fetch(REST+'?select=slug,bio,highlights,socials,video_id,portfolio&slug=eq.'+SLUG,{headers:{apikey:KEY,Authorization:'Bearer '+KEY},signal:ctl.signal})
+  .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){clearTimeout(to);if(Array.isArray(j)&&j.length===1)apply(j[0])}).catch(function(){});
+})();
+</script>
+"""
+
 def teacher_page(t):
     name = t["name"]
     s = slug(name)
@@ -725,9 +775,9 @@ def teacher_page(t):
     chips = "".join(f'<a class="cchip" href="/courses/#{cid(x)}">{E(x)} {ic("arrow", 16)}</a>' for x in teaches[name])
     sections = f'<section><h2>คอร์สที่สอน</h2><div class="cchips">{chips}</div><p class="one">ทุกคอร์สเรียนตัวต่อตัว</p></section>'
     if prof.get("bio"):
-        sections += f'<section><h2>เกี่ยวกับ {E(name)}</h2><p class="bio">{E(prof["bio"])}</p></section>'
+        sections += f'<section data-tp="bio"><h2>เกี่ยวกับ {E(name)}</h2><p class="bio">{E(prof["bio"])}</p></section>'
     if prof.get("highlights"):
-        sections += f'<section><h2>ผลงาน</h2><ul class="bl">{"".join("<li>" + E(h) + "</li>" for h in prof["highlights"])}</ul></section>'
+        sections += f'<section data-tp="hl"><h2>ผลงาน</h2><ul class="bl">{"".join("<li>" + E(h) + "</li>" for h in prof["highlights"])}</ul></section>'
     script = ""
     pf = prof.get("portfolio") or []
     from PIL import Image as _Im
@@ -740,12 +790,12 @@ def teacher_page(t):
     if pf:
         slides = "".join(f'<li><figure><img src="/assets/img/portfolio/{E(it["img"])}" width="{it["_w"]}" height="{it["_h"]}" style="--r:{it["_w"] / it["_h"]:.4f}" alt="{E(it.get("alt") or "ผลงานของ " + name)}" loading="lazy" decoding="async">'
                          + (f'<figcaption>{E(it["caption"])}</figcaption>' if it.get("caption") else "") + '</figure></li>' for it in pf)
-        sections += (f'<section><h2>Portfolio</h2><div class="pfs" data-pfs><ul class="pfs-t" tabindex="0" aria-label="สไลด์ผลงานของ {E(name)}">{slides}</ul>'
+        sections += (f'<section data-tp="pf"><h2>Portfolio</h2><div class="pfs" data-pfs><ul class="pfs-t" tabindex="0" aria-label="สไลด์ผลงานของ {E(name)}">{slides}</ul>'
                      + ('<button type="button" class="pfs-b p" aria-label="ภาพก่อนหน้า">‹</button><button type="button" class="pfs-b n" aria-label="ภาพถัดไป">›</button>' if len(pf) > 1 else "")
                      + '</div></section>')
         script += PFS_JS
     if prof.get("video_id"):
-        sections += (f'<section><h2>วิดีโอแนะนำ</h2><div class="fc"><div class="fc-box" data-vid="{E(prof["video_id"])}" data-title="วิดีโอแนะนำ {E(name)}">'
+        sections += (f'<section data-tp="vid"><h2>วิดีโอแนะนำ</h2><div class="fc"><div class="fc-box" data-vid="{E(prof["video_id"])}" data-title="วิดีโอแนะนำ {E(name)}">'
                      f'<img src="/assets/img/{E(prof["poster"])}" width="1280" height="720" alt="" loading="lazy">'
                      f'<button class="fc-btn" type="button" aria-label="เล่นวิดีโอแนะนำของ {E(name)}">{ic("play", 28)}</button>'
                      f'<div class="fc-msg l" role="status">กำลังเชื่อมต่อ YouTube…</div>'
@@ -756,7 +806,12 @@ def teacher_page(t):
     if soc:
         host = urllib.parse.urlparse(soc).netloc.lower()
         label = "Instagram" if "instagram" in host else ("Linktree" if "linktr.ee" in host else "ลิงก์ของ " + name)
-        sections += f'<section><h2>ติดตาม</h2><div><a class="btn sec sm" href="{E(soc)}" target="_blank" rel="noopener">{label} {ic("ext", 16)}</a></div></section>'
+        sections += f'<section data-tp="soc"><h2>ติดตาม</h2><div><a class="btn sec sm" href="{E(soc)}" target="_blank" rel="noopener">{label} {ic("ext", 16)}</a></div></section>'
+    api, key = book_backend()
+    origin = re.match(r"https://[a-z0-9.-]+\.supabase\.co", api).group(0)
+    script += (TP_JS.replace("@@SLUG@@", s).replace("@@REST@@", origin + "/rest/v1/web_teacher_profiles").replace("@@KEY@@", key)
+               .replace("@@IMG@@", origin + "/storage/v1/object/public/teacher-portfolio/"))
+    sections += f'<template id="tp-note">{PRIVACY_NOTE}</template>'
     sections += (f'<div class="stick"><p class="tpick">ไม่ต้องเลือกอาจารย์ก็ได้ ร้านจัดอาจารย์ที่เหมาะกับคอร์สและเวลาว่างให้</p>'
                  f'{line_btn("สนใจเรียน ให้ร้านจัดอาจารย์ให้", "ทัก LINE · ให้ร้านจัดอาจารย์ให้")}'
                  f'{line_btn("สนใจเรียนกับอาจารย์ " + name, "ขอเรียนกับอาจารย์ " + name, "sec")}</div>')
@@ -769,7 +824,7 @@ def teacher_page(t):
     taught = ", ".join(teaches[name])
     return shell(f"/teachers/{s}/", f"{name} — อาจารย์ DJ LAB SIAM",
                  f"{name} สอน {taught} แบบตัวต่อตัว ที่ DJ LAB SIAM สยามสแควร์", body, script=script, active="teachers",
-                 css_extra=PFS_CSS if pf else "")
+                 css_extra=PFS_CSS)
 
 
 # ───────── /content/ ─────────
