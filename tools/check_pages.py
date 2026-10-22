@@ -330,6 +330,10 @@ if PIXEL_ID:
     ok("Meta Pixel" in en and "Turn off ad measurement" in en, "the Pixel can run but privacy-en.html does not describe Meta Pixel and the off switch")
     ok("ไม่มีสคริปต์วัดผลหรือติดตามการเข้าชม" not in th, "privacy.html still says there is no tracking script while the Pixel can run")
     ok("no shop analytics or tracking scripts run" not in en, "privacy-en.html still says there are no tracking scripts while the Pixel can run")
+# teacher profile pages publish what each teacher wrote: both policies carry the owner-approved line (always, not only when the Pixel can run)
+th, en = read(os.path.join(SITE, "privacy.html")), read(os.path.join(SITE, "privacy-en.html"))
+ok("<p>เนื้อหาในหน้าโปรไฟล์อาจารย์ (ประวัติ ผลงาน ลิงก์ และรูปภาพ) เป็นข้อมูลที่อาจารย์แต่ละท่านเลือกเผยแพร่ด้วยตนเอง</p>" in th, "privacy.html lost the owner-approved line about teacher profile content (teachers publish it themselves)")
+ok("<p>The content on each teacher's profile page (biography, achievements, links and images) is information that each teacher has chosen to publish themselves.</p>" in en, "privacy-en.html lost the owner-approved line about teacher profile content (teachers publish it themselves)")
 
 # ---- /content/: the clip list comes from the database through one public function; YouTube is touched only after a press; nothing from the database is ever treated as HTML ----
 for k, s in SRC.items():
