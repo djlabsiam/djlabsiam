@@ -350,7 +350,10 @@ ok(r"/^\/book\//.test(location.pathname)" in pj, "popup.js must stay off /book/"
 ok(not re.search(r"฿|baht|promoPrice|regularPrice|\.products|\.conditions|\.gift|gifts|\.price", pj), "popup.js must not read or show prices, products, gifts or conditions of a promotion (owner: name + end date only)")
 ok("pic(images[typeof p.id === 'string' ? p.id : '']) || pic(images['default'])" in pj, "popup.js: every promotion slide must get its own picture (by promotion id) or the default picture")
 ok("str(p.name, 140)" in pj and "str(it.title, 90)" in pj, "popup.js: promotion names from the database allow 140 characters (long names are real), admin titles 90")
-ok(".dpop{position:fixed;inset:0;" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
+ok("localStorage.setItem(SKIP" in pj and "localStorage.removeItem(SKIP)" in pj and "hidden.indexOf(keyOf(s)) >= 0" in pj and "ไม่ต้องแสดงอีกในครั้งต่อไป" in pj, "popup.js: the 'don't show again' tick must remember the slides seen and show the pop-up again when a slide is new")
+ok("facebook.com/plugins/video.php?href=" in pj and "pl.addEventListener('click', function () { playVideo(i, false); })" in pj and "FBEMBED.test(it.embed)" in pj and "s.autoplay) playVideo(i, true)" in pj, "popup.js: a Facebook video is embedded only after a press (or muted when the admin sets autoplay), and only for a valid facebook.com video address")
+ok("(max-width: 700px)" in pj and "<picture>" not in pj and "createElement('picture')" in pj, "popup.js: slides must use a portrait picture on phones (picture/source)")
+ok("position:fixed;inset:0;z-index:200" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss and "@media (max-width:700px)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
 pv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "popup.js"), "rb").read() + io.open(os.path.join(SITE, "assets", "css", "popup.css"), "rb").read()).hexdigest()[:8]
 for k, s in SRC.items():
     if k in ("home-next",):
@@ -364,12 +367,26 @@ ok(isinstance(pim, dict) and "default" in pim, "data/popup.json: promoImages mus
 for pk, pv in (pim.items() if isinstance(pim, dict) else []):
     ok(isinstance(pv, dict) and re.fullmatch(r"[A-Za-z0-9_-]{1,60}\.(webp|jpg|png)", str(pv.get("img", ""))) is not None and os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(pv.get("img", "")))) and bool(str(pv.get("alt", "")).strip()),
        f"data/popup.json promoImages[{pk}]: img must be a plain file name that exists in assets/img/popup/ and needs alt text")
+for who, pv in [("newsImage", pop.get("newsImage"))] + [(f"promoImages[{k}]", v) for k, v in (pim.items() if isinstance(pim, dict) else [])]:
+    ok(isinstance(pv, dict) and re.fullmatch(r"[A-Za-z0-9_-]{1,60}-m\.(webp|jpg|png)", str(pv.get("imgM", ""))) is not None and os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(pv.get("imgM", "")))),
+       f"data/popup.json {who}: imgM (portrait picture for phones, file name ending -m) must exist in assets/img/popup/")
+ok(isinstance(pop.get("newsImage"), dict) and os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(pop["newsImage"].get("img", "")))), "data/popup.json: newsImage (backdrop for slides without their own picture) must exist")
+from PIL import Image as _PI
+for pv in [pop.get("newsImage")] + list(pim.values() if isinstance(pim, dict) else []):
+    for fk, want in (("img", (1920, 1080)), ("imgM", (1080, 1920))):
+        fp = os.path.join(SITE, "assets", "img", "popup", str((pv or {}).get(fk, "")))
+        if os.path.exists(fp):
+            with _PI.open(fp) as _im:
+                ok(_im.size == want, f"popup picture {os.path.basename(fp)} is {_im.size[0]}x{_im.size[1]}, expected {want[0]}x{want[1]}")
 for i, it in enumerate(pop.get("items", [])):
     w = f"data/popup.json item {i + 1}"
     ok(isinstance(it, dict) and 1 <= len(str(it.get("title", "")).strip()) <= 90, f"{w}: title is required (1-90 characters)")
     if not isinstance(it, dict):
         continue
     ok(it.get("type", "news") in ("news", "promo", "facebook", "update"), f"{w}: type must be news | promo | facebook | update")
+    if it.get("embed"):
+        ok(re.fullmatch(r"https://(www\.)?facebook\.com/(reel/\d{5,25}|watch/?\?v=\d{5,25}|[A-Za-z0-9.\-]{5,60}/videos/\d{5,25})/?", it["embed"]) is not None, f"{w}: embed must be a facebook.com reel / watch?v= / videos address")
+    ok(it.get("autoplay") in (None, True, False), f"{w}: autoplay must be true or false")
     ok(len(str(it.get("text", ""))) <= 220 and len(str(it.get("cta", ""))) <= 30 and len(str(it.get("alt", ""))) <= 120, f"{w}: text ≤ 220, cta ≤ 30, alt ≤ 120 characters")
     for dk in ("from", "until"):
         ok(dk not in it or re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(it[dk])) is not None, f"{w}: {dk} must be YYYY-MM-DD")
