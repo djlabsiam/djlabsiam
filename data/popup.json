@@ -1,7 +1,21 @@
 {
-  "_about": "สไลด์ Pop up ลอยเมื่อเข้าเว็บ (แสดงครั้งเดียวต่อรอบเปิดเบราว์เซอร์ ที่หน้าแรกที่ผู้เข้าชมเปิด (หน้าไหนก็ได้ ยกเว้น /book/) · ปิดแล้วไม่แสดงซ้ำ 24 ชม. จนกว่าสไลด์จะเปลี่ยน) · สไลด์ = โปรโมชั่นที่กำลังรันจากระบบร้านอัตโนมัติ (autoPromotions) + รายการใน items ด้านล่าง ผู้ดูแลแก้ไฟล์นี้แล้ว push ก็ขึ้นเว็บเลย ไม่ต้อง build · รายการที่หมดช่วง from/until จะหายเองตามวันที่ไทย · ว่าง/ปิดทั้งหมด = ไม่มี Pop up",
-  "_fields": "items[]: type = news | promo | facebook | update (ป้ายหัวสไลด์) · title (จำเป็น ≤90 ตัวอักษร) · text (≤220) · img = ชื่อไฟล์ใน assets/img/popup/ (webp/jpg/png อัตราส่วน 16:9 แนะนำ 1280x720) + alt · link = พาธในเว็บ (เช่น /shop/) หรือ https ของ facebook.com / fb.watch / instagram.com / youtube.com / youtu.be / tiktok.com / line.me / lin.ee / djlabsiam.com เท่านั้น · cta = ข้อความปุ่ม (≤30) · from / until = วันที่ YYYY-MM-DD (ไม่ใส่ = ไม่จำกัด) · สูงสุด 8 สไลด์ ลำดับ = โปรโมชั่นอัตโนมัติก่อน แล้วตามลำดับในไฟล์ · Facebook: ใส่ลิงก์โพสต์ + ชื่อ/ข้อความ/รูปเอง (เว็บดึงโพสต์อัตโนมัติไม่ได้)",
+  "_about": "Pop up เต็มหน้าเป็นด่านแรกเมื่อเข้าเว็บ (ผู้เข้าชมต้องกดปิดก่อนจึงใช้เว็บได้ · แสดงครั้งเดียวต่อรอบเปิดเบราว์เซอร์ ที่หน้าแรกที่เปิด ยกเว้น /book/) · สไลด์ = โปรโมชั่นที่กำลังรันจากระบบร้านอัตโนมัติ (autoPromotions · แสดงเฉพาะชื่อโปร + วันสิ้นสุด ไม่แสดงราคา) + รายการใน items · ผู้ดูแลแก้ไฟล์นี้แล้ว push ก็ขึ้นเว็บเลย ไม่ต้อง build · รายการที่หมดช่วง from/until จะหายเองตามวันที่ไทย · ว่าง/ปิดทั้งหมด = ไม่มี Pop up",
+  "_fields": "promoImages: รูปของสไลด์โปรโมชั่น — คีย์ = รหัสโปรในระบบร้าน (promotions.code) ค่า = {img: ชื่อไฟล์ใน assets/img/popup/, alt} · โปรที่ไม่มีคีย์ใช้ \"default\" (ต้องมีเสมอ เพื่อให้ทุกโปรมีรูป) · รูป 16:9 แนะนำ 1600x900 webp ไม่ใส่ตัวหนังสือ/ราคาในรูป (ข้อความมาจากระบบร้านสด) · items[]: type = news | promo | facebook | update (ป้ายหัวสไลด์) · title (จำเป็น ≤90 ตัวอักษร) · text (≤220) · img + alt (ไม่ใส่ = แผงสีแบรนด์ ถ้าเป็น facebook มีปุ่มเล่น) · link = พาธในเว็บ (เช่น /shop/) หรือ https ของ facebook.com / fb.watch / instagram.com / youtube.com / youtu.be / tiktok.com / line.me / lin.ee / djlabsiam.com เท่านั้น · cta = ข้อความปุ่ม (≤30) · from / until = วันที่ YYYY-MM-DD (ไม่ใส่ = ไม่จำกัด) · สูงสุด 8 สไลด์ ลำดับ = โปรโมชั่นอัตโนมัติก่อน แล้วตามลำดับในไฟล์ · Facebook: ใส่ลิงก์โพสต์ + ชื่อ/ข้อความ/รูปเอง (เว็บดึงโพสต์อัตโนมัติไม่ได้)",
   "enabled": true,
   "autoPromotions": true,
-  "items": []
+  "promoImages": {
+    "starter-pack-2026-08": { "img": "promo-starter-pack.webp", "alt": "ชุด Starter Pack: DJ controller DDJ-FLX2 ลำโพง และหูฟัง Pioneer DJ" },
+    "mahajak-special-2026-09": { "img": "promo-cdj-special.webp", "alt": "เครื่องเล่น DJ CDJ-3000X ของ AlphaTheta" },
+    "alphatheta-mahajak-2026-10": { "img": "promo-alphatheta-oct.webp", "alt": "XDJ-RR, CDJ-350, ลำโพง DM-40D-BT และหูฟัง HDJ-CUE1BT ของ Pioneer DJ" },
+    "default": { "img": "promo-default.webp", "alt": "เครื่องเล่น DJ CDJ-3000X ของ AlphaTheta" }
+  },
+  "items": [
+    {
+      "type": "facebook",
+      "title": "สรุปมาให้แล้ว 5ข้อ Serato DJ Mobile น่าใช้มั้ย?",
+      "text": "วิดีโอล่าสุดจากเพจ DJ Lab Siam บน Facebook",
+      "link": "https://www.facebook.com/share/v/1BzxbkbiUG/",
+      "cta": "ดูวิดีโอบน Facebook"
+    }
+  ]
 }

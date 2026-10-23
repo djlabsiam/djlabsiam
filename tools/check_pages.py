@@ -8,7 +8,7 @@ track on the pages matches that file, the visible FAQ equals the JSON-LD FAQ, no
 placeholders, every image has width/height/alt, the privacy policy covers YouTube if any page can load a video, and the sitemap lists exactly the
 indexable pages.  Standard library only.
 """
-import argparse, glob, hashlib, html, io, json, os, re, sys
+import argparse, glob, hashlib, html, io, json, os, re, sys, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -344,11 +344,13 @@ ok(bool(bk_api and bk_key) and f"var RPC = '{bk_api.group(1)}bot_promotions'" in
 ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function|srcdoc", pj), "popup.js must not use innerHTML/outerHTML/insertAdjacentHTML/document.write/eval")
 ok("textContent" in pj and "a.protocol === 'https:'" in pj and "!a.username && !a.password && !a.port" in pj and "rel = 'noopener noreferrer'" in pj, "popup.js lost its link guard (https + allowed host + rel)")
 ok("/^[A-Za-z0-9_-]{1,60}\\.(webp|jpg|png)$/" in pj and "'/assets/img/popup/'" in pj, "popup.js: slide images must come only from /assets/img/popup/ with a plain file name")
-ok("sessionStorage" in pj and "86400000" in pj and "prefers-reduced-motion" in pj and "'Escape'" in pj, "popup.js: once-per-session, 24h dismissal, reduced-motion and Esc handling must stay")
+ok("sessionStorage" in pj and "prefers-reduced-motion" in pj and "e.key === 'Escape'" in pj and "e.key !== 'Tab'" in pj, "popup.js: once-per-session, reduced-motion, Esc and focus-trap handling must stay")
+ok("aria-modal" in pj and ".inert = true" in pj and "de.style.overflow = 'hidden'" in pj and "n.inert = false" in pj, "popup.js: the pop-up is a full-page gate — aria-modal, inert page behind it, scroll lock, and everything given back on close")
 ok(r"/^\/book\//.test(location.pathname)" in pj, "popup.js must stay off /book/")
 ok(not re.search(r"฿|baht|promoPrice|regularPrice|\.products|\.conditions|\.gift|gifts|\.price", pj), "popup.js must not read or show prices, products, gifts or conditions of a promotion (owner: name + end date only)")
+ok("pic(images[typeof p.id === 'string' ? p.id : '']) || pic(images['default'])" in pj, "popup.js: every promotion slide must get its own picture (by promotion id) or the default picture")
 ok("str(p.name, 140)" in pj and "str(it.title, 90)" in pj, "popup.js: promotion names from the database allow 140 characters (long names are real), admin titles 90")
-ok(".dpop{" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
+ok(".dpop{position:fixed;inset:0;" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
 pv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "popup.js"), "rb").read() + io.open(os.path.join(SITE, "assets", "css", "popup.css"), "rb").read()).hexdigest()[:8]
 for k, s in SRC.items():
     if k in ("home-next",):
@@ -357,6 +359,11 @@ for k, s in SRC.items():
 pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
 ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 8 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 8 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
+pim = pop.get("promoImages", {})
+ok(isinstance(pim, dict) and "default" in pim, "data/popup.json: promoImages must exist and have a \"default\" picture (every promotion needs one)")
+for pk, pv in (pim.items() if isinstance(pim, dict) else []):
+    ok(isinstance(pv, dict) and re.fullmatch(r"[A-Za-z0-9_-]{1,60}\.(webp|jpg|png)", str(pv.get("img", ""))) is not None and os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(pv.get("img", "")))) and bool(str(pv.get("alt", "")).strip()),
+       f"data/popup.json promoImages[{pk}]: img must be a plain file name that exists in assets/img/popup/ and needs alt text")
 for i, it in enumerate(pop.get("items", [])):
     w = f"data/popup.json item {i + 1}"
     ok(isinstance(it, dict) and 1 <= len(str(it.get("title", "")).strip()) <= 90, f"{w}: title is required (1-90 characters)")
