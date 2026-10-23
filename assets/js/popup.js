@@ -22,7 +22,6 @@
     return a.protocol === 'https:' && !a.username && !a.password && !a.port && HOSTS.indexOf(a.hostname) >= 0 ? a.href : '';
   }
   function thDate(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? (+m[3]) + ' ' + MONTH[+m[2] - 1] + ' ' + (+m[1] + 543) : ''; }
-  function baht(n) { return '฿' + Number(n).toLocaleString('en-US'); }
   function get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
   function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
   function seen() { try { return sessionStorage.getItem(SESSION) === '1'; } catch (e) { return false; } }
@@ -46,20 +45,13 @@
     });
     return out;
   }
-  function fromPromos(list) {   // running promotions from the database
+  function fromPromos(list) {   // running promotions from the database: name + end date only (nothing else of the promotion is read)
     if (!Array.isArray(list)) return [];
     var out = [];
     list.slice(0, 3).forEach(function (p) {
-      var name = p && str(p.name, 90); if (!name) return;
-      var lines = [];
-      (Array.isArray(p.products) ? p.products : []).slice(0, 3).forEach(function (d) {
-        var m = d && str(d.model, 60); if (!m) return;
-        if (typeof d.promoPrice === 'number' && d.promoPrice > 0) lines.push(m + ' ' + baht(d.promoPrice) + (typeof d.regularPrice === 'number' && d.regularPrice > d.promoPrice ? ' (ปกติ ' + baht(d.regularPrice) + ')' : ''));
-        else if (d.gift && str(d.gift.item, 60)) lines.push(m + ' แถม ' + str(d.gift.item, 60));
-        else lines.push(m);
-      });
+      var name = p && str(p.name, 140); if (!name) return;
       var until = thDate(p.endDate);
-      out.push({ tag: TAGS.promo, title: name, text: (until ? 'ถึง ' + until + ' · ' : '') + 'รายละเอียดและเงื่อนไขสอบถามทีมงาน', lines: lines, img: '', alt: '', link: '/shop/', cta: 'ดูสินค้าที่ร้าน' });
+      out.push({ tag: TAGS.promo, title: name, text: (until ? 'ถึง ' + until + ' · ' : '') + 'รายละเอียดและเงื่อนไขสอบถามทีมงาน', lines: [], img: '', alt: '', link: '/shop/', cta: 'ดูสินค้าที่ร้าน' });
     });
     return out;
   }

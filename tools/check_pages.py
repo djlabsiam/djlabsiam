@@ -346,6 +346,8 @@ ok("textContent" in pj and "a.protocol === 'https:'" in pj and "!a.username && !
 ok("/^[A-Za-z0-9_-]{1,60}\\.(webp|jpg|png)$/" in pj and "'/assets/img/popup/'" in pj, "popup.js: slide images must come only from /assets/img/popup/ with a plain file name")
 ok("sessionStorage" in pj and "86400000" in pj and "prefers-reduced-motion" in pj and "'Escape'" in pj, "popup.js: once-per-session, 24h dismissal, reduced-motion and Esc handling must stay")
 ok(r"/^\/book\//.test(location.pathname)" in pj, "popup.js must stay off /book/")
+ok(not re.search(r"฿|baht|promoPrice|regularPrice|\.products|\.conditions|\.gift|gifts|\.price", pj), "popup.js must not read or show prices, products, gifts or conditions of a promotion (owner: name + end date only)")
+ok("str(p.name, 140)" in pj and "str(it.title, 90)" in pj, "popup.js: promotion names from the database allow 140 characters (long names are real), admin titles 90")
 ok(".dpop{" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
 pv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "popup.js"), "rb").read() + io.open(os.path.join(SITE, "assets", "css", "popup.css"), "rb").read()).hexdigest()[:8]
 for k, s in SRC.items():
