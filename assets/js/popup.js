@@ -96,7 +96,7 @@
       var b = el('div', 'dpop-b'); b.appendChild(el('span', 'dpop-tag', s.tag)); b.appendChild(el('h2', '', s.title));
       if (s.text) b.appendChild(el('p', '', s.text));
       if (s.link) { var a = el('a', 'dpop-a', s.cta); a.href = s.link; if (s.link.charAt(0) !== '/') { a.target = '_blank'; a.rel = 'noopener noreferrer'; } b.appendChild(a); }
-      if (s.play) b.appendChild(el('p', 'dpop-note', 'กดปุ่มเล่นเพื่อโหลดวิดีโอจาก Facebook · ก่อนกดเล่น หน้านี้ไม่เรียกข้อมูลใดจาก Facebook'));
+      if (s.play) b.appendChild(el('p', 'dpop-note', 'กดปุ่มเล่นเพื่อโหลดวิดีโอจาก Facebook (ตัวเล่นของ Facebook จะโหลดเมื่อกดเท่านั้น)'));
       li.appendChild(m); li.appendChild(b); ul.appendChild(li);
     });
     card.appendChild(x); card.appendChild(ul);
