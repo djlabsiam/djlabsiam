@@ -335,6 +335,42 @@ th, en = read(os.path.join(SITE, "privacy.html")), read(os.path.join(SITE, "priv
 ok("<p>เนื้อหาในหน้าโปรไฟล์อาจารย์ (ประวัติ ผลงาน ลิงก์ และรูปภาพ) เป็นข้อมูลที่อาจารย์แต่ละท่านเลือกเผยแพร่ด้วยตนเอง</p>" in th, "privacy.html lost the owner-approved line about teacher profile content (teachers publish it themselves)")
 ok("<p>The content on each teacher's profile page (biography, achievements, links and images) is information that each teacher has chosen to publish themselves.</p>" in en, "privacy-en.html lost the owner-approved line about teacher profile content (teachers publish it themselves)")
 
+# ---- slide pop-up (assets/js/popup.js + data/popup.json): on every generated page, never on /book/, fed only by the admin file + the public promotions function, DOM via textContent ----
+pj = read(os.path.join(SITE, "assets", "js", "popup.js"))
+pcss = read(os.path.join(SITE, "assets", "css", "popup.css"))
+bk = read(os.path.join(SITE, "book", "index.html"))
+bk_api, bk_key = re.search(r"const API='(https://[a-z0-9.-]+\.supabase\.co/rest/v1/rpc/)'", bk), re.search(r"const KEY='([A-Za-z0-9._-]+)'", bk)
+ok(bool(bk_api and bk_key) and f"var RPC = '{bk_api.group(1)}bot_promotions'" in pj and f"KEY = '{bk_key.group(1)}'" in pj, "popup.js: the database address / anon key differ from book/index.html (or are missing)")
+ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function|srcdoc", pj), "popup.js must not use innerHTML/outerHTML/insertAdjacentHTML/document.write/eval")
+ok("textContent" in pj and "a.protocol === 'https:'" in pj and "!a.username && !a.password && !a.port" in pj and "rel = 'noopener noreferrer'" in pj, "popup.js lost its link guard (https + allowed host + rel)")
+ok("/^[A-Za-z0-9_-]{1,60}\\.(webp|jpg|png)$/" in pj and "'/assets/img/popup/'" in pj, "popup.js: slide images must come only from /assets/img/popup/ with a plain file name")
+ok("sessionStorage" in pj and "86400000" in pj and "prefers-reduced-motion" in pj and "'Escape'" in pj, "popup.js: once-per-session, 24h dismissal, reduced-motion and Esc handling must stay")
+ok(r"/^\/book\//.test(location.pathname)" in pj, "popup.js must stay off /book/")
+ok(".dpop{" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
+pv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "popup.js"), "rb").read() + io.open(os.path.join(SITE, "assets", "css", "popup.css"), "rb").read()).hexdigest()[:8]
+for k, s in SRC.items():
+    if k in ("home-next",):
+        continue
+    ok(s.count('<script src="/assets/js/popup.js?v=' + pv + '" defer></script>') == 1, f"{k}: popup script must be on the page exactly once with the current version {pv}")
+pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
+ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 8 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 8 entries")
+POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
+for i, it in enumerate(pop.get("items", [])):
+    w = f"data/popup.json item {i + 1}"
+    ok(isinstance(it, dict) and 1 <= len(str(it.get("title", "")).strip()) <= 90, f"{w}: title is required (1-90 characters)")
+    if not isinstance(it, dict):
+        continue
+    ok(it.get("type", "news") in ("news", "promo", "facebook", "update"), f"{w}: type must be news | promo | facebook | update")
+    ok(len(str(it.get("text", ""))) <= 220 and len(str(it.get("cta", ""))) <= 30 and len(str(it.get("alt", ""))) <= 120, f"{w}: text ≤ 220, cta ≤ 30, alt ≤ 120 characters")
+    for dk in ("from", "until"):
+        ok(dk not in it or re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(it[dk])) is not None, f"{w}: {dk} must be YYYY-MM-DD")
+    if it.get("link"):
+        u = urllib.parse.urlparse(it["link"])
+        ok((it["link"].startswith("/") and not it["link"].startswith("//") and "\\" not in it["link"]) or (u.scheme == "https" and u.hostname in POP_HOSTS and not u.username and not u.port), f"{w}: link must be a site path or https on an allowed host")
+    if it.get("img"):
+        ok(re.fullmatch(r"[A-Za-z0-9_-]{1,60}\.(webp|jpg|png)", it["img"]) is not None and os.path.exists(os.path.join(SITE, "assets", "img", "popup", it["img"])), f"{w}: img must be a plain file name that exists in assets/img/popup/")
+        ok(bool(str(it.get("alt", "")).strip()), f"{w}: an image needs alt text")
+
 # ---- /content/: the clip list comes from the database through one public function; YouTube is touched only after a press; nothing from the database is ever treated as HTML ----
 for k, s in SRC.items():
     ok(s.count("/assets/js/meta-pixel.js") == 1, f"{k}: the Pixel script must be on the page exactly once")

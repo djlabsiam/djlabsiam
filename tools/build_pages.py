@@ -498,6 +498,16 @@ PIXEL_ROW = '<div data-pixel-row hidden><button type="button" data-pixel-toggle>
 PIXEL_SCRIPT = '<script src="/assets/js/meta-pixel.js" defer></script>\n'
 
 
+def popup_tag():
+    """slide pop-up (assets/js/popup.js): version = hash of its js+css (the promotions address + public anon key sit inside popup.js; check_pages compares them with book/index.html)"""
+    h = hashlib.md5()
+    for rel in ("assets/js/popup.js", "assets/css/popup.css"):
+        with io.open(os.path.join(SITE, rel), "rb") as fh:
+            h.update(fh.read())
+    return f'<script src="/assets/js/popup.js?v={h.hexdigest()[:8]}" defer></script>\n'
+
+
+
 
 def minify_css(c):
     """strip comments and line breaks (inline tokens are big; every generated page must stay under the 80 KB check)"""
@@ -551,7 +561,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
-            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{script}</body>\n</html>\n')
+            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{popup_tag()}{script}</body>\n</html>\n')
 
 
 # ───────── /courses/ ─────────
