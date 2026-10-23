@@ -52,20 +52,18 @@ def save(canvas, name):
     print(f"{name}  {os.path.getsize(p) / 1024:.0f} KB")
 
 
-# Starter Pack: controller + speakers + headphones
-c = backdrop(520, 600)
-put(c, "dm-40d-bt", width=640, x=850, y=110)
-put(c, "ddj-flx2", width=1020, x=70, y=330)
-put(c, "hdj-cue1bt-w", height=500, x=1060, y=340)
+# Starter Pack: only the controller of the set (the set is DDJ-FLX2/FLX4 + wired HDJ-CUE1 or DM-40D; the BT versions are not in the set price, so they are not shown)
+c = backdrop(560, 640)
+put(c, "ddj-flx2", width=1240, x=180, y=190)
 save(c, "promo-starter-pack.webp")
 
-# AlphaTheta October: player + all-in-one + speakers + headphones
+# AlphaTheta October: only models that the owner allows to be advertised (XDJ-RR, DM-40D-BT, HDJ-CUE1BT W/K/R) — no CDJ-350, DDJ-REV1 or DDJ-GRV6
 c = backdrop(420, 640)
-put(c, "xdj-rr", width=900, x=60, y=420)
-put(c, "cdj-350", height=520, x=1010, y=60)
-put(c, "dm-40d-bt", width=430, x=1150, y=520)
-put(c, "hdj-cue1bt-k", height=420, x=720, y=60)
-put(c, "hdj-cue1bt-r", height=420, x=920, y=190)
+put(c, "xdj-rr", width=980, x=40, y=290)
+put(c, "dm-40d-bt", width=520, x=1040, y=60)
+put(c, "hdj-cue1bt-k", height=420, x=960, y=440)
+put(c, "hdj-cue1bt-w", height=470, x=1120, y=390)
+put(c, "hdj-cue1bt-r", height=400, x=1300, y=470)
 save(c, "promo-alphatheta-oct.webp")
 
 # CDJ / all-in-one special + default: the official dark CDJ-3000X scene, 16:9

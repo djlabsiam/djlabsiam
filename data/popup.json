@@ -4,9 +4,9 @@
   "enabled": true,
   "autoPromotions": true,
   "promoImages": {
-    "starter-pack-2026-08": { "img": "promo-starter-pack.webp", "alt": "ชุด Starter Pack: DJ controller DDJ-FLX2 ลำโพง และหูฟัง Pioneer DJ" },
+    "starter-pack-2026-08": { "img": "promo-starter-pack.webp", "alt": "DJ controller DDJ-FLX2 ของ Pioneer DJ" },
     "mahajak-special-2026-09": { "img": "promo-cdj-special.webp", "alt": "เครื่องเล่น DJ CDJ-3000X ของ AlphaTheta" },
-    "alphatheta-mahajak-2026-10": { "img": "promo-alphatheta-oct.webp", "alt": "XDJ-RR, CDJ-350, ลำโพง DM-40D-BT และหูฟัง HDJ-CUE1BT ของ Pioneer DJ" },
+    "alphatheta-mahajak-2026-10": { "img": "promo-alphatheta-oct.webp", "alt": "XDJ-RR, ลำโพง DM-40D-BT และหูฟัง HDJ-CUE1BT ของ Pioneer DJ" },
     "default": { "img": "promo-default.webp", "alt": "เครื่องเล่น DJ CDJ-3000X ของ AlphaTheta" }
   },
   "items": [
