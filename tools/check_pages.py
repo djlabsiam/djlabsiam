@@ -353,6 +353,11 @@ ok("str(p.name, 140)" in pj and "str(it.title, 90)" in pj, "popup.js: promotion 
 ok("localStorage.setItem(SKIP" in pj and "localStorage.removeItem(SKIP)" in pj and "hidden.indexOf(keyOf(s)) >= 0" in pj and "ไม่ต้องแสดงอีกในครั้งต่อไป" in pj, "popup.js: the 'don't show again' tick must remember the slides seen and show the pop-up again when a slide is new")
 ok("facebook.com/plugins/video.php?href=" in pj and "pl.addEventListener('click', function () { playVideo(i, false); })" in pj and "FBEMBED.test(it.embed)" in pj and "s.autoplay) playVideo(i, true)" in pj, "popup.js: a Facebook video is embedded only after a press (or muted when the admin sets autoplay), and only for a valid facebook.com video address")
 ok("ไม่เรียกข้อมูลใดจาก Facebook" not in pj and "ก่อนกดเล่น หน้านี้ไม่เรียก" not in pj, "popup.js: must not claim the page calls nothing from Facebook before a press (the Meta Pixel runs on every page) — say only that the Facebook player loads on press")
+ok(r"var SPEMBED = /^https:\/\/open\.spotify\.com\/embed\/episode\/([A-Za-z0-9]{22})$/;" in pj and pj.count("open.spotify.com") == 1 and pj.count("document.createElement('iframe')") == 1 and "autoplay: !!embed && !sp && it.autoplay === true" in pj
+   and "f.setAttribute('sandbox'," in pj and "s.spotify ? 'encrypted-media; fullscreen" in pj and "pb.addEventListener('click', function () { playVideo(i, false); })" in pj,
+   "popup.js: the Spotify player must be one exact open.spotify.com/embed/episode/<22 characters> address, created in one place only after a press (no iframe before), sandboxed, never autoplay")
+ok("ตัวเล่นของ Spotify จะโหลดเมื่อกดเท่านั้น" in pj and "ไม่เรียกข้อมูลใดจาก Spotify" not in pj and "ไม่เรียกข้อมูลจากบุคคลที่สาม" not in pj, "popup.js: the Spotify note must say only that the Spotify player loads when pressed (the Meta Pixel runs on every page — never claim nothing third-party is called before a press)")
+ok(".dpop-s.bare .dpop-b h2" in pcss and "clip:rect(0 0 0 0)" in pcss and ".dpop-v.sp iframe" in pcss, "popup.css: a bare slide must hide the words on the picture visually (not from screen readers) and size the Spotify player")
 ok("(max-width: 700px)" in pj and "<picture>" not in pj and "createElement('picture')" in pj, "popup.js: slides must use a portrait picture on phones (picture/source)")
 ok("position:fixed;inset:0;z-index:200" in pcss and "@media (prefers-reduced-motion:reduce)" in pcss and "@media (max-width:700px)" in pcss, "popup.css missing the pop-up styles / reduced-motion rule")
 pv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "popup.js"), "rb").read() + io.open(os.path.join(SITE, "assets", "css", "popup.css"), "rb").read()).hexdigest()[:8]
@@ -373,20 +378,25 @@ for who, pv in [("newsImage", pop.get("newsImage"))] + [(f"promoImages[{k}]", v)
        f"data/popup.json {who}: imgM (portrait picture for phones, file name ending -m) must exist in assets/img/popup/")
 ok(isinstance(pop.get("newsImage"), dict) and os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(pop["newsImage"].get("img", "")))), "data/popup.json: newsImage (backdrop for slides without their own picture) must exist")
 from PIL import Image as _PI
-for pv in [pop.get("newsImage")] + list(pim.values() if isinstance(pim, dict) else []):
+for pv in [pop.get("newsImage")] + list(pim.values() if isinstance(pim, dict) else []) + [it for it in pop.get("items", []) if isinstance(it, dict) and it.get("img")]:
     for fk, want in (("img", (1920, 1080)), ("imgM", (1080, 1920))):
         fp = os.path.join(SITE, "assets", "img", "popup", str((pv or {}).get(fk, "")))
         if os.path.exists(fp):
             with _PI.open(fp) as _im:
                 ok(_im.size == want, f"popup picture {os.path.basename(fp)} is {_im.size[0]}x{_im.size[1]}, expected {want[0]}x{want[1]}")
+for _pg in SRC.values():
+    ok("open.spotify.com/embed" not in _pg, "a page must not carry a Spotify player address before a press (Spotify is loaded by popup.js only after a press)")
 for i, it in enumerate(pop.get("items", [])):
     w = f"data/popup.json item {i + 1}"
     ok(isinstance(it, dict) and 1 <= len(str(it.get("title", "")).strip()) <= 90, f"{w}: title is required (1-90 characters)")
     if not isinstance(it, dict):
         continue
-    ok(it.get("type", "news") in ("news", "promo", "facebook", "update"), f"{w}: type must be news | promo | facebook | update")
+    ok(it.get("type", "news") in ("news", "promo", "facebook", "podcast", "update"), f"{w}: type must be news | promo | facebook | podcast | update")
     if it.get("embed"):
-        ok(re.fullmatch(r"https://(www\.)?facebook\.com/(reel/\d{5,25}|watch/?\?v=\d{5,25}|[A-Za-z0-9.\-]{5,60}/videos/\d{5,25})/?", it["embed"]) is not None, f"{w}: embed must be a facebook.com reel / watch?v= / videos address")
+        ok(re.fullmatch(r"https://(www\.)?facebook\.com/(reel/\d{5,25}|watch/?\?v=\d{5,25}|[A-Za-z0-9.\-]{5,60}/videos/\d{5,25})/?", it["embed"]) is not None
+           or re.fullmatch(r"https://open\.spotify\.com/embed/episode/[A-Za-z0-9]{22}", it["embed"]) is not None, f"{w}: embed must be a facebook.com reel / watch?v= / videos address or an open.spotify.com/embed/episode/<22 characters> address")
+        ok("autoplay" not in it or it["autoplay"] is False or "spotify" not in it["embed"], f"{w}: a Spotify embed must never autoplay")
+    ok(it.get("bare") in (None, True, False) and (not it.get("bare") or bool(it.get("img"))), f"{w}: bare needs a picture (img)")
     ok(it.get("autoplay") in (None, True, False), f"{w}: autoplay must be true or false")
     ok(len(str(it.get("text", ""))) <= 220 and len(str(it.get("cta", ""))) <= 30 and len(str(it.get("alt", ""))) <= 120, f"{w}: text ≤ 220, cta ≤ 30, alt ≤ 120 characters")
     for dk in ("from", "until"):

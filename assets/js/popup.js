@@ -2,7 +2,7 @@
    Each slide is a full picture with its words and buttons floating on top of it. A tick box ("don't show again") hides it on later visits until something new is announced.
    Slides = promotions running today (database function bot_promotions: name + end date only, nothing else is read) + the items an admin lists in /data/popup.json.
    Every promotion gets a picture from "promoImages" (by promotion id, else "default"). Everything is written with textContent / setAttribute;
-   links must be a site path or https on an allowed host; images only from /assets/img/popup/; a Facebook video is embedded only after a press (or muted autoplay if the admin sets it).
+   links must be a site path or https on an allowed host; images only from /assets/img/popup/; a Facebook video / Spotify episode is embedded only after a press (Facebook: or muted autoplay if the admin sets it; Spotify never autoplays).
    Any failure (offline, bad file, empty list) = nothing is shown. */
 (function () {
   var S = document.currentScript;
@@ -11,10 +11,11 @@
     KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM';
   var HOSTS = ['facebook.com', 'www.facebook.com', 'fb.watch', 'instagram.com', 'www.instagram.com', 'youtube.com', 'www.youtube.com', 'youtu.be',
     'tiktok.com', 'www.tiktok.com', 'line.me', 'lin.ee', 'djlabsiam.com', 'www.djlabsiam.com', 'console.djlabsiam.com'];
-  var TAGS = { promo: 'โปรโมชั่น', news: 'ข่าวสาร', facebook: 'ล่าสุดบน Facebook', update: 'อัปเดต' };
+  var TAGS = { promo: 'โปรโมชั่น', news: 'ข่าวสาร', facebook: 'ล่าสุดบน Facebook', podcast: 'Podcast', update: 'อัปเดต' };
   var MONTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   var SESSION = 'djl-popup-seen', SKIP = 'djl-popup-skip', IMGRE = /^[A-Za-z0-9_-]{1,60}\.(webp|jpg|png)$/;
   var FBEMBED = /^https:\/\/(www\.)?facebook\.com\/(reel\/\d{5,25}|watch\/?\?v=\d{5,25}|[A-Za-z0-9.\-]{5,60}\/videos\/\d{5,25})\/?$/;
+  var SPEMBED = /^https:\/\/open\.spotify\.com\/embed\/episode\/([A-Za-z0-9]{22})$/;   // Spotify episode player: nothing else from Spotify is accepted
   var today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);   // Thai date
 
   function str(v, max) { return typeof v === 'string' && v.trim() && v.length <= max ? v.trim() : ''; }
@@ -46,8 +47,8 @@
       var title = str(it.title, 90); if (!title) return;
       if (typeof it.from === 'string' && it.from > today) return;
       if (typeof it.until === 'string' && it.until < today) return;
-      var type = TAGS[it.type] ? it.type : 'news', embed = typeof it.embed === 'string' && FBEMBED.test(it.embed) ? it.embed : '';
-      out.push({ tag: TAGS[type], title: title, text: str(it.text, 220), pic: pic(it) || fallback, embed: embed, autoplay: !!embed && it.autoplay === true,
+      var type = TAGS[it.type] ? it.type : 'news', embed = typeof it.embed === 'string' && (FBEMBED.test(it.embed) || SPEMBED.test(it.embed)) ? it.embed : '', sp = SPEMBED.test(embed);
+      out.push({ tag: TAGS[type], title: title, text: str(it.text, 220), pic: pic(it) || fallback, embed: embed, spotify: sp, bare: it.bare === true && !!pic(it), autoplay: !!embed && !sp && it.autoplay === true,
         play: !!embed, link: safeLink(it.link), cta: str(it.cta, 30) || (type === 'facebook' ? 'ดูโพสต์บน Facebook' : 'ดูเพิ่มเติม') });
     });
     return out;
@@ -76,9 +77,11 @@
     function stopVideo(i) { var li = lis[i], v = li.querySelector('.dpop-v'); if (v) v.remove(); li.classList.remove('playing'); }
     function playVideo(i, muted) {
       var s = slides[i], li = lis[i]; if (!s.embed || li.classList.contains('playing')) return;
-      var v = el('div', 'dpop-v'), f = document.createElement('iframe');
-      f.src = 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(s.embed) + '&show_text=false&autoplay=true' + (muted ? '&mute=1' : '') + '&width=500';
-      f.title = s.title; f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.referrerPolicy = 'strict-origin-when-cross-origin'; f.setAttribute('allowfullscreen', '');
+      var v = el('div', 'dpop-v' + (s.spotify ? ' sp' : '')), f = document.createElement('iframe');
+      f.src = s.spotify ? 'https://open.spotify.com/embed/episode/' + SPEMBED.exec(s.embed)[1] + '/video?utm_source=generator'
+        : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(s.embed) + '&show_text=false&autoplay=true' + (muted ? '&mute=1' : '') + '&width=500';
+      if (s.spotify) f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation allow-forms');
+      f.title = s.title; f.allow = s.spotify ? 'encrypted-media; fullscreen; picture-in-picture; clipboard-write' : 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.referrerPolicy = 'strict-origin-when-cross-origin'; f.setAttribute('allowfullscreen', '');
       v.appendChild(f); li.querySelector('.dpop-m').appendChild(v); li.classList.add('playing'); stop();
     }
     slides.forEach(function (s, i) {
@@ -88,15 +91,17 @@
         if (s.pic.m) { var so = document.createElement('source'); so.media = '(max-width: 700px)'; so.srcset = s.pic.m; pc.appendChild(so); }
         im.src = s.pic.src; im.setAttribute('alt', s.pic.alt); im.decoding = 'async'; if (i) im.loading = 'lazy'; pc.appendChild(im); m.appendChild(pc);
       }
+      if (s.bare) li.classList.add('bare');
       if (s.play) {
         var pl = el('button', 'dpop-pl'), NS = 'http://www.w3.org/2000/svg', sv = document.createElementNS(NS, 'svg'), tri = document.createElementNS(NS, 'path');
         pl.type = 'button'; pl.setAttribute('aria-label', 'เล่นวิดีโอ: ' + s.title); sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('aria-hidden', 'true'); tri.setAttribute('d', 'M8 5v14l11-7z'); tri.setAttribute('fill', 'currentColor'); sv.appendChild(tri); pl.appendChild(sv);
         pl.addEventListener('click', function () { playVideo(i, false); }); m.appendChild(pl);
       }
-      var b = el('div', 'dpop-b'); b.appendChild(el('span', 'dpop-tag', s.tag)); b.appendChild(el('h2', '', s.title));
+      var b = el('div', 'dpop-b'); b.appendChild(el('span', 'dpop-tag', s.tag)); b.appendChild(el('h2', '', s.title));   // bare slide: the picture already carries the words, so tag/title/text are hidden by CSS (title stays for screen readers)
       if (s.text) b.appendChild(el('p', '', s.text));
+      if (s.bare && s.play) { var pb = el('button', 'dpop-pb', 'เล่นที่นี่'); pb.type = 'button'; pb.setAttribute('aria-label', 'เล่นที่นี่: ' + s.title); pb.addEventListener('click', function () { playVideo(i, false); }); b.appendChild(pb); }
       if (s.link) { var a = el('a', 'dpop-a', s.cta); a.href = s.link; if (s.link.charAt(0) !== '/') { a.target = '_blank'; a.rel = 'noopener noreferrer'; } b.appendChild(a); }
-      if (s.play) b.appendChild(el('p', 'dpop-note', 'กดปุ่มเล่นเพื่อโหลดวิดีโอจาก Facebook (ตัวเล่นของ Facebook จะโหลดเมื่อกดเท่านั้น)'));
+      if (s.play) b.appendChild(el('p', 'dpop-note', s.spotify ? 'กดปุ่มเล่นเพื่อโหลดตัวเล่นจาก Spotify (ตัวเล่นของ Spotify จะโหลดเมื่อกดเท่านั้น)' : 'กดปุ่มเล่นเพื่อโหลดวิดีโอจาก Facebook (ตัวเล่นของ Facebook จะโหลดเมื่อกดเท่านั้น)'));
       li.appendChild(m); li.appendChild(b); ul.appendChild(li);
     });
     card.appendChild(x); card.appendChild(ul);
