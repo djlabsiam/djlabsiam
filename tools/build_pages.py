@@ -519,7 +519,7 @@ def minify_css(c):
 RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("สมาชิก", "/member/", "member")]  # Shop is appended below when --shop /shop/
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("สมาชิก", "/member/", "member"), ("เกม", "/game/signal-flow/", "game")]  # Shop is appended below when --shop /shop/
 if A.shop == "/shop/":
     NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
 GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data-depth="14">'
