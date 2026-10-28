@@ -112,8 +112,12 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .fx i.ring{width:24px;height:24px;margin:-12px 0 0 -12px;border:3px solid var(--ok);border-radius:50%;background:none;animation:ring .9s ease-out both}
 @keyframes pop{0%{transform:scale(.5);opacity:1}55%{transform:translate(var(--dx),var(--dy)) rotate(calc(var(--r) * .6));opacity:1}100%{transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 110px)) rotate(var(--r));opacity:0}}
 @keyframes ring{from{transform:scale(.4);opacity:1}to{transform:scale(8);opacity:0}}
-.winlogo{position:absolute;left:0;right:0;top:7%;display:flex;justify-content:center;perspective:800px;pointer-events:none;z-index:4}
-.winlogo[hidden]{display:none}
+/* ผ่านด่าน: โลโก้กึ่งกลางพื้นที่โต๊ะใต้แถบลอย · ปุ่มด่านถัดไปห้อยใต้โลโก้ (ไม่ดันโลโก้ขึ้น) · โลโก้จางแล้วปุ่มยังอยู่ที่เดิม */
+.wincenter{position:absolute;left:0;right:0;top:var(--inset,0);bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4}
+.wincenter[hidden],.wincenter button[hidden]{display:none}
+.winlogo{position:relative;flex:1;display:flex;justify-content:center;perspective:800px}
+.winlogo.gone{visibility:hidden}
+.winlogo button{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:14px;visibility:visible;pointer-events:auto;font-size:16px;padding:7px 20px;white-space:nowrap}
 .winlogo img{width:min(52%,280px);height:auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6));animation:logoSpin 1.9s cubic-bezier(.15,.6,.25,1) both}
 .winlogo.out img{animation:logoOut .45s ease-in both}
 /* เด้งขึ้นพร้อมหมุนรอบแกนตั้งเร็วแล้วค่อยๆ ช้าลง จบที่ 1080° = หันหน้าตรง */
@@ -194,7 +198,9 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
             <div class="row"><div class="dots" id="advDots"></div><button class="amber" id="advOk" type="button">เข้าใจแล้ว</button></div>
           </div>
         </div>
-        <div class="winlogo" id="winLogo" hidden><img src="assets/djlabsiam-logo.png" alt="DJ LAB SIAM"></div>
+        <div class="wincenter" id="winCenter" hidden>
+          <div class="winlogo gone" id="winLogo"><img src="assets/djlabsiam-logo.png" alt="DJ LAB SIAM"><button class="amber" type="button" id="nextBtn" hidden>ด่านถัดไป →</button></div>
+        </div>
         <div class="dock">
           <div class="result glass" id="result" aria-live="polite">
             <h3>ผ่านด่าน<span class="stars" id="rStars" aria-label="ดาว"></span></h3>
@@ -207,7 +213,6 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
             </div>
             <p class="best" id="rBest"></p>
             <p id="rMsg" style="margin:0 0 8px;font-size:13px;color:var(--dim)"></p>
-            <button type="button" id="nextBtn" disabled>ด่านถัดไป (ยังไม่เปิดในตัวอย่าง)</button>
           </div>
           <p class="toast glass" id="toast" role="status" aria-live="polite"></p>
         </div>
@@ -328,7 +333,7 @@ function sfStart(){
       var n=document.createElement('i');n.textContent=c;li.appendChild(n);li.appendChild(document.createTextNode(t));document.getElementById('patchList').appendChild(li);});
     document.getElementById('patch').hidden=false;
   }
-  if(LEVELS[LV]){var nb=document.getElementById('nextBtn');nb.disabled=false;nb.textContent='ด่านถัดไป →';
+  if(LEVELS[LV]){var nb=document.getElementById('nextBtn');nb.hidden=false;   // ด่านสุดท้ายของ Phase = ไม่มีปุ่ม
     nb.addEventListener('click',function(){location.search=lvUrl(PH,LV+1);});}
   // เลือกด่านได้ทุกด่าน · ✓ = เคยผ่านบนเครื่องนี้ (มีสถิติดีที่สุดเก็บไว้) · "เริ่มด่านใหม่" = โหลดด่านเดิมใหม่ทั้งหน้า
   var sel=document.getElementById('lvlSel');
@@ -885,9 +890,9 @@ function sfStart(){
   }
   // โลโก้ DJ LAB SIAM เด้งหมุนขึ้นกลางกระดาน ค้างให้เห็นแล้วจางหายเอง
   var logoEl=document.getElementById('winLogo'), logoT=0;
-  function hideLogo(){clearTimeout(logoT);logoEl.hidden=true;logoEl.classList.remove('out');}
+  function hideLogo(){clearTimeout(logoT);logoEl.classList.add('gone');logoEl.classList.remove('out');}
   function showLogo(){
-    hideLogo(); void logoEl.offsetWidth; logoEl.hidden=false;   // เริ่มแอนิเมชันใหม่ทุกครั้ง
+    var img=logoEl.querySelector('img'); hideLogo(); img.style.animation='none'; void img.offsetWidth; img.style.animation=''; logoEl.classList.remove('gone');   // เริ่มแอนิเมชันใหม่ทุกครั้ง
     logoT=setTimeout(function(){logoEl.classList.add('out');logoT=setTimeout(hideLogo,450);},3400);
   }
   function celebrate(){ // FX ผ่านด่าน: วงแสงจากลำโพงทั้งสองข้าง + เศษกระดาษสีพุ่งขึ้นแล้วร่วง + ขอบกระดานเรืองเขียว
@@ -972,8 +977,8 @@ function sfStart(){
       document.getElementById('rMsg').textContent=(qMsg.length?qMsg.join(' · ')
         :(ev.length<=sc.target+1e-6?'ต่อถูกและใช้สายสั้นที่สุดที่พอ (เป้าหมาย '+sc.target.toFixed(1)+' ม.)':'ต่อถูกต้อง แต่ใช้สายรวม '+ev.length.toFixed(1)+' ม. ยาวกว่าเป้าหมาย '+sc.target.toFixed(1)+' ม. ลองเลือกสายที่สั้นลง'))
         +(mism?' หมายเหตุ: สีสายบางเส้นไม่ตรงสีช่อง เสียงไม่เสียแต่ควรต่อให้ตรงสี':'');
-      res.classList.add('show');
-    } else {res.classList.remove('show');document.getElementById('board').classList.remove('win');hideLogo();}
+      res.classList.add('show'); document.getElementById('winCenter').hidden=false;
+    } else {res.classList.remove('show');document.getElementById('winCenter').hidden=true;document.getElementById('board').classList.remove('win');hideLogo();}
     won=ev.solved;
     return ev;
   }
