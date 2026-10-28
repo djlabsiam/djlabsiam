@@ -120,7 +120,7 @@
 
 <main class="wrap">
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 24 October 2026</p>
+  <p class="updated">Last updated: 28 October 2026</p>
   <p class="lede">
     This document explains what personal data DJ LAB SIAM collects, when we collect it, what we use it for,
     who we pass it to, and what rights you have under Thailand's Personal Data Protection Act B.E. 2562 (2019) (PDPA).
@@ -144,7 +144,7 @@
   <h3>2.1 When you visit this website</h3>
   <p>
     The general pages of this website have <strong>no forms for you to fill in</strong>, and we do not create user accounts on the website,
-    except the <strong>practice room booking page (djlabsiam.com/book)</strong>, which has a form — see section 2.5.
+    except the <strong>practice room booking page (djlabsiam.com/book)</strong>, which has a form — see section 2.5, and the <strong>member sign-in page (djlabsiam.com/member)</strong>, which has a form and holds members' sign-in accounts — see section 2.8.
     The website runs scripts from external service providers, and those providers receive your technical data,
     such as your IP address, browser type, the device you use, and the pages you open.
   </p>
@@ -152,7 +152,7 @@
     <table>
       <thead><tr><th>Service</th><th>What it does</th></tr></thead>
       <tbody>
-        <tr><td>Meta (Facebook)</td><td><strong>Meta Pixel</strong> — measures the shop's advertising; it starts as soon as a page opens (except the practice room booking page) and sets Meta cookies; you can turn it off, see section 8.</td></tr>
+        <tr><td>Meta (Facebook)</td><td><strong>Meta Pixel</strong> — measures the shop's advertising; it starts as soon as a page opens (except the practice room booking page and the member sign-in page) and sets Meta cookies; you can turn it off, see section 8.</td></tr>
         <tr><td>Meta (Facebook) — video player</td><td>A Facebook video slide in the pop-up plays only after you press play — before you press "Play here" your browser does not load Facebook's video player (the Meta Pixel above still runs on every page as usual). When you press play, the Facebook player (www.facebook.com/plugins/video.php) is loaded in addition; Meta receives your technical data and may keep data or set cookies under Meta's policy. Facebook videos are currently not played automatically.</td></tr>
         <tr><td>Google Fonts</td><td>Only this privacy policy page (Thai and English) loads its fonts from Google Fonts — the other pages of the website use fonts stored on the shop's own website.</td></tr>
         <tr><td>LINE</td><td>The practice room booking page loads LINE's script so that it can be used inside the LINE app (loaded only when you open the booking page inside the LINE app).</td></tr>
@@ -226,6 +226,27 @@
   <p>Payment slips are stored as files in a private file store in the system (jpg, png, webp or pdf, up to 5 MB each). The link used to open a slip each time is valid for 60 seconds, and slips are not publicly accessible.</p>
   <p>The content on each teacher's profile page (biography, achievements, links and images) is information that each teacher has chosen to publish themselves.</p>
 
+  <h3>2.8 When you sign in as a member on the website</h3>
+  <p>
+    When you sign in as a member at djlabsiam.com/member, the system uses the <strong>member code and phone number</strong> the shop already holds from your membership sign-up
+    only to identify which member you are (this is not the sign-in itself), before sending a <strong>6-digit verification code to the e-mail the shop has on file</strong>.
+    After the first successful verification you set your own <strong>password</strong>; the shop cannot see it (it is stored as a hash by Supabase Auth),
+    and the verified e-mail is recorded as the web account's e-mail (used to send a code if you forget the password). The system does not say where the code was sent or whether a member was found.
+  </p>
+  <p>
+    The code is valid for 10 minutes, can be used once, and is stored in the database as a hash (never the actual digits).
+    Five wrong codes or five wrong passwords lock sign-in temporarily for 15 minutes. This page does not use the Meta Pixel and does not show the pop-up.
+  </p>
+  <p>
+    After you sign in, the website keeps a sign-in token in your browser (it does not keep your password, phone number or member code) and removes it when you press sign out.
+    The page shows only your name, member code and whether LINE is linked.
+  </p>
+  <p>
+    If you choose to link LINE (optional), the website loads LINE's script and takes you to LINE's sign-in page.
+    The shop sends the token LINE issues to LINE for checking, then stores your <strong>LINE user ID</strong> and the time of linking with your member record (no LINE name or profile picture).
+    Once linked you cannot change it yourself; staff must do it. If you do not press link, the shop stores nothing from LINE.
+  </p>
+
   <h2>3. What we use the data for</h2>
   <ul>
     <li>Provide the service you contacted us for — selling products, teaching, practice room booking, equipment repair</li>
@@ -252,10 +273,10 @@
       <thead><tr><th>Provider</th><th>What it is used for</th></tr></thead>
       <tbody>
         <tr><td>Meta Platforms</td><td>Facebook page · Instagram account · advertising system · Meta Pixel (ad measurement on this website) · Facebook video player in the pop-up (loaded only when you press play)</td></tr>
-        <tr><td>LINE</td><td>The shop's official account · linking accounts to membership numbers · sending practice room booking confirmations</td></tr>
-        <tr><td>Google</td><td>Google Workspace · membership data sheets · teaching schedule calendar · web fonts on this policy page · YouTube videos on the video page · Google Scene Viewer (AR on Android when you press the place-in-your-room button)</td></tr>
+        <tr><td>LINE</td><td>The shop's official account · linking accounts to membership numbers · sending practice room booking confirmations · linking LINE to the web member account (LINE's script loads only when you press link)</td></tr>
+        <tr><td>Google</td><td>Google Workspace · membership data sheets · teaching schedule calendar · web fonts on this policy page · YouTube videos on the video page · Google Scene Viewer (AR on Android when you press the place-in-your-room button) · verification e-mails for members (sent from a separate Gmail account that no staff read)</td></tr>
         <tr><td>Spotify</td><td>Podcast episode player in the pop-up (loaded only when you press play) · link to the podcast on Spotify</td></tr>
-        <tr><td>Supabase</td><td>Database of members, products, and bookings · product pictures and 3D model files shown on the shop page · payment slip files of course students (private file store)</td></tr>
+        <tr><td>Supabase</td><td>Database of members, products, and bookings · product pictures and 3D model files shown on the shop page · payment slip files of course students (private file store) · member sign-in (hashed passwords, sign-in tokens, verification codes)</td></tr>
         <tr><td>Discord</td><td>The shop's online community and member verification system</td></tr>
         <tr><td>GitHub</td><td>Hosts this website</td></tr>
       </tbody>
@@ -269,6 +290,7 @@
   <h2>6. How long we keep data</h2>
   <ul>
     <li><strong>Member data</strong> — kept for as long as you are a member, and deleted when you ask us to delete it</li>
+    <li><strong>Web member sign-in data</strong> — verification codes expired for more than 1 day and the guess-limiting counters (stored as hashes) are deleted when the clean-up is run · security event records (time, event type, success or not; no phone, e-mail, name, IP or password) are kept for 90 days · the verified e-mail and sign-in account are kept until the member is deleted or staff remove the account</li>
     <li><strong>Sales documents and warranty certificates</strong> — kept for the period required by accounting and tax law</li>
     <li><strong>Course students' payment slips</strong> — kept for 12 months after the course ends, after which the shop owner clears them manually on a periodic basis (there is no automatic deletion yet). Clearing applies to the slip file only; the payment record itself (date, amount and payment method) remains. If an administrator deletes a payment record that has a slip attached, the slip file may remain in the file store until the owner deletes it.</li>
     <li><strong>Practice room booking data for bookings made through the website or LINE</strong> — kept for 12 months after the booking date; after that we delete the data that identifies you (name, contact details, LINE user ID), while the date, time, and amount are kept for accounting</li>
@@ -302,7 +324,7 @@
     to measure the shop's advertising on Facebook and Instagram — how many people the ads bring to look at the courses or contact the shop.
     The Meta Pixel starts as soon as you open a page, and sets Meta cookies named _fbp
     (and _fbc, if you arrived from a Facebook or Instagram ad) in your browser. These cookies last about 3 months.
-    <strong>The practice room booking page (djlabsiam.com/book) does not use the Meta Pixel.</strong>
+    <strong>The practice room booking page (djlabsiam.com/book) and the member sign-in page (djlabsiam.com/member) do not use the Meta Pixel.</strong>
   </p>
 
   <h3>8.1 What the Meta Pixel sends to Meta</h3>
