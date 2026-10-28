@@ -245,7 +245,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="vendor/GLTFLoader.js"></script>
 <script src="vendor/RoomEnvironment.js"></script>
 <!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
-<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","auth":"https://vvtefgjseihadsmvuntd.supabase.co/auth/v1/","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/"};</script>
+<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/"};</script>
 <script src="rules.js?v=55"></script>
 <script src="level1.js?v=55"></script>
 <script src="level2.js?v=55"></script>
@@ -292,6 +292,7 @@ function sfStart(){
       s.addEventListener('keydown',function(e){if(e.key==='Enter')location.search=lvUrl(p,1);});}  });
   if(LOCK){ // Phase สมาชิกที่ยังเปิดไม่ได้: การ์ดล็อกบนกระดาน ไม่โหลดฉาก 3D
     var LT={login:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','เข้าสู่ระบบสมาชิกเพื่อเล่น · Phase 1–2 เล่นได้ฟรี ไม่ต้องเข้าสู่ระบบ'],
+      expired:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','การเข้าสู่ระบบหมดอายุ · กดปุ่มเพื่อต่ออายุที่หน้าสมาชิก แล้วกด "กลับไปเล่นเกม"'],
       not_member:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','บัญชีนี้ยังไม่ได้เป็นสมาชิก · สมัครสมาชิกได้ที่ร้าน หรือทักทีมงานทาง LINE @djlabsiam'],
       soon:['Phase '+PH+' เร็วๆ นี้','กำลังเตรียมด่านสำหรับสมาชิก · ระหว่างนี้เล่น Phase 1–2 ได้ฟรี'],
       error:['ตรวจสิทธิ์สมาชิกไม่สำเร็จ','เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้งในอีกสักครู่']}[LOCK.reason]||[];
@@ -301,7 +302,8 @@ function sfStart(){
     document.getElementById('lockTitle').textContent=LT[0]; document.getElementById('lockBody').textContent=LT[1];
     var lb=document.getElementById('lockLogin'); lb.hidden=LOCK.reason==='soon';
     lb.textContent=LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':'เข้าสู่ระบบสมาชิก';
-    lb.addEventListener('click',function(){if(LOCK.reason==='error')location.reload();else location.href=SF_MEMBERS.login;});
+    lb.addEventListener('click',function(){if(LOCK.reason==='error')location.reload();
+      else location.href=SF_MEMBERS.login+'?next='+encodeURIComponent(location.pathname+'?phase='+PH);});   // หน้าสมาชิกพากลับได้เฉพาะ /game/signal-flow/
     document.getElementById('lockFree').addEventListener('click',function(){location.search=lvUrl(1,1);});
     document.getElementById('lock').hidden=false; return;
   }
@@ -1190,25 +1192,15 @@ function sfStart(){
   if(!M||M.phases.indexOf(ph)<0){sfStart();return;}
   if(M.soon.indexOf(ph)>=0){window.SF_LOCK={reason:'soon'};sfStart();return;}
   document.getElementById('loading').textContent='กำลังตรวจสิทธิ์สมาชิก…';
-  var STORE='djl-member-session';   // ที่เดียวกับ assets/js/member.js
-  function now(){return Math.floor(Date.now()/1000);}
-  function token(){ // access token ที่ยังใช้ได้ · ใกล้หมดอายุ = ต่ออายุด้วย refresh token แบบเดียวกับ fresh() ใน member.js
-    var s=null;try{s=JSON.parse(localStorage.getItem(STORE)||'null');}catch(e){}
-    if(!s||!s.access_token||!s.refresh_token)return Promise.resolve(null);
-    if(s.expires_at&&s.expires_at-now()>60)return Promise.resolve(s.access_token);
-    return fetch(M.auth+'token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key},body:JSON.stringify({refresh_token:s.refresh_token})})
-      .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(j){
-        if(!j||!j.access_token){try{localStorage.removeItem(STORE);}catch(e){}return null;}
-        try{localStorage.setItem(STORE,JSON.stringify({access_token:j.access_token,refresh_token:j.refresh_token||s.refresh_token,expires_at:j.expires_at||(now()+(j.expires_in||3600))}));}catch(e){}
-        return j.access_token;});
-  }
-  token().then(function(tok){
-    if(!tok)return 'login';
-    return fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({phase:ph})})
+  // session ของหน้าสมาชิก (assets/js/member.js · คีย์เดียวกัน) — อ่านอย่างเดียว ไม่ต่ออายุเอง (กันชนกับ member.js ที่หมุน refresh token)
+  // ใกล้หมดอายุ = ส่งไป /member/?next= ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
+  var s=null;try{s=JSON.parse(localStorage.getItem('djl-member-session')||'null');}catch(e){}
+  var tok=s&&s.access_token, exp=s&&s.expires_at;
+  (!tok?Promise.resolve('login'):exp&&exp-Date.now()/1000<=60?Promise.resolve('expired'):fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({phase:ph})})
       .then(function(r){return r.json().catch(function(){return null;}).then(function(j){
         if(r.ok&&j&&j.ok===true&&typeof j.js==='string'){new Function(j.js)();return null;}
-        return r.status===401?'login':r.status===403?'not_member':r.status===404?'soon':'error';});});
-  }).catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason};sfStart();});
+        return r.status===401?'login':r.status===403?'not_member':r.status===404?'soon':'error';});}))
+  .catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason};sfStart();});
 })();
 </script>
 </body>
