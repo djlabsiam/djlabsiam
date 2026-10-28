@@ -28,6 +28,10 @@ h1{font-family:var(--f-cond);font-weight:700;font-size:clamp(22px,4vw,30px);lett
 .ph small{font-size:12px;opacity:.8;margin-left:4px}
 .ph.go{color:var(--fg);cursor:pointer}
 .ph.go:hover{border-color:var(--dim)}
+/* Phase สมาชิก (ฉบับเว็บ): กุญแจหน้าชื่อ */
+.ph.lk::before{content:"";display:inline-block;width:9px;height:11px;margin-right:6px;vertical-align:-1px;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 11'%3E%3Cpath d='M2 5V3.5a2.5 2.5 0 0 1 5 0V5h1v6H1V5zm1 0h3V3.5a1.5 1.5 0 0 0-3 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 11'%3E%3Cpath d='M2 5V3.5a2.5 2.5 0 0 1 5 0V5h1v6H1V5zm1 0h3V3.5a1.5 1.5 0 0 0-3 0z'/%3E%3C/svg%3E") center/contain no-repeat}
 .game{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;min-width:0}
 .hud{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
@@ -58,6 +62,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:8px;-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);box-shadow:0 8px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07)}
 /* แถบลอยบนสุดของกระดาน: สถานะ + มาตรความยาว + ถาดสาย · ใบแพตช์ใต้แถบ ชิดขวา */
 .hudo{position:absolute;top:8px;left:8px;right:8px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+.hudo[hidden],.row[hidden]{display:none}
 .deck{align-self:stretch;pointer-events:auto;padding:6px 10px;display:flex;flex-direction:column;gap:6px}
 .back{position:absolute;top:var(--inset,8px);left:8px;z-index:2}
 /* ใบแพตช์ของสถานที่: แสดงตลอด ใต้แถบลอย ชิดขวา · แตะทะลุได้ */
@@ -224,6 +229,14 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
             <div class="row" style="justify-content:flex-end"><button class="amber" id="helpOk" type="button">ปิด</button></div>
           </div>
         </div>
+        <div class="advice" id="lock" hidden>
+          <div class="card glass">
+            <div class="tag">สมาชิกเท่านั้น</div>
+            <h2 id="lockTitle"></h2>
+            <p id="lockBody"></p>
+            <div class="row" style="justify-content:flex-end;gap:6px"><button id="lockFree" type="button">เล่น Phase 1–2 ฟรี</button><button class="amber" id="lockLogin" type="button"></button></div>
+          </div>
+        </div>
       </div>
     </section>
 </div>
@@ -232,6 +245,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="vendor/GLTFLoader.js"></script>
 <script src="vendor/RoomEnvironment.js"></script>
 <!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
+<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","auth":"https://vvtefgjseihadsmvuntd.supabase.co/auth/v1/","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/"};</script>
 <script src="rules.js?v=55"></script>
 <script src="level1.js?v=55"></script>
 <script src="level2.js?v=55"></script>
@@ -260,35 +274,37 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="p2level12.js?v=55"></script>
 <script src="p2level13.js?v=55"></script>
 <script src="p2level14.js?v=55"></script>
-<script src="p3level1.js?v=55"></script>
-<script src="p3level2.js?v=55"></script>
-<script src="p3level3.js?v=55"></script>
-<script src="p3level4.js?v=55"></script>
-<script src="p3level5.js?v=55"></script>
-<script src="p3level6.js?v=55"></script>
-<script src="p3level7.js?v=55"></script>
-<script src="p3level8.js?v=55"></script>
-<script src="p3level9.js?v=55"></script>
-<script src="p3level10.js?v=55"></script>
-<script src="p3level11.js?v=55"></script>
-<script src="p3level12.js?v=55"></script>
-<script src="p3level13.js?v=55"></script>
-<script src="p3level14.js?v=55"></script>
 <script>
-(function(){
+function sfStart(){
   // เลือกด่านจาก ?phase=P&level=N (ค่าเริ่มต้น Phase 1 ด่าน 1) · ปุ่ม "ด่านถัดไป" โหลดหน้าใหม่ด้วยด่านถัดไป
-  // ไฟล์ด่าน: Phase 1 = SFLevelN · Phase 2 ขึ้นไป = SFP<P>LevelN · Phase ที่ยังไม่มีด่านกดไม่ได้
+  // ไฟล์ด่าน: Phase 1 = SFLevelN · Phase 2 ขึ้นไป = SFP<P>LevelN · Phase ที่ยังไม่มีด่านกดไม่ได้ (ยกเว้น Phase สมาชิกของฉบับเว็บ: กดได้ เปิดเป็นหน้าล็อก)
   function phaseLevels(p){var a=[];for(var n=1;window[(p===1?'SFLevel':'SFP'+p+'Level')+n];n++)a.push(window[(p===1?'SFLevel':'SFP'+p+'Level')+n]);return a;}
   var Q=new URLSearchParams(location.search), PH=parseInt(Q.get('phase'),10)||1;
-  if(!phaseLevels(PH).length)PH=[1,2,3,4].filter(function(p){return phaseLevels(p).length;})[0];   // ฉบับเผยแพร่มีด่านแค่ Phase เดียว
+  var MEM=window.SF_MEMBERS?SF_MEMBERS.phases:[], LOCK=window.SF_LOCK||null;
+  if(!LOCK&&!phaseLevels(PH).length)PH=[1,2,3,4].filter(function(p){return phaseLevels(p).length;})[0];   // ฉบับเผยแพร่มีด่านแค่ Phase เดียว
   function lvUrl(p,n){return p===1?'?level='+n:'?phase='+p+'&level='+n;}
   var LEVELS=phaseLevels(PH);
   var LV=Math.max(1,Math.min(LEVELS.length,parseInt(Q.get('level'),10)||1));
   [].forEach.call(document.querySelectorAll('.phases .ph'),function(s,i){
-    var p=i+1; s.classList.toggle('on',p===PH);
-    if(p!==PH&&phaseLevels(p).length){s.classList.add('go');s.tabIndex=0;s.setAttribute('role','link');
+    var p=i+1; s.classList.toggle('on',p===PH); s.classList.toggle('lk',MEM.indexOf(p)>=0);
+    if(p!==PH&&(phaseLevels(p).length||MEM.indexOf(p)>=0)){s.classList.add('go');s.tabIndex=0;s.setAttribute('role','link');
       s.addEventListener('click',function(){location.search=lvUrl(p,1);});
       s.addEventListener('keydown',function(e){if(e.key==='Enter')location.search=lvUrl(p,1);});}  });
+  if(LOCK){ // Phase สมาชิกที่ยังเปิดไม่ได้: การ์ดล็อกบนกระดาน ไม่โหลดฉาก 3D
+    var LT={login:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','เข้าสู่ระบบสมาชิกเพื่อเล่น · Phase 1–2 เล่นได้ฟรี ไม่ต้องเข้าสู่ระบบ'],
+      not_member:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','บัญชีนี้ยังไม่ได้เป็นสมาชิก · สมัครสมาชิกได้ที่ร้าน หรือทักทีมงานทาง LINE @djlabsiam'],
+      soon:['Phase '+PH+' เร็วๆ นี้','กำลังเตรียมด่านสำหรับสมาชิก · ระหว่างนี้เล่น Phase 1–2 ได้ฟรี'],
+      error:['ตรวจสิทธิ์สมาชิกไม่สำเร็จ','เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้งในอีกสักครู่']}[LOCK.reason]||[];
+    document.getElementById('lvlNo').textContent='Phase '+PH; document.getElementById('lvlTitle').textContent=LOCK.reason==='soon'?'เร็วๆ นี้':'สำหรับสมาชิก';
+    document.getElementById('lvlSel').parentNode.hidden=true; document.getElementById('hudo').hidden=true;
+    document.getElementById('loading').hidden=true; document.getElementById('advice').hidden=true;
+    document.getElementById('lockTitle').textContent=LT[0]; document.getElementById('lockBody').textContent=LT[1];
+    var lb=document.getElementById('lockLogin'); lb.hidden=LOCK.reason==='soon';
+    lb.textContent=LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':'เข้าสู่ระบบสมาชิก';
+    lb.addEventListener('click',function(){if(LOCK.reason==='error')location.reload();else location.href=SF_MEMBERS.login;});
+    document.getElementById('lockFree').addEventListener('click',function(){location.search=lvUrl(1,1);});
+    document.getElementById('lock').hidden=false; return;
+  }
   var R=window.SFRules, L=LEVELS[LV-1];
   var SOL=R.solve(L), TARGET=L.budget||SOL.len, BARMAX=Math.max(4,Math.ceil(TARGET*1.6));   // ด่านงบสาย: เส้นประ = งบ
   var NS='http://www.w3.org/2000/svg';
@@ -1166,6 +1182,33 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
   document.getElementById('helpOk').addEventListener('click',function(){helpEl.hidden=true;});
 
   render();toast('เลือกสายจากถาดด้านบน ซูมด้วยล้อเมาส์หรือถ่างนิ้ว แล้วแตะช่องต่อเพื่อเสียบ');showAdvice(0);
+}
+// ฉบับเว็บ djlabsiam.com (build-web.mjs ใส่ SF_MEMBERS): ด่าน Phase สมาชิกไม่อยู่บนเว็บ — ดึงจาก Edge Function game-levels ด้วย session ของหน้าสมาชิก (/member/)
+// Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลย · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
+(function(){
+  var M=window.SF_MEMBERS, ph=parseInt(new URLSearchParams(location.search).get('phase'),10)||1;
+  if(!M||M.phases.indexOf(ph)<0){sfStart();return;}
+  if(M.soon.indexOf(ph)>=0){window.SF_LOCK={reason:'soon'};sfStart();return;}
+  document.getElementById('loading').textContent='กำลังตรวจสิทธิ์สมาชิก…';
+  var STORE='djl-member-session';   // ที่เดียวกับ assets/js/member.js
+  function now(){return Math.floor(Date.now()/1000);}
+  function token(){ // access token ที่ยังใช้ได้ · ใกล้หมดอายุ = ต่ออายุด้วย refresh token แบบเดียวกับ fresh() ใน member.js
+    var s=null;try{s=JSON.parse(localStorage.getItem(STORE)||'null');}catch(e){}
+    if(!s||!s.access_token||!s.refresh_token)return Promise.resolve(null);
+    if(s.expires_at&&s.expires_at-now()>60)return Promise.resolve(s.access_token);
+    return fetch(M.auth+'token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key},body:JSON.stringify({refresh_token:s.refresh_token})})
+      .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(j){
+        if(!j||!j.access_token){try{localStorage.removeItem(STORE);}catch(e){}return null;}
+        try{localStorage.setItem(STORE,JSON.stringify({access_token:j.access_token,refresh_token:j.refresh_token||s.refresh_token,expires_at:j.expires_at||(now()+(j.expires_in||3600))}));}catch(e){}
+        return j.access_token;});
+  }
+  token().then(function(tok){
+    if(!tok)return 'login';
+    return fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({phase:ph})})
+      .then(function(r){return r.json().catch(function(){return null;}).then(function(j){
+        if(r.ok&&j&&j.ok===true&&typeof j.js==='string'){new Function(j.js)();return null;}
+        return r.status===401?'login':r.status===403?'not_member':r.status===404?'soon':'error';});});
+  }).catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason};sfStart();});
 })();
 </script>
 </body>
