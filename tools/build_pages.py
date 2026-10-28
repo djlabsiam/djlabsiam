@@ -239,6 +239,12 @@ img{display:block;max-width:100%;height:auto}
 .logo img{width:126px;height:42px}
 .tnav{display:none}
 .top>.btn{margin-left:auto;white-space:nowrap}.top>.btn.sm{padding:4px 16px}
+.top>.btn+.btn{margin-left:0}
+.btn.mem{background:#0F0F0F;border-color:#0F0F0F;color:#fff;gap:6px}
+.btn.mem:hover{background:#333;border-color:#333}
+.btn.mem.on{background:#fff;color:#0F0F0F}
+.btn.mem svg{width:18px;height:18px;flex:none}
+@media (max-width:959px){.top{gap:8px;padding:10px 12px}.logo img{width:96px;height:32px}.top>.btn.sm{padding:4px 12px;font-size:14px}.top .lw{display:none}.mnav>summary{padding:0 14px}}
 .xf{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:transparent;pointer-events:none}
 .xf i{position:absolute;top:-6px;left:0;width:22px;height:15px;margin-left:-11px;border-radius:3px;background:var(--brand-base);box-shadow:0 2px 0 var(--brand-press),0 4px 8px rgba(0,0,0,.2)}
 .xf i::after{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:2px;margin-left:-1px;background:#fff;opacity:.85}
@@ -519,9 +525,10 @@ def minify_css(c):
 RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("สมาชิก", "/member/", "member"), ("เกม", "/game/signal-flow/", "game")]  # Shop is appended below when --shop /shop/
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("เกม", "/game/signal-flow/", "game")]  # Shop is appended below when --shop /shop/ · Member is NOT in this list: it is its own button next to the LINE button (desktop and phone)
 if A.shop == "/shop/":
     NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
+PERSON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0117 0z"/></svg>'
 GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data-depth="14">'
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
@@ -534,7 +541,8 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
            f'<header class="top"><a class="logo" href="/"><img src="/assets/img/logo-ink-252.png" srcset="/assets/img/logo-ink-252.png 1x, /assets/img/logo-ink-504.png 2x" '
            f'width="126" height="42" alt="DJ LAB SIAM — หน้าแรก"></a>'
            f'<nav class="tnav" aria-label="เมนูหลัก">{li}</nav>'
-           f'<a class="btn pri sm" href="{LINE_ADD}" rel="noopener"><span class="dot"></span>ติดต่อ LINE</a>'
+           f'<a class="btn pri sm" href="{LINE_ADD}" rel="noopener"><span class="dot"></span><span class="lw">ติดต่อ </span>LINE</a>'
+           f'<a class="btn mem sm{" on" if active == "member" else ""}" href="/member/"{" aria-current=page" if active == "member" else ""}>{PERSON}สมาชิก</a>'
            f'<details class="mnav"><summary>เมนู</summary><nav aria-label="เมนูหลักบนมือถือ">{li}</nav></details>'
            f'<span class="xf" aria-hidden="true"><i></i></span></header>')
     foot = ('<footer class="foot"><div class="foot-in">'
