@@ -449,6 +449,8 @@ if os.path.exists(mp):
     ok("'ขอรหัสใหม่ได้ในอีก '" in mj and "n = 60" in mj, "member.js: the resend button must stay closed for 60 seconds")
     ok("ส่งไปที่" not in mj and "ไม่พบสมาชิก" not in mj, "member.js: never say where the code was sent or that the member was not found (the server answers with one generic message)")
     ok("เปิด 12:00–20:00" in mh and "ตรวจกล่องสแปม" in mh, "member: the help line (staff hours + spam folder) must sit under the code forms")
+    _ml, _bl = re.search(r'data-liff="([0-9]+-[A-Za-z0-9]+)"', mh), re.search(r"const LIFF_ID='([0-9]+-[A-Za-z0-9]+)'", read(os.path.join(SITE, "book", "index.html")))
+    ok(bool(_ml and _bl) and _ml.group(1) == "2010938781-AaiycM1b" and _ml.group(1) != _bl.group(1), "member: /member/ must use its own LIFF app (2010938781-AaiycM1b, endpoint /member/, scope openid), different from the booking page's LIFF_ID")
     ok(all(f'id="v-{v}"' in mh for v in ("boot", "login", "first", "verify", "line", "profile")), "member: one of the six screens is missing")
 
 print(f"check_pages: {passes} passed, {len(fails)} failed · courses.json md5 {md5}")

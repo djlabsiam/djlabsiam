@@ -1433,11 +1433,12 @@ MEMBER_CSS = """
 """
 
 
+# LIFF app "DJ LAB Member" (own app: Endpoint https://djlabsiam.com/member/ · scope openid · same LINE Login channel as the booking LIFF). /book/ keeps its own LIFF_ID.
+MEMBER_LIFF_ID = "2010938781-AaiycM1b"
+
+
 def member_page():
     api, key = book_backend()
-    liff = re.search(r"const LIFF_ID='([0-9]+-[A-Za-z0-9]+)'", io.open(os.path.join(SITE, "book", "index.html"), encoding="utf-8").read())
-    if not liff:
-        die("cannot read LIFF_ID from book/index.html")
     fn = api.replace("/rest/v1/rpc/", "/functions/v1/member-auth")
     with io.open(os.path.join(SITE, "assets", "js", "member.js"), "rb") as fh:
         ver = hashlib.md5(fh.read()).hexdigest()[:8]
@@ -1484,7 +1485,7 @@ def member_page():
                '<p class="mm" id="m-profile" role="alert" hidden></p>'
                '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>'))
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
-            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{E(liff.group(1))}" data-line="1">{views}'
+            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True,
                  script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
