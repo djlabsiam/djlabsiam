@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal Flow — เกมต่อสายเครื่องเสียง | DJ LAB SIAM</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&family=Barlow+Condensed:wght@500;700&display=swap">
+<style>
+/* Layout: one screen, no page scroll. One control panel (level, buttons, length meter, cable tray of plug heads) above the 3D desk,
+   which takes the rest of the height. Toast and result sit on the desk; how-to-play opens as a dialog.
+   Look: real 3D models in a dim room. One committed dark theme; amber marks advice, green marks success. */
+:root{
+  --bg:#0f1217; --panel:#171b22; --panel-2:#1f2530; --line:#2d3542; --fg:#e8ebf0; --dim:#9aa3b2;
+  --amber:#f2b134; --ok:#3ccf7a; --bad:#ff6b5e; --cool:#6fb4ff;
+  --f-body:"Prompt","Noto Sans Thai",system-ui,sans-serif; --f-cond:"Barlow Condensed","Prompt",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;padding:10px 16px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:8px;height:calc(100dvh - 20px);min-height:520px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+h1{font-family:var(--f-cond);font-weight:700;font-size:clamp(22px,4vw,30px);letter-spacing:.02em;margin:0;line-height:1;text-transform:uppercase}
+.phases{display:flex;flex-wrap:wrap;gap:6px}
+.ph{font-family:var(--f-cond);font-weight:500;font-size:15px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);padding:3px 10px;color:var(--dim);background:var(--panel)}
+.ph.on{color:#101216;background:var(--amber);border-color:var(--amber);font-weight:700}
+.ph small{font-size:12px;opacity:.8;margin-left:4px}
+.ph.go{color:var(--fg);cursor:pointer}
+.ph.go:hover{border-color:var(--dim)}
+.game{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hud{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.lvl{flex:1 1 180px;min-width:0;font-family:var(--f-cond);font-size:20px;font-weight:700;letter-spacing:.03em;line-height:1.1}
+.lvl span{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--dim);letter-spacing:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);padding:2px 9px;border-radius:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.chip.hold{border-color:var(--amber)}
+.meter{flex:1 1 220px;font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.meter span{white-space:nowrap}
+.track{flex:1;min-width:60px;position:relative;height:8px;background:#0b0e12;border-radius:4px;border:1px solid var(--line)}
+.fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--cool);border-radius:4px;transition:width .2s}
+.fill.over{background:var(--bad)}
+.tick{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--amber)}
+button,select{font-family:var(--f-body);font-weight:500;font-size:14px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:4px 12px;cursor:pointer}
+button:hover,select:hover{border-color:var(--dim)}
+button.amber{background:var(--amber);color:#101216;border-color:var(--amber);font-weight:700}
+button:focus-visible,select:focus-visible,.jk:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+button[disabled]{opacity:.45;cursor:not-allowed}
+.board{position:relative;flex:1;min-height:240px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0e1116;touch-action:none}
+.stage{position:absolute;inset:0}
+.stage canvas{display:block;width:100%;height:100%}
+svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.ov .grip{pointer-events:all;cursor:grab}
+.ov .grip:active{cursor:grabbing}
+.back{position:absolute;top:8px;left:8px;z-index:2;background:rgba(23,27,34,.92)}
+/* ใบแพตช์ของสถานที่: แสดงตลอด มุมขวาบน · แตะทะลุได้ */
+.patch{position:absolute;top:8px;right:8px;z-index:2;pointer-events:none;background:rgba(23,27,34,.94);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:6px;padding:6px 10px 8px;font-size:12px;line-height:1.5;min-width:150px}
+.patch[hidden]{display:none}
+.patch b{display:block;font-family:var(--f-cond);letter-spacing:.08em;color:var(--amber);font-size:13px;margin-bottom:2px}
+.patch ol{margin:0;padding:0;list-style:none;display:grid;gap:0 12px}
+.patch li{display:flex;gap:6px;color:#cfd5df;white-space:nowrap}
+.patch li i{font-style:normal;color:var(--dim);min-width:12px;text-align:right}
+.patch li.dj{color:var(--fg);font-weight:700}
+.patch li.dj i{color:var(--amber)}
+/* จอแคบ: ใบแพตช์เป็นแถบบนสุดของกระดาน ไม่บังโต๊ะ 3D (กระดานแบ่งความสูงให้) */
+@media (max-width:600px){.board.hp{display:flex;flex-direction:column}.board.hp .stage{position:relative;flex:1;inset:auto}
+  .patch{position:static;border:0;border-bottom:1px solid var(--line);border-radius:0;font-size:11px;line-height:1.4;padding:3px 8px 4px;min-width:0}.patch b{font-size:12px;margin:0}.patch ol{grid-template-columns:repeat(4,auto);gap:0 8px;justify-content:start}.patch li{gap:3px}}
+.loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--dim);font-size:14px;text-align:center;padding:16px}
+.dock{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{margin:0;padding:6px 10px;font-size:13px;line-height:1.45;background:rgba(23,27,34,.94);border:1px solid var(--line);border-left:4px solid var(--dim);border-radius:4px}
+.toast:empty{display:none}
+.toast.bad{border-left-color:var(--bad)} .toast.good{border-left-color:var(--ok)} .toast.warn{border-left-color:var(--amber)}
+.advice{position:absolute;inset:0;background:rgba(6,8,11,.72);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
+.advice[hidden]{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:6px;padding:14px 16px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:8px;max-height:100%;overflow:auto}
+.card .tag{font-family:var(--f-cond);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-size:14px}
+.card h2{font-size:17px;margin:0;line-height:1.3}
+.card p{margin:0;color:#cfd5df;font-size:14px}
+.card .how{border-left:3px solid var(--cool);padding-left:10px;color:var(--fg)}
+.card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;color:#cfd5df;font-size:14px}
+.card h3{font-size:15px;margin:4px 0 0}
+.dots{display:flex;gap:5px}
+.dots b{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots b.on{background:var(--amber)}
+.tray{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:6px;min-width:0}
+.tray .tl{flex:0 0 auto;font-family:var(--f-cond);font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);line-height:1.2}
+.tray .tl span{display:block;font-family:var(--f-body);font-size:12px;letter-spacing:0;text-transform:none}
+.cards{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px;scrollbar-color:var(--line) transparent}
+.cc{flex:0 0 52px;display:flex;flex-direction:column;align-items:center;gap:0;padding:3px 2px 2px;background:var(--panel-2)}
+.cc .ci{display:block;width:34px;height:42px}
+.cc b{font-family:var(--f-cond);font-size:14px;letter-spacing:.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.cc small{font-family:var(--f-cond);font-size:11px;color:var(--dim);line-height:1.1;letter-spacing:.04em}
+.cc.held{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+.cc.used{opacity:.5}
+.result{display:none;pointer-events:auto;background:rgba(23,27,34,.96);border:1px solid var(--ok);border-radius:6px;padding:10px 12px}
+.result.show{display:block;animation:rise .35s ease-out}
+@keyframes rise{from{transform:translateY(14px);opacity:0}}
+.board.win{border-color:var(--ok);box-shadow:0 0 26px rgba(60,207,122,.35);transition:box-shadow .4s,border-color .4s}
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:4}
+.fx i{position:absolute;width:9px;height:5px;margin:-2px 0 0 -4px;border-radius:1px;animation:pop 1.4s ease-out both}
+.fx i.ring{width:24px;height:24px;margin:-12px 0 0 -12px;border:3px solid var(--ok);border-radius:50%;background:none;animation:ring .9s ease-out both}
+@keyframes pop{0%{transform:scale(.5);opacity:1}55%{transform:translate(var(--dx),var(--dy)) rotate(calc(var(--r) * .6));opacity:1}100%{transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 110px)) rotate(var(--r));opacity:0}}
+@keyframes ring{from{transform:scale(.4);opacity:1}to{transform:scale(8);opacity:0}}
+.winlogo{position:absolute;left:0;right:0;top:7%;display:flex;justify-content:center;perspective:800px;pointer-events:none;z-index:4}
+.winlogo[hidden]{display:none}
+.winlogo img{width:min(52%,280px);height:auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6));animation:logoSpin 1.9s cubic-bezier(.15,.6,.25,1) both}
+.winlogo.out img{animation:logoOut .45s ease-in both}
+/* เด้งขึ้นพร้อมหมุนรอบแกนตั้งเร็วแล้วค่อยๆ ช้าลง จบที่ 1080° = หันหน้าตรง */
+@keyframes logoSpin{0%{transform:translateY(70px) scale(.2) rotateY(0);opacity:0}18%{opacity:1}55%{transform:translateY(-16px) scale(1.08) rotateY(900deg)}78%{transform:translateY(5px) scale(.97) rotateY(1050deg)}100%{transform:translateY(0) scale(1) rotateY(1080deg);opacity:1}}
+@keyframes logoOut{to{transform:translateY(-20px) scale(.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.winlogo img{animation:none}}
+.best{margin:0 0 6px;font-size:13px;color:var(--fg)}
+.best em{font-style:normal;color:var(--amber);font-weight:700}
+.result h3{margin:0 0 6px;font-family:var(--f-cond);font-size:20px;letter-spacing:.04em;color:var(--ok);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.stat{background:var(--panel-2);border-radius:4px;padding:4px 8px}
+.stat b{display:block;font-family:var(--f-cond);font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--dim);line-height:1.2;display:block}
+.stars{font-size:20px;letter-spacing:4px;color:var(--amber)}
+.jk .ring{fill:rgba(111,180,255,.10);stroke:rgba(111,180,255,.85);stroke-width:2}
+.jk.off .ring{fill:rgba(154,163,178,.06);stroke:rgba(154,163,178,.45);stroke-dasharray:3 3}
+.jk.busy .ring{stroke:rgba(60,207,122,.85)}
+.jk text,text.dv{font-family:"Barlow Condensed","Prompt",sans-serif;font-weight:700;paint-order:stroke;stroke:rgba(0,0,0,.75);stroke-width:3px}
+.nofx circle{transform-box:fill-box;transform-origin:center;animation:nofx .45s ease-out forwards}
+@keyframes nofx{from{transform:scale(.8);opacity:1}to{transform:scale(2.4);opacity:0}}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.shake{animation:shake .22s 2}
+@media (prefers-reduced-motion:reduce){.shake,.nofx circle{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Signal Flow</h1>
+    <div class="phases" aria-label="4 Phase">
+      <span class="ph on">1 Beginner<small>12 ด่าน</small></span>
+      <span class="ph">2 Amateur<small>14</small></span>
+      <span class="ph">3 Professional DJ<small>14</small></span>
+      <span class="ph">4 Sound Engineer<small>12</small></span>
+    </div>
+    <button id="snd" type="button" aria-pressed="true" style="margin-left:auto">เสียง: เปิด</button>
+  </header>
+
+    <section class="game" aria-label="กระดานเกม">
+      <div class="hud">
+        <div class="row">
+          <div class="lvl"><b id="lvlNo" style="font:inherit"></b><span id="lvlTitle"></span></div>
+          <div class="row" style="gap:6px"><select id="lvlSel" aria-label="เลือกด่าน"></select><button id="adv" type="button">คำแนะนำ</button><button id="helpBtn" type="button">วิธีเล่น</button><button id="drop" type="button">วางสายคืน</button><button id="reset" type="button">ถอดสายทั้งหมด</button><button id="restart" type="button">เริ่มด่านใหม่</button></div>
+        </div>
+        <div class="row">
+          <div class="chips" id="chips"></div>
+          <div class="meter" title="เส้นประ = เป้าหมายความยาวสายรวม">
+            <span>สายรวม <span id="lenTxt">0.0 ม.</span></span>
+            <div class="track"><div class="fill" id="fill"></div><div class="tick" id="tick"></div></div>
+            <span>เป้า <span id="tgtTxt"></span> ม.</span>
+          </div>
+        </div>
+        <div class="tray" aria-label="ถาดสาย">
+          <div class="tl">ถาดสาย<span id="trayInfo"></span></div>
+          <div class="cards" id="cards"></div>
+        </div>
+      </div>
+
+      <div class="board" id="board">
+        <aside class="patch" id="patch" aria-label="ใบแพตช์" hidden><b>ใบแพตช์</b><ol id="patchList"></ol></aside>
+        <div class="stage" id="stage">
+          <canvas id="cv"></canvas>
+          <svg class="ov" id="ov" aria-hidden="false"></svg>
+          <div class="fx" id="fx" aria-hidden="true"></div>
+          <button class="back" id="back" type="button" hidden>ดูทั้งโต๊ะ</button>
+          <p class="loading" id="loading">กำลังโหลดโมเดล 3D…</p>
+        </div>
+        <div class="advice" id="advice" role="dialog" aria-modal="true" aria-labelledby="advTitle">
+          <div class="card">
+            <div class="tag" id="advTag">ตัวแปรใหม่</div>
+            <h2 id="advTitle"></h2>
+            <p id="advBody"></p>
+            <p class="how" id="advHow"></p>
+            <div class="row"><div class="dots" id="advDots"></div><button class="amber" id="advOk" type="button">เข้าใจแล้ว</button></div>
+          </div>
+        </div>
+        <div class="winlogo" id="winLogo" hidden><img src="assets/djlabsiam-logo.png" alt="DJ LAB SIAM"></div>
+        <div class="dock">
+          <div class="result" id="result" aria-live="polite">
+            <h3>ผ่านด่าน<span class="stars" id="rStars" aria-label="ดาว"></span></h3>
+            <div class="stats">
+              <div class="stat"><b id="rTime">0:00.0</b><span>เวลา</span></div>
+              <div class="stat"><b id="rDrags">0</b><span>ครั้งที่เสียบสาย</span></div>
+              <div class="stat"><b id="rLen">0.0</b><span>ความยาวรวม (ม.)</span></div>
+              <div class="stat"><b id="rQ">0</b><span>เหตุการณ์คุณภาพ</span></div>
+              <div class="stat"><b id="rScore">0</b><span>คะแนนตัวอย่าง</span></div>
+            </div>
+            <p class="best" id="rBest"></p>
+            <p id="rMsg" style="margin:0 0 8px;font-size:13px;color:var(--dim)"></p>
+            <button type="button" id="nextBtn" disabled>ด่านถัดไป (ยังไม่เปิดในตัวอย่าง)</button>
+          </div>
+          <p class="toast" id="toast" role="status" aria-live="polite"></p>
+        </div>
+        <div class="advice" id="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+          <div class="card">
+            <div class="tag" id="helpTitle">วิธีเล่น</div>
+            <ul>
+          <li>คลิกสายในถาดด้านบนเพื่อหยิบ (เลื่อนถาดซ้ายขวาเพื่อดูสายทั้งหมด)</li>
+          <li>ซูมด้วยล้อเมาส์ หรือถ่างสองนิ้วบนมือถือ ลากพื้นที่ว่างเพื่อเลื่อนภาพ กด "ดูทั้งโต๊ะ" เพื่อกลับภาพรวม</li>
+          <li>แตะช่องต่อบนตัวเครื่องเพื่อเสียบทีละปลาย ซูมเข้าแล้วจะมีวงบอกตำแหน่งช่องให้แตะง่ายขึ้น</li>
+          <li>ปลายสายที่ยังไม่ได้เสียบลากได้ ไกลสุดเท่าความยาวสาย ปล่อยบนช่องเพื่อเสียบ</li>
+          <li>ต้องต่อ OUT เข้า IN หัวต่อต้องตรงชนิด และสายต้องยาวพอให้ถึง ช่องที่เสียบไม่ได้จะขึ้นวงสีแดง</li>
+          <li>แตะช่องที่มีสายเสียบอยู่เพื่อดึงปลายนั้นออก · แตะที่ตัวสายเพื่อถอดทั้งเส้น</li>
+          <li id="goalLi"></li>
+            </ul>
+            <h3>อุปกรณ์ในด่านนี้</h3>
+            <ul id="notesList"></ul>
+            <p style="font-size:13px;color:var(--dim)">ตัวอย่างสำหรับดูหน้าตาและการเล่น ค่าความยาวสายและคะแนนเป็นค่าเสนอ ยังไม่ปรับสมดุล</p>
+            <div class="row" style="justify-content:flex-end"><button class="amber" id="helpOk" type="button">ปิด</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
+<script src="rules.js?v=55"></script>
+<script src="level1.js?v=55"></script>
+<script src="level2.js?v=55"></script>
+<script src="level3.js?v=55"></script>
+<script src="level4.js?v=55"></script>
+<script src="level5.js?v=55"></script>
+<script src="level6.js?v=55"></script>
+<script src="level7.js?v=55"></script>
+<script src="level8.js?v=55"></script>
+<script src="level9.js?v=55"></script>
+<script src="level10.js?v=55"></script>
+<script src="level11.js?v=55"></script>
+<script src="level12.js?v=55"></script>
+<script src="p2level1.js?v=55"></script>
+<script src="p2kit.js?v=55"></script>
+<script src="p2level2.js?v=55"></script>
+<script src="p2level3.js?v=55"></script>
+<script src="p2level4.js?v=55"></script>
+<script src="p2level5.js?v=55"></script>
+<script src="p2level6.js?v=55"></script>
+<script src="p2level7.js?v=55"></script>
+<script src="p2level8.js?v=55"></script>
+<script src="p2level9.js?v=55"></script>
+<script src="p2level10.js?v=55"></script>
+<script src="p2level11.js?v=55"></script>
+<script src="p2level12.js?v=55"></script>
+<script src="p2level13.js?v=55"></script>
+<script src="p2level14.js?v=55"></script>
+<script src="p3level1.js?v=55"></script>
+<script src="p3level2.js?v=55"></script>
+<script src="p3level3.js?v=55"></script>
+<script src="p3level4.js?v=55"></script>
+<script src="p3level5.js?v=55"></script>
+<script src="p3level6.js?v=55"></script>
+<script src="p3level7.js?v=55"></script>
+<script src="p3level8.js?v=55"></script>
+<script src="p3level9.js?v=55"></script>
+<script src="p3level10.js?v=55"></script>
+<script src="p3level11.js?v=55"></script>
+<script src="p3level12.js?v=55"></script>
+<script src="p3level13.js?v=55"></script>
+<script src="p3level14.js?v=55"></script>
+<script>
+(function(){
+  // เลือกด่านจาก ?phase=P&level=N (ค่าเริ่มต้น Phase 1 ด่าน 1) · ปุ่ม "ด่านถัดไป" โหลดหน้าใหม่ด้วยด่านถัดไป
+  // ไฟล์ด่าน: Phase 1 = SFLevelN · Phase 2 ขึ้นไป = SFP<P>LevelN · Phase ที่ยังไม่มีด่านกดไม่ได้
+  function phaseLevels(p){var a=[];for(var n=1;window[(p===1?'SFLevel':'SFP'+p+'Level')+n];n++)a.push(window[(p===1?'SFLevel':'SFP'+p+'Level')+n]);return a;}
+  var Q=new URLSearchParams(location.search), PH=parseInt(Q.get('phase'),10)||1;
+  if(!phaseLevels(PH).length)PH=[1,2,3,4].filter(function(p){return phaseLevels(p).length;})[0];   // ฉบับเผยแพร่มีด่านแค่ Phase เดียว
+  function lvUrl(p,n){return p===1?'?level='+n:'?phase='+p+'&level='+n;}
+  var LEVELS=phaseLevels(PH);
+  var LV=Math.max(1,Math.min(LEVELS.length,parseInt(Q.get('level'),10)||1));
+  [].forEach.call(document.querySelectorAll('.phases .ph'),function(s,i){
+    var p=i+1; s.classList.toggle('on',p===PH);
+    if(p!==PH&&phaseLevels(p).length){s.classList.add('go');s.tabIndex=0;s.setAttribute('role','link');
+      s.addEventListener('click',function(){location.search=lvUrl(p,1);});
+      s.addEventListener('keydown',function(e){if(e.key==='Enter')location.search=lvUrl(p,1);});}  });
+  var R=window.SFRules, L=LEVELS[LV-1];
+  var SOL=R.solve(L), TARGET=L.budget||SOL.len, BARMAX=Math.max(4,Math.ceil(TARGET*1.6));   // ด่านงบสาย: เส้นประ = งบ
+  var NS='http://www.w3.org/2000/svg';
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+  function f(n){return n.toFixed(1);}
+  function V(a){return new THREE.Vector3(a[0],a[1],a[2]);}
+  var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var stage=document.getElementById('stage'), cv=document.getElementById('cv'), ov=document.getElementById('ov');
+  document.getElementById('lvlTitle').textContent=L.title;
+  document.getElementById('lvlNo').textContent='Phase '+L.phase+' · ด่าน '+L.number+' / '+L.of;
+  cv.setAttribute('aria-label',L.canvasLabel);
+  document.getElementById('goalLi').textContent=L.goal;
+  L.notes.forEach(function(t){var li=document.createElement('li');li.textContent=t;document.getElementById('notesList').appendChild(li);});
+  if(L.patch){ // ใบแพตช์: { list: [ชื่อช่อง 1..n], dj: {เลขช่อง: 'L'|'R'} } · ช่องของดีเจเน้นสี
+    L.patch.list.forEach(function(t,i){var li=document.createElement('li');if(L.patch.dj[i+1])li.className='dj';
+      var n=document.createElement('i');n.textContent=i+1;li.appendChild(n);li.appendChild(document.createTextNode(t));document.getElementById('patchList').appendChild(li);});
+    if(L.patch.ret) L.patch.ret.list.forEach(function(t,i){ // ช่องส่งกลับ A–D (จากคอนโซลมอนิเตอร์)
+      var c='ABCD'[i], li=document.createElement('li');if(L.patch.ret.dj[c])li.className='dj';
+      var n=document.createElement('i');n.textContent=c;li.appendChild(n);li.appendChild(document.createTextNode(t));document.getElementById('patchList').appendChild(li);});
+    document.getElementById('patch').hidden=false; document.getElementById('board').classList.add('hp');
+  }
+  if(LEVELS[LV]){var nb=document.getElementById('nextBtn');nb.disabled=false;nb.textContent='ด่านถัดไป →';
+    nb.addEventListener('click',function(){location.search=lvUrl(PH,LV+1);});}
+  // เลือกด่านได้ทุกด่าน · ✓ = เคยผ่านบนเครื่องนี้ (มีสถิติดีที่สุดเก็บไว้) · "เริ่มด่านใหม่" = โหลดด่านเดิมใหม่ทั้งหน้า
+  var sel=document.getElementById('lvlSel');
+  LEVELS.forEach(function(lv,i){
+    var done=false;try{done=!!localStorage.getItem('signal-flow-best-'+lv.id);}catch(e){}
+    var o=document.createElement('option');o.value=i+1;o.textContent='ด่าน '+(i+1)+(done?' ✓':'');o.selected=i+1===LV;sel.appendChild(o);
+  });
+  sel.addEventListener('change',function(){location.search=lvUrl(PH,+sel.value);});
+  document.getElementById('restart').addEventListener('click',function(){location.reload();});
+
+  /* ---------- เสียงประกอบ: สังเคราะห์ด้วย Web Audio ไม่ใช้ไฟล์เสียง · เริ่มทำงานหลังผู้เล่นแตะครั้งแรก (กติกาเบราว์เซอร์) ---------- */
+  var AC=null, muted=false;
+  try{muted=localStorage.getItem('signal-flow-mute')==='1';}catch(e){}
+  function ac(){
+    if(!AC){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}
+    if(AC.state==='suspended')AC.resume();
+    return AC;
+  }
+  function tone(f,t,dur,type,vol,f2){ // โน้ตเดียว: ความถี่ f (เลื่อนไป f2 ได้) เริ่มหลัง t วินาที
+    var a=muted?null:ac(); if(!a)return;
+    var o=a.createOscillator(), g=a.createGain(), s=a.currentTime+t;
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,s); if(f2)o.frequency.exponentialRampToValueAtTime(f2,s+dur);
+    g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(vol||0.2,s+0.008); g.gain.exponentialRampToValueAtTime(0.0001,s+dur);
+    o.connect(g); g.connect(a.destination); o.start(s); o.stop(s+dur+0.02);
+  }
+  function click(vol,hp){ // เสียงโลหะกระทบสั้นๆ (สัญญาณรบกวนกรองความถี่สูง)
+    var a=muted?null:ac(); if(!a)return;
+    var n=Math.floor(a.sampleRate*0.05), b=a.createBuffer(1,n,a.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);
+    var s=a.createBufferSource(), fl=a.createBiquadFilter(), g=a.createGain();
+    s.buffer=b; fl.type='highpass'; fl.frequency.value=hp; g.gain.value=vol;
+    s.connect(fl); fl.connect(g); g.connect(a.destination); s.start();
+  }
+  var SFX={
+    pick:function(){tone(520,0,.09,'triangle',.12,780);},                                   // หยิบสายจากถาด
+    back:function(){tone(420,0,.12,'triangle',.1,260);},                                    // วางสายคืนถาด
+    plug:function(){click(.35,2500);tone(140,.01,.09,'sine',.25,70);},                      // เสียบแน่น "แกร๊ก"
+    unplug:function(){click(.22,1500);tone(300,0,.1,'sine',.12,600);},                      // ดึงออก
+    deny:function(){tone(150,0,.16,'sawtooth',.07);tone(110,.08,.2,'sawtooth',.07);},       // เสียบไม่ได้
+    info:function(){tone(660,0,.08,'sine',.08);},                                           // แตะช่องที่ไม่ใช้ / แจ้งเตือน
+    thud:function(){tone(95,0,.12,'sine',.22,50);},                                         // ปลายสายตกโต๊ะ
+    win:function(){[523.25,659.25,783.99,1046.5].forEach(function(f,i){tone(f,.12+i*.09,.35,'triangle',.14);});tone(1046.5,.48,.8,'sine',.08);}   // ผ่านด่าน (C E G C) หลังเสียงเสียบ
+  };
+  function setMute(m){
+    muted=m; try{localStorage.setItem('signal-flow-mute',m?'1':'0');}catch(e){}
+    var b=document.getElementById('snd'); b.textContent='เสียง: '+(m?'ปิด':'เปิด'); b.setAttribute('aria-pressed',m?'false':'true');
+  }
+  document.getElementById('snd').addEventListener('click',function(){setMute(!muted);if(!muted)SFX.info();BGM.update();});
+  setMute(muted);
+
+  /* ---------- BGM: บีตสังเคราะห์ 122 BPM (Am F C G) ไม่ใช้ไฟล์ · ดังเฉพาะตอนลำโพงในด่านมีเสียง
+     ลำโพงซ้ายมีเสียงข้างเดียว = เพลงออกหูซ้าย (ซ้าย/ขวาตามฝั่งดีเจ: x < 0 = ซ้าย) ---------- */
+  var BGM=(function(){
+    var bus=null, pan=null, noise=null, timer=0, step=0, next=0, last=null, humOsc=null, humG=null, SPB=60/122/4;   // SPB = ความยาวโน้ตเขบ็ต 2 ชั้น
+    var ROOT=[55,43.65,65.41,49], CHORD=[[220,261.63,329.63],[174.61,220,261.63],[196,261.63,329.63],[196,246.94,293.66]];
+    function setup(a){
+      bus=a.createGain(); bus.gain.value=0;
+      pan=a.createStereoPanner?a.createStereoPanner():null;
+      if(pan){bus.connect(pan);pan.connect(a.destination);}else bus.connect(a.destination);
+      var n=Math.floor(a.sampleRate*0.3), d; noise=a.createBuffer(1,n,a.sampleRate); d=noise.getChannelData(0);
+      for(var i=0;i<n;i++)d[i]=Math.random()*2-1;
+    }
+    function osc(a,t,f,f2,dur,type,vol,lp){
+      var o=a.createOscillator(), g=a.createGain();
+      o.type=type; o.frequency.setValueAtTime(f,t); if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+      g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      if(lp){var fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=lp;o.connect(fl);fl.connect(g);}else o.connect(g);
+      g.connect(bus); o.start(t); o.stop(t+dur+0.02);
+    }
+    function hit(a,t,type,freq,dur,vol){ // เสียงกลองจากสัญญาณรบกวนกรองความถี่
+      var s=a.createBufferSource(), fl=a.createBiquadFilter(), g=a.createGain();
+      s.buffer=noise; fl.type=type; fl.frequency.value=freq;
+      g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      s.connect(fl); fl.connect(g); g.connect(bus); s.start(t); s.stop(t+dur+0.02);
+    }
+    function play(a,s,t){
+      var bar=Math.floor(s/16)%4, i=s%16;
+      if(i%4===0)osc(a,t,150,45,.28,'sine',.9);                                   // กระเดื่องทุกจังหวะ
+      if(i%4===2){hit(a,t,'highpass',7000,.05,.25);osc(a,t,ROOT[bar],0,.18,'sawtooth',.35,420);}   // ไฮแฮต + เบสตกจังหวะยก
+      if(i===4||i===12)hit(a,t,'bandpass',1500,.12,.35);                           // แคลปจังหวะ 2 และ 4
+      if(i===3||i===11)CHORD[bar].forEach(function(f){osc(a,t,f,0,.22,'triangle',.08);});   // คอร์ดสั้น
+    }
+    function tick(){
+      var a=AC; if(next<a.currentTime)next=a.currentTime+0.05;   // แท็บถูกพักแล้วกลับมา ไม่เล่นโน้ตที่ค้างรวดเดียว
+      while(next<a.currentTime+0.12){play(a,step,next);step++;next+=SPB;}
+    }
+    return {update:function(ev){
+      if(ev)last=ev; if(!last)return;
+      var l=0, r=0;
+      L.sounds.forEach(function(sd){
+        if(!(sd.jacks||[sd.jack]).some(function(j){return last.fed[j];})||!DEV[sd.dev])return;
+        var b=new THREE.Box3().setFromObject(DEV[sd.dev]), x=(b.min.x+b.max.x)/2;
+        if(x<-0.05)l++;else if(x>0.05)r++;else{l++;r++;}
+      });
+      var live=(l+r)>0&&!muted;
+      // L.hum = {jacks, gnd, need}: เครื่องเล่นแผ่นเสียงต่อแล้ว (jacks มีสัญญาณ) แต่ขั้วกราวด์ (gnd) มีสายน้อยกว่า need = มีเสียงฮัม 50 Hz ปนเพลง
+      var hum=live&&L.hum&&L.hum.jacks.some(function(j){return last.fed[j];})&&L.hum.gnd.filter(function(j){return last.fed[j];}).length<(L.hum.need||L.hum.gnd.length);
+      if(!live&&!bus)return;
+      var a=ac(); if(!a)return;
+      if(!bus)setup(a);
+      if(live&&!timer){step=0;next=a.currentTime+0.05;timer=setInterval(tick,25);}
+      if(hum&&!humOsc){humOsc=a.createOscillator();humG=a.createGain();humOsc.type='sawtooth';humOsc.frequency.value=50;humG.gain.value=0;
+        var fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=400;humOsc.connect(fl);fl.connect(humG);humG.connect(bus);humOsc.start();}
+      if(humG)humG.gain.setTargetAtTime(hum?0.5:0,a.currentTime,0.1);
+      bus.gain.setTargetAtTime(live?0.16:0,a.currentTime,0.12);
+      if(pan)pan.pan.setTargetAtTime(live?(r-l)/(r+l):0,a.currentTime,0.08);
+      if(!live&&timer){clearInterval(timer);timer=0;}
+    }};
+  })();
+
+  /* ---------- 3D scene ---------- */
+  var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.95;
+  renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0e1116);
+  var pmrem=new THREE.PMREMGenerator(renderer);
+  scene.environment=pmrem.fromScene(new THREE.RoomEnvironment(),0.04).texture;
+  scene.add(new THREE.HemisphereLight(0xfff1dc,0x1a1d24,0.35));
+  // ด่านที่กล้องอยู่ฝั่งดีเจ (camDir z > 0) ย้ายไฟหลักมาฝั่งเดียวกับกล้อง
+  var key=new THREE.DirectionalLight(0xffe2bd,1.6); key.position.set(-0.6,1.4,L.camDir&&L.camDir[2]>0?0.5:-0.5); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); key.shadow.bias=-0.0004; key.shadow.normalBias=0.004;
+  var sc=key.shadow.camera; sc.left=-0.8; sc.right=0.8; sc.top=0.8; sc.bottom=-0.8; sc.near=0.1; sc.far=4;
+  scene.add(key);
+
+  // โต๊ะไม้ (ลายไม้วาดด้วย canvas)
+  (function(){
+    var c=document.createElement('canvas');c.width=512;c.height=256;var g=c.getContext('2d');
+    var gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#7b5233');gr.addColorStop(1,'#5e3b22');g.fillStyle=gr;g.fillRect(0,0,512,256);
+    var s=11;function rnd(){s=(s*9301+49297)%233280;return s/233280;}
+    for(var i=0;i<90;i++){g.strokeStyle='rgba(40,22,10,'+(0.08+rnd()*0.18).toFixed(2)+')';g.lineWidth=0.5+rnd()*1.6;
+      var y=rnd()*256;g.beginPath();g.moveTo(0,y);g.bezierCurveTo(170,y+(rnd()-.5)*10,340,y+(rnd()-.5)*10,512,y+(rnd()-.5)*8);g.stroke();}
+    var tex=new THREE.CanvasTexture(c);tex.encoding=THREE.sRGBEncoding;
+    var mn=V(L.desk.min), mx=V(L.desk.max), size=mx.clone().sub(mn);
+    var desk=new THREE.Mesh(new THREE.BoxGeometry(size.x,size.y,size.z),new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:0}));
+    desk.position.copy(mn.clone().add(mx).multiplyScalar(.5)); desk.receiveShadow=true; scene.add(desk);
+  })();
+
+  var cam=new THREE.OrthographicCamera(-1,1,1,-1,0.01,10);
+  // กล้องอยู่ด้านหลังเครื่อง ยกสูง มองเฉียง · ซูมด้วยล้อเมาส์ / ถ่างสองนิ้ว · ลากพื้นที่ว่างเพื่อเลื่อนภาพตอนซูมอยู่
+  var DIR=new THREE.Vector3().fromArray(L.camDir||[0.42,0.56,-0.72]).normalize(), MAXZOOM=10;   // ค่าเริ่มต้น = หลังเครื่อง
+  var view=null, home=null;
+  function W(){return stage.clientWidth;} function H(){return cv.clientHeight;}
+  function applyView(v){
+    var asp=W()/H();
+    cam.position.copy(v.target).addScaledVector(DIR,3); cam.up.set(0,1,0); cam.lookAt(v.target);
+    cam.top=v.halfH; cam.bottom=-v.halfH; cam.left=-v.halfH*asp; cam.right=v.halfH*asp;
+    cam.updateProjectionMatrix(); cam.updateMatrixWorld(); view=v;
+  }
+  function fitBox(mn,mx,pad){
+    var c=mn.clone().add(mx).multiplyScalar(.5);
+    cam.position.copy(c).addScaledVector(DIR,3); cam.up.set(0,1,0); cam.lookAt(c); cam.updateMatrixWorld();
+    var inv=cam.matrixWorldInverse, x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+    for(var i=0;i<8;i++){var p=new THREE.Vector3(i&1?mx.x:mn.x,i&2?mx.y:mn.y,i&4?mx.z:mn.z).applyMatrix4(inv);
+      x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);}
+    var right=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,0), up=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,1);
+    c.addScaledVector(right,(x0+x1)/2).addScaledVector(up,(y0+y1)/2);
+    return {target:c,halfH:Math.max((y1-y0)/2,(x1-x0)/2/(W()/H()))*pad};
+  }
+  function zoomed(){return !!home&&view.halfH<home.halfH*0.999;}
+  function setView(v){
+    if(v.halfH>=home.halfH*0.999) v={target:home.target.clone(),halfH:home.halfH};   // ถอยสุด = กลับภาพรวม
+    else { var mn=L.overview[0], mx=L.overview[1];   // ไม่ให้เลื่อนออกนอกโต๊ะ
+      v.target.set(Math.max(mn[0],Math.min(mx[0],v.target.x)),Math.max(mn[1],Math.min(mx[1],v.target.y)),Math.max(mn[2],Math.min(mx[2],v.target.z))); }
+    applyView(v); document.getElementById('back').hidden=!zoomed(); draw();
+  }
+  function camAxes(){return [new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,0),new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,1)];}
+  function zoomAt(p,k){ // ซูมโดยให้จุดใต้นิ้ว/เมาส์อยู่ที่เดิม · k>1 = ซูมเข้า
+    var h=Math.min(home.halfH,Math.max(home.halfH/MAXZOOM,view.halfH/k)), asp=W()/H(), ax=camAxes();
+    var nx=p[0]/W()*2-1, ny=1-p[1]/H()*2;
+    setView({target:view.target.clone().addScaledVector(ax[0],nx*(view.halfH-h)*asp).addScaledVector(ax[1],ny*(view.halfH-h)),halfH:h});
+  }
+  function panBy(dx,dy){var s=2*view.halfH/H(), ax=camAxes();setView({target:view.target.clone().addScaledVector(ax[0],-dx*s).addScaledVector(ax[1],dy*s),halfH:view.halfH});}
+  function sizeStage(){
+    var w=W(), h=stage.clientHeight;   // กระดานกินความสูงที่เหลือของจอ (เกมจอเดียว)
+    renderer.setSize(w,h,false);
+    ov.setAttribute('viewBox','0 0 '+w+' '+h);
+    if(view){home=fitBox(V(L.overview[0]),V(L.overview[1]),1.02);setView(home);}
+  }
+  function toScreen(v){var p=v.clone().project(cam);return [(p.x+1)/2*W(),(1-p.y)/2*H()];}
+
+  /* ---------- devices ---------- */
+  var DEV={}, JK={};
+  L.jacks.forEach(function(j){JK[j.id]={def:j,p:V(j.pos),n:V(j.normal)};});
+  var loader=new THREE.GLTFLoader();
+  // ฉบับเผยแพร่เป็น Artifact (SF_EMBED · Artifact ไม่เสิร์ฟไฟล์ .glb): โมเดลฝังเป็น base64 ใน models/<ชื่อ>.js โหลดเฉพาะที่ด่านนี้ใช้ · เปิดในเครื่องโหลดไฟล์ .glb ตรงๆ
+  function loadModel(key){
+    var url=L.models[key];
+    if(!window.SF_EMBED) return loader.loadAsync(url);
+    return new Promise(function(ok,fail){
+      var s=document.createElement('script'); s.src=url.replace(/\.glb$/,'.js');
+      s.onload=ok; s.onerror=function(){fail(new Error('โหลด '+s.src+' ไม่ได้'));}; document.head.appendChild(s);
+    }).then(function(){
+      var bin=atob(window.SF_MODEL_DATA[url]), buf=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
+      return new Promise(function(ok,fail){loader.parse(buf.buffer,'',ok,fail);});
+    });
+  }
+  /* อุปกรณ์ทั่วไปที่ไม่มีโมเดลรุ่นจริง (แล็ปท็อป ซับ แอมป์ ลำโพงพาสซีฟ มือถือ): สร้างจากรูปทรงพื้นฐาน สีเทา ไม่มีโลโก้/ยี่ห้อ
+     proc.size = [กว้าง, สูง, ลึก] เมตร · จุดกำเนิดอยู่กึ่งกลางฐาน · ช่องต่อวาดจาก L.jacks ของเครื่องนั้น */
+  function procDevice(id,d){
+    var g=new THREE.Group(), s=d.proc.size, k=d.proc.kind, col=d.proc.color||0x2e3238;
+    function mat(c,m){return new THREE.MeshStandardMaterial({color:new THREE.Color(c).convertSRGBToLinear(),roughness:m?.35:.6,metalness:m||.05});}   // สี hex เป็น sRGB → แปลงก่อน ไม่งั้นออกมาสว่างเกิน
+    function add(geo,m,x,y,z){var o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o;}
+    function disc(r,x,y,z,c){var o=add(new THREE.CylinderGeometry(r,r,0.006,40),mat(c||0x15171a),x,y,z);o.rotation.x=Math.PI/2;return o;}
+    if(k==='laptop'){
+      add(new THREE.BoxGeometry(s[0],0.016,s[2]),mat(col,.3),0,0.008,0);
+      var hinge=new THREE.Group(); hinge.position.set(0,0.016,-s[2]/2); hinge.rotation.x=-0.3; g.add(hinge);   // ฝาจอเปิดเอนไปข้างหลัง
+      var lid=new THREE.Mesh(new THREE.BoxGeometry(s[0],s[1],0.007),mat(col,.3)); lid.position.set(0,s[1]/2,0); lid.castShadow=true; hinge.add(lid);
+      var scr=new THREE.Mesh(new THREE.PlaneGeometry(s[0]*0.92,s[1]*0.86),new THREE.MeshStandardMaterial({color:0x0d1b2a,emissive:0x0a2540,emissiveIntensity:.6}));
+      scr.position.set(0,s[1]/2,0.0037); hinge.add(scr);
+      add(new THREE.BoxGeometry(s[0]*0.86,0.002,s[2]*0.45),mat(0x1d2025),0,0.017,-s[2]*0.12);   // คีย์บอร์ด
+    } else if(k==='phone'){
+      add(new THREE.BoxGeometry(s[0],s[1],s[2]),mat(0x1b1d21,.2),0,s[1]/2,0);
+      var ph=add(new THREE.PlaneGeometry(s[0]*0.9,s[2]*0.92),new THREE.MeshStandardMaterial({color:0x0d1b2a,emissive:0x16324f,emissiveIntensity:.7}),0,s[1]+0.0005,0); ph.rotation.x=-Math.PI/2;
+    } else if(k==='mic'){   // ไมค์บนขาตั้งโต๊ะ: ฐานกลม + เสา + ด้ามไมค์ (ช่อง XLR อยู่ท้ายด้าม)
+      add(new THREE.CylinderGeometry(s[0]/2,s[0]/2,0.01,32),mat(0x1b1d21,.3),0,0.005,0);
+      add(new THREE.CylinderGeometry(0.005,0.005,s[1],16),mat(0x1b1d21,.5),0,s[1]/2,0);
+      var bd=add(new THREE.CylinderGeometry(0.019,0.013,0.17,24),mat(0x2a2d32,.5),0,s[1]+0.01,0.03); bd.rotation.x=Math.PI/2-0.35;
+      add(new THREE.SphereGeometry(0.026,24,16),mat(0x9aa0a8,.6),0,s[1]+0.04,0.11);
+    } else if(k==='guitar'){   // กีตาร์/เบสวางราบบนโต๊ะ: ตัวกีตาร์สองช่วง (ฝั่ง -x) + คอยาวไป +x · ช่อง OUTPUT อยู่ขอบตัวกีตาร์ช่วงล่าง
+      add(new THREE.CylinderGeometry(s[2]/2,s[2]/2,s[1],40),mat(col,.15),-s[0]/2+s[2]*0.5,s[1]/2,0);
+      add(new THREE.CylinderGeometry(s[2]*0.38,s[2]*0.38,s[1],40),mat(col,.15),-s[0]/2+s[2]*1.05,s[1]/2,0);
+      add(new THREE.BoxGeometry(s[0]-s[2],s[1]*0.5,0.05),mat(0x3a2a1c),s[2]*0.5,s[1]*0.7,0);
+      add(new THREE.BoxGeometry(0.09,s[1]*0.6,0.07),mat(0x1b1d21),s[0]/2-0.045,s[1]*0.7,0);
+    } else if(k==='keys'){   // คีย์บอร์ด: ตัวเครื่อง + แถบคีย์ขาวด้านหน้า (+z) · แผงช่องต่อด้านหลัง
+      add(new THREE.BoxGeometry(s[0],s[1],s[2]),mat(col,.2),0,s[1]/2,0);
+      add(new THREE.BoxGeometry(s[0]*0.9,0.012,s[2]*0.5),mat(0xeeeeea),0,s[1]+0.006,s[2]*0.2);
+      for(var kx=-0.43;kx<0.43;kx+=0.035) add(new THREE.BoxGeometry(0.012,0.01,s[2]*0.28),mat(0x15171a),s[0]*kx,s[1]+0.014,s[2]*0.11);
+    } else {   // กล่อง: ซับ แอมป์ ลำโพงพาสซีฟ สวิตช์ LAN เครื่องบันทึก กล่องสาย PA มิกเซอร์ อินเทอร์เฟซ
+      add(new THREE.BoxGeometry(s[0],s[1],s[2]),mat(col),0,s[1]/2,0);
+      add(new THREE.BoxGeometry(s[0]*0.86,s[1]*0.8,0.002),mat(0x22252a),0,s[1]/2,-s[2]/2-0.001);   // แผงหลัง
+      if(k==='sub') disc(Math.min(s[0],s[1])*0.38,0,s[1]*0.5,s[2]/2+0.003);
+      if(k==='passive'){disc(s[0]*0.36,0,s[1]*0.36,s[2]/2+0.003);disc(s[0]*0.13,0,s[1]*0.78,s[2]/2+0.003,0x3a3e44);}
+      if(k==='amp'){[-0.3,0,0.3].forEach(function(f){var kn=add(new THREE.CylinderGeometry(0.009,0.009,0.012,24),mat(0x9aa0a8,.6),s[0]*f,s[1]*0.5,s[2]/2+0.006);kn.rotation.x=Math.PI/2;});}
+    }
+    var off=V(d.offset);
+    L.jacks.forEach(function(j){if(j.dev===id&&!j.covers)socket(g,j,V(j.pos).sub(off));});
+    return g;
+  }
+  // ปากช่องบนอุปกรณ์ทั่วไป ตามชนิด (รุ่นจริงมีช่องในโมเดลอยู่แล้ว)
+  var SOCK={RCA:[0.0045,0],TRS:[0.0062,0],MINI:[0.0032,0],COMBO:[0.011,0],XLR:[0.011,0],'USB-C':[0.0045,0.0016],'USB-A':[0.0066,0.0025],'USB-B':[0.0045,0.004],SPKC:[0.0055,0],LAN:[0.0075,0.0065],COAX:[0.0045,0],GND:[0.004,0],XLRM:[0.011,0],XLRF:[0.011,0],TS:[0.0062,0],MULTI:[0.014,0]};
+  function socket(g,j,p){
+    var sz=SOCK[j.type]||[0.004,0], n=V(j.normal).normalize(), o;
+    var ring=j.color==='red'?0xd8281c:j.color==='white'?0xe9eaec:j.type==='SPKC'?0xc0392b:0xb9bec7;
+    if(sz[1]) o=new THREE.Mesh(new THREE.BoxGeometry(sz[0]*2,sz[1]*2,0.004),new THREE.MeshStandardMaterial({color:0x0c0d0f}));
+    else o=new THREE.Mesh(new THREE.CylinderGeometry(sz[0],sz[0],0.004,28),new THREE.MeshStandardMaterial({color:ring,metalness:.6,roughness:.35}));
+    o.position.copy(p); g.add(o);
+    if(sz[1]) o.lookAt(p.clone().add(n)); else o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),n);
+    if(!sz[1]){var h=new THREE.Mesh(new THREE.CylinderGeometry(sz[0]*0.55,sz[0]*0.55,0.0045,20),new THREE.MeshStandardMaterial({color:0x0c0d0f}));h.position.copy(p);h.quaternion.copy(o.quaternion);g.add(h);}
+  }
+  var MK=Object.keys(L.models||{});
+  Promise.all(MK.map(loadModel)).then(function(res){
+    var files={}, taken=[]; MK.forEach(function(k,i){files[k]=res[i].scene;});
+    Object.keys(L.devices).forEach(function(id){
+      var d=L.devices[id], node;
+      if(d.proc) node=procDevice(id,d);
+      else { node=d.node?files[d.model].getObjectByName(d.node):files[d.model];
+        if(taken.indexOf(node)>=0) node=node.clone(true); else taken.push(node); }   // รุ่นเดียวกันหลายตัว (เช่น VM-80 ซ้าย/ขวา) = โคลน
+      var g=new THREE.Group(); g.add(node); g.position.fromArray(d.offset); g.rotation.y=d.rot||0; g.userData.dev=id;   // rot = หมุนรอบแกนตั้ง (เช่น แผ่นเสียง Battle position)
+      node.traverse(function(o){if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+      scene.add(g); DEV[id]=g;
+    });
+    footprints(); drawWires();
+    document.getElementById('loading').remove();
+    applyView({target:new THREE.Vector3(),halfH:1}); sizeStage(); render();   // sizeStage คำนวณภาพรวม (home) เมื่อมี view แล้ว
+  }).catch(function(e){document.getElementById('loading').textContent='โหลดโมเดล 3D ไม่สำเร็จ: '+e.message;});
+
+  /* ---------- cables (3D) ---------- */
+  var CABLE_HEX={white:0xe9eaec,red:0xd8281c,gray:0x6b7079,black:0x1c1d20,blue:0x2f6fd0,green:0x3f9e4a};
+  var COLORS={white:'#f1f2f4',red:'#e8392c',gray:'#8a909b',black:'#4a4e55',blue:'#3d82e8',green:'#4fb35b'};   // black ในไอคอนถาดสว่างกว่าของจริงให้เห็นบนพื้นเข้ม
+  var COLOR_TH={white:'ขาว',red:'แดง',gray:'เทา',black:'ดำ',blue:'น้ำเงิน',green:'เขียว'};
+  var metal=new THREE.MeshStandardMaterial({color:0xc9ccd2,metalness:1,roughness:.3});
+  var PLUG_LEN=0.034, DESK_Y=0.006;
+  var gCab=new THREE.Group(); scene.add(gCab);
+  var cableMeshes=[];
+  // glow: true = ผ่านด่าน (เรืองฟ้า) · 'cross' = สายเส้นนี้ตัดกับเส้นอื่น (เรืองแดง)
+  function mat(color,glow){var m=new THREE.MeshStandardMaterial({color:CABLE_HEX[color],roughness:.45,metalness:0});if(glow){m.emissive=new THREE.Color(glow==='cross'?0xff3020:0x2a6fd6);m.emissiveIntensity=glow==='cross'?.6:.45;}return m;}
+  // รัศมีปลอกโลหะ / ตัวหัว ตามขนาดจริงโดยประมาณ (3.5 มม. เล็ก · 6.35 มม. กลาง · RCA ใหญ่)
+  var PLUG_R={MINI:[0.00175,0.0034],TRS:[0.0032,0.0055],TS:[0.0032,0.0055]}, gold=new THREE.MeshStandardMaterial({color:0xc8a24a,metalness:.9,roughness:.3});
+  function plug(at,dir,color,type,g,adapted){ // หัวเสียบ: ปลอกโลหะที่ปากช่อง + ตัวหัวสี (RCA) หรือดำ (ชนิดอื่น) · adapted = ขันอะแดปเตอร์ทองไว้
+    var q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize()), rr=PLUG_R[type]||[0.0043,0.0052];
+    var sleeve=new THREE.Mesh(new THREE.CylinderGeometry(rr[0],rr[0],0.011,20),metal);
+    sleeve.quaternion.copy(q); sleeve.position.copy(at).addScaledVector(dir,0.0055);
+    var body=new THREE.Mesh(new THREE.CylinderGeometry(rr[1],rr[1]*0.88,PLUG_LEN-0.011,20),adapted?gold:new THREE.MeshStandardMaterial({color:type==='RCA'?CABLE_HEX[color]:0x1c1d20,roughness:.5}));
+    body.quaternion.copy(q); body.position.copy(at).addScaledVector(dir,0.011+(PLUG_LEN-0.011)/2);
+    [sleeve,body].forEach(function(m){m.castShadow=true;g.add(m);});
+  }
+  function curveFrom(A,nA,B,nB,len){ // สายที่เหลือความยาวมากห้อยลงโต๊ะ สายที่ตึงเกือบเป็นเส้นตรง
+    var a=A.clone().addScaledVector(nA,PLUG_LEN), b=B.clone().addScaledVector(nB,PLUG_LEN);
+    var extra=Math.max(0,len-A.distanceTo(B)*L.slack), t=Math.min(1,extra/0.3), off=0.03+Math.min(0.14,extra*0.2);
+    var h=new THREE.Vector3(b.x-a.x,0,b.z-a.z).normalize();   // หักสายออกด้านข้างไปทางปลายอีกด้าน ไม่ห้อยบังช่องข้างล่าง
+    var a1=a.clone().addScaledVector(nA,off).addScaledVector(h,0.05), b1=b.clone().addScaledVector(nB,off).addScaledVector(h,-0.05);
+    a1.y+=(DESK_Y-a1.y)*t; b1.y+=(DESK_Y-b1.y)*t;
+    return new THREE.CubicBezierCurve3(a,a1,b1,b);
+  }
+  function tube(curve,color,glow,r){var m=new THREE.Mesh(new THREE.TubeGeometry(curve,64,r||0.0028,10,false),mat(color,glow));m.castShadow=true;return m;}
+  function drawWires(){ // สายลำโพงที่ต่อไว้ให้แล้ว (ซ้าย → ขวา) เดินหลังคอนโทรลเลอร์
+    L.wires.forEach(function(w,i){
+      var A=JK[w.from].p, B=JK[w.to].p, back=Math.min(A.z,B.z)-0.11-i*0.008;   // ห่างแผงหลังลำโพงออกมา (ด่าน 1 ≈ z −0.24)
+      var c=new THREE.CatmullRomCurve3([A.clone().add(new THREE.Vector3(0,0,-0.012)),new THREE.Vector3(A.x+0.01,0.04,A.z-0.07),new THREE.Vector3(A.x+0.06,DESK_Y,back),new THREE.Vector3(B.x-0.06,DESK_Y,back),new THREE.Vector3(B.x-0.01,0.04,B.z-0.07),B.clone().add(new THREE.Vector3(0,0,-0.012))]);
+      scene.add(tube(c,w.color,false,0.0018));
+    });
+  }
+  // สายต้องไม่ลอดใต้เครื่อง: ปลายสายที่ลากไปวางถูกดันออกนอกฐานเครื่อง และเส้นบนโต๊ะอ้อมฐานทางมุม
+  var FOOT=[], GAP=0.012;
+  function footprints(){FOOT=Object.keys(DEV).map(function(id){var b=new THREE.Box3().setFromObject(DEV[id]);return {x0:b.min.x-GAP,x1:b.max.x+GAP,z0:b.min.z-GAP,z1:b.max.z+GAP,y1:b.max.y+GAP};});}
+  function inBox(b,P){return P.x>b.x0&&P.x<b.x1&&P.z>b.z0&&P.z<b.z1&&P.y<b.y1;}
+  function pushOutBox(P){ // ปลายสายที่ลอยอยู่ห้ามจมในตัวเครื่อง: ดันออกทางด้านข้างหรือขึ้นเหนือเครื่อง
+    FOOT.forEach(function(b){
+      if(!inBox(b,P))return;
+      var d=[P.x-b.x0,b.x1-P.x,P.z-b.z0,b.z1-P.z,b.y1-P.y], k=d.indexOf(Math.min.apply(null,d));
+      if(k===0)P.x=b.x0;else if(k===1)P.x=b.x1;else if(k===2)P.z=b.z0;else if(k===3)P.z=b.z1;else P.y=b.y1;
+    });
+    return P;
+  }
+  function airCurve(a,a1,tail,dirD,len){ // ปลายสายลอยตามนิ้ว: หย่อนตามความยาวที่เหลือ ไม่ต่ำกว่าโต๊ะ และยกข้ามตัวเครื่อง
+    var b1=tail.clone().addScaledVector(dirD,-0.04), sag=Math.min(0.12,Math.max(0,len-a.distanceTo(tail))*0.15), c;
+    a1.y=Math.max(DESK_Y,a1.y-sag); b1.y=Math.max(DESK_Y,b1.y-sag);
+    for(var n=0;n<5;n++){
+      c=new THREE.CubicBezierCurve3(a,a1,b1,tail);
+      var hit=null;
+      for(var i=2;i<=18&&!hit;i++){var q=c.getPoint(i/20);FOOT.forEach(function(b){if(!hit&&inBox(b,q))hit=b;});}
+      if(!hit)break;
+      var lift=hit.y1+0.03+n*0.03; a1.y=Math.max(a1.y,lift); b1.y=Math.max(b1.y,lift);
+    }
+    return c;
+  }
+  function pushOut(P){
+    FOOT.forEach(function(b){
+      if(!(P.x>b.x0&&P.x<b.x1&&P.z>b.z0&&P.z<b.z1))return;
+      var d=[P.x-b.x0,b.x1-P.x,P.z-b.z0,b.z1-P.z], k=d.indexOf(Math.min.apply(null,d));
+      if(k===0)P.x=b.x0;else if(k===1)P.x=b.x1;else if(k===2)P.z=b.z0;else P.z=b.z1;
+    });
+    return P;
+  }
+  function crosses(b,p,q){ // เส้น p→q (มองแค่แกน x,z) ผ่านเข้าไปในฐานเครื่องไหม (Liang–Barsky)
+    var t0=0,t1=1,dx=q.x-p.x,dz=q.z-p.z,P=[-dx,dx,-dz,dz],Q=[p.x-b.x0,b.x1-p.x,p.z-b.z0,b.z1-p.z];
+    for(var i=0;i<4;i++){
+      if(Math.abs(P[i])<1e-12){if(Q[i]<=0)return false;continue;}
+      var r=Q[i]/P[i]; if(P[i]<0)t0=Math.max(t0,r);else t1=Math.min(t1,r);
+      if(t0>=t1)return false;
+    }
+    return t1-t0>1e-6;
+  }
+  function deskRoute(S,D){ // จุดหักมุมบนโต๊ะระหว่าง S กับ D ที่อ้อมฐานเครื่อง (ทางสั้นสุดผ่านมุมฐาน 1–2 มุม)
+    var pts=[S,D], m=0.015;
+    for(var n=0;n<8;n++){
+      var hit=null;
+      for(var i=0;i<pts.length-1&&!hit;i++)FOOT.forEach(function(b){if(!hit&&crosses(b,pts[i],pts[i+1]))hit={i:i,b:b};});
+      if(!hit)break;
+      var b=hit.b, p=pts[hit.i], q=pts[hit.i+1], best=null, bl=1e9;
+      var c=[[b.x0-m,b.z0-m],[b.x1+m,b.z0-m],[b.x1+m,b.z1+m],[b.x0-m,b.z1+m]].map(function(v){return new THREE.Vector3(v[0],DESK_Y,v[1]);});
+      for(var k=0;k<4;k++)[[k],[k,(k+1)%4],[k,(k+3)%4]].forEach(function(seq){
+        var path=[p].concat(seq.map(function(s){return c[s];}),[q]), len=0, ok=true;
+        for(var s=0;s<path.length-1;s++){if(crosses(b,path[s],path[s+1]))ok=false;len+=path[s].distanceTo(path[s+1]);}
+        if(ok&&len<bl){bl=len;best=seq;}
+      });
+      if(!best)break;
+      pts.splice.apply(pts,[hit.i+1,0].concat(best.map(function(s){return c[s];})));
+    }
+    return pts.slice(1,-1);
+  }
+  var dangle=null; // จุดปลายสายที่ยังไม่ได้เสียบ (พิกัดโลก บนพื้นโต๊ะ)
+  function anchorOf(id){var p=R.plugsOf(state,id);return (p[0]&&p[1])||!(p[0]||p[1])?null:JK[p[0]||p[1]];}
+  function looseEnd(k){ // ปลายที่ยังไม่ได้เสียบ: ตำแหน่งที่ลากไว้ ไม่งั้นวางบนโต๊ะห่างช่อง 9 ซม. ตามทิศที่ช่องหันออก
+    if(dangle)return dangle;
+    var h=new THREE.Vector3(k.n.x,0,k.n.z).normalize();
+    return pushOut(new THREE.Vector3(k.p.x+h.x*0.09,DESK_Y,k.p.z+h.z*0.09));
+  }
+  function adaptedEnd(cab,e){var a=state.adapt&&state.adapt[cab.id];return !!(a&&a.end===e);}
+  function plugJack(jid,cab,e,g){ // หัวที่เสียบอยู่ในช่อง jid · ช่องคู่ (covers) = หัว RCA คู่ แยกเป็นสองหัวเข้าช่อง L (ขาว) และ R (แดง)
+    var k=JK[jid], cv=k.def.covers;
+    if(!cv){plug(k.p,k.n,cab.color,R.endType(state,cab,e),g,adaptedEnd(cab,e));return;}
+    var hub=k.p.clone().addScaledVector(k.n,PLUG_LEN+0.014);
+    cv.forEach(function(m){
+      var q=JK[m]; plug(q.p,q.n,q.def.color||(q.def.ch==='R'?'red':'white'),'RCA',g);
+      g.add(tube(new THREE.LineCurve3(hub,q.p.clone().addScaledVector(q.n,PLUG_LEN)),cab.color,false,0.0022));
+    });
+  }
+  function buildCables(ev){
+    while(gCab.children.length){var c=gCab.children.pop();c.traverse(function(o){if(o.geometry)o.geometry.dispose();});}
+    cableMeshes=[];
+    L.cables.forEach(function(cab){
+      var p=state.plugs[cab.id]; if(!p) return;
+      var g=new THREE.Group(); gCab.add(g);
+      if(p[0]&&p[1]){
+        var A=JK[p[0]],B=JK[p[1]], crossed=(ev.crossings||[]).some(function(c){return c.indexOf(cab.id)>=0;});
+        var m=tube(curveFrom(A.p,A.n,B.p,B.n,cab.len),cab.color,ev.solved||(crossed&&'cross'));
+        m.userData.cable=cab.id; cableMeshes.push(m); g.add(m);
+        plugJack(p[0],cab,0,g); plugJack(p[1],cab,1,g);
+      } else {
+        var e=p[0]?0:1, k=JK[p[e]], D=looseEnd(k), a=k.p.clone().addScaledVector(k.n,PLUG_LEN);
+        var a1=a.clone().addScaledVector(k.n,0.04), air=D.y>DESK_Y+1e-4;   // air = ปลายสายลอยอยู่ (กำลังลาก)
+        if(!air) a1.y+=(DESK_Y-a1.y)*.6;
+        var via=air?[]:deskRoute(a1,D), from=via.length?via[via.length-1]:a;
+        var dirD=new THREE.Vector3(D.x-from.x,0,D.z-from.z); if(dirD.lengthSq()<1e-6)dirD.copy(k.n); dirD.normalize();
+        var tail=D.clone().addScaledVector(dirD,-PLUG_LEN);
+        g.add(tube(air?airCurve(a,a1,tail,dirD,cab.len):via.length?new THREE.CatmullRomCurve3([a,a1].concat(via,[tail]),false,'centripetal')
+          :new THREE.CubicBezierCurve3(a,a1,tail.clone().addScaledVector(dirD,-0.04),tail),cab.color,false));
+        plugJack(p[e],cab,e,g);
+        plug(D,dirD.clone().negate(),cab.color,R.endType(state,cab,1-e),g,adaptedEnd(cab,1-e));
+      }
+    });
+  }
+
+  /* ---------- overlay: hotspot ช่องต่อ ป้าย และเอฟเฟกต์ ---------- */
+  // จุดแตะของแต่ละช่อง: รัศมี = ครึ่งระยะถึงช่องที่ใกล้ที่สุดบนจอ ซูมเข้า = จุดใหญ่ขึ้น แตะง่ายขึ้น (ขั้วสายลำโพงต่อไว้แล้ว ไม่มีจุดแตะ)
+  var HOT={};
+  function hotspots(){
+    // ช่องคู่ (covers) ไม่มีจุดแตะของตัวเอง แตะผ่านช่องย่อย
+    var js=L.jacks.filter(function(j){return j.type!=='SPK'&&!j.covers;}), pts=js.map(function(j){return toScreen(JK[j.id].p);});
+    HOT={};
+    js.forEach(function(j,i){var m=1e9;pts.forEach(function(q,k){if(k!==i)m=Math.min(m,Math.hypot(pts[i][0]-q[0],pts[i][1]-q[1]));});HOT[j.id]={s:pts[i],r:Math.min(22,m/2-1)};});
+  }
+  function drawOverlay(ev){
+    ov.innerHTML=''; hotspots();
+    Object.keys(DEV).forEach(function(id){ // ชื่อเครื่อง
+      var b=new THREE.Box3().setFromObject(DEV[id]), s=toScreen(new THREE.Vector3((b.min.x+b.max.x)/2,b.max.y+0.02,(b.min.z+b.max.z)/2));
+      var t=el('text',{'class':'dv',x:f(s[0]),y:f(s[1]),'text-anchor':'middle','font-size':13,fill:'#e8ebf0'},ov);t.textContent=L.devices[id].name;
+    });
+    Object.keys(HOT).forEach(function(id){ // วงช่องต่อ: ขึ้นเมื่อซูมพอให้แตะได้
+      var h=HOT[id], j=JK[id].def; if(h.r<7)return;
+      var g=el('g',{'class':'jk'+(j.usable?'':' off')+(R.occupantAt(L,state,id)?' busy':''),tabindex:0,role:'button','aria-label':j.name},ov);
+      el('circle',{'class':'ring',cx:f(h.s[0]),cy:f(h.s[1]),r:f(h.r)},g);
+      if(h.r>=10){var t=el('text',{x:f(h.s[0]),y:f(h.s[1]-h.r-4),'text-anchor':'middle','font-size':12,fill:j.usable?'#e8ebf0':'#9aa3b2'},g);t.textContent=j.short||'';}
+      g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tapJack(id);}});
+    });
+    L.sounds.forEach(function(sd){ // คลื่นเสียงเหนือลำโพงที่มีเสียง
+      if(!(sd.jacks||[sd.jack]).some(function(j){return ev.fed[j];})||!DEV[sd.dev])return;   // ลำโพงมีเสียงเมื่อช่องใดช่องหนึ่งของมันได้สัญญาณ
+      var b=new THREE.Box3().setFromObject(DEV[sd.dev]), s=toScreen(new THREE.Vector3((b.min.x+b.max.x)/2,b.max.y,(b.min.z+b.max.z)/2));
+      var g=el('g',{},ov);
+      if(reduce){el('ellipse',{cx:f(s[0]),cy:f(s[1]),rx:22,ry:12,fill:'none',stroke:'#6fb4ff','stroke-width':1.5,opacity:.7},g);return;}
+      [0,1].forEach(function(i){var c=el('ellipse',{cx:f(s[0]),cy:f(s[1]),rx:6,ry:3,fill:'none',stroke:'#6fb4ff','stroke-width':1.5,opacity:0},g);
+        el('animate',{attributeName:'rx',from:6,to:44,dur:'1.6s',begin:(i*.8)+'s',repeatCount:'indefinite'},c);
+        el('animate',{attributeName:'ry',from:3,to:24,dur:'1.6s',begin:(i*.8)+'s',repeatCount:'indefinite'},c);
+        el('animate',{attributeName:'opacity',from:.8,to:0,dur:'1.6s',begin:(i*.8)+'s',repeatCount:'indefinite'},c);});
+    });
+    if(held&&anchorOf(held)){ // จุดจับปลายสายที่ยังไม่ได้เสียบ
+      var s=toScreen(looseEnd(anchorOf(held)));
+      var gp=el('g',{'class':'grip'},ov);
+      el('circle',{cx:f(s[0]),cy:f(s[1]),r:16,fill:'rgba(242,177,52,.12)',stroke:'rgba(242,177,52,.85)','stroke-width':1.5},gp);
+      el('circle',{cx:f(s[0]),cy:f(s[1]),r:3,fill:'#f2b134'},gp);
+    }
+  }
+  function draw(){renderer.render(scene,cam);drawOverlay(R.evaluate(L,state));}
+
+  /* ---------- tray ---------- */
+  var PLUG_TAG={RCA:'RCA',TRS:'TRS',TS:'TS',MINI:'3.5','USB-A':'USB','USB-C':'USB','USB-B':'USB-B',XLR:'XLR',SPKC:'ลำโพง',RCA2:'RCA คู่',LAN:'LAN',COAX:'ดิจิทัล',GND:'กราวด์',XLRF:'XLR ♀',XLRM:'XLR ♂'};
+  function cableOf(id){return R.byId(L.cables,id);}
+  function tl(t){return L.typeLabels[t]||t;}
+  function cableName(c){return tl(c.ends[0])+' ⇄ '+tl(c.ends[1]);}
+  function cableFull(c){return (c.label||'สาย '+cableName(c))+' '+COLOR_TH[c.color]+' '+c.len.toFixed(1)+' ม.';}
+  function plugIcon(type,col){ // หัวต่อหันซ้าย ท้ายหัวอยู่ที่ x=34 แนวกลาง y=30
+    var M='#b9bec7', MD='#6b707a', K='#1b1d21', o=' stroke="#0b0c0e" stroke-width=".8"';
+    if(type==='RCA') return '<rect x="16" y="25" width="18" height="10" rx="2.5" fill="'+col+'"'+o+'/>'
+      +'<rect x="8" y="25.5" width="9" height="9" rx="1" fill="'+M+'"'+o+'/>'
+      +'<line x1="10.5" y1="26.5" x2="10.5" y2="33.5" stroke="'+MD+'"/><line x1="13.5" y1="26.5" x2="13.5" y2="33.5" stroke="'+MD+'"/>'
+      +'<rect x="2" y="28.8" width="7" height="2.4" rx="1" fill="'+M+'"/>';
+    if(type==='TRS') return '<rect x="18" y="25.5" width="16" height="9" rx="2" fill="'+K+'"'+o+'/>'
+      +'<rect x="3" y="27.8" width="16" height="4.4" rx="2" fill="'+M+'"'+o+'/>'
+      +'<rect x="7" y="27.8" width="1.3" height="4.4" fill="'+K+'"/><rect x="11.5" y="27.8" width="1.3" height="4.4" fill="'+K+'"/>';
+    if(type==='TS') return '<rect x="18" y="25.5" width="16" height="9" rx="2" fill="'+K+'"'+o+'/>'   // 6.35 มม. โมโน: ขีดเดียว
+      +'<rect x="3" y="27.8" width="16" height="4.4" rx="2" fill="'+M+'"'+o+'/>'
+      +'<rect x="9" y="27.8" width="1.3" height="4.4" fill="'+K+'"/>';
+    if(type==='MINI') return '<rect x="20" y="26.5" width="14" height="7" rx="2" fill="'+K+'"'+o+'/>'
+      +'<rect x="8" y="28.4" width="13" height="3.2" rx="1.5" fill="'+M+'"'+o+'/>'
+      +'<rect x="11.5" y="28.4" width="1" height="3.2" fill="'+K+'"/><rect x="15" y="28.4" width="1" height="3.2" fill="'+K+'"/>';
+    if(type==='USB-A') return '<rect x="18" y="25.5" width="16" height="9" rx="2" fill="'+K+'"'+o+'/>'
+      +'<rect x="4" y="26.5" width="15" height="7" rx=".6" fill="'+M+'"'+o+'/>'
+      +'<rect x="7" y="28" width="2.4" height="1.6" fill="'+K+'"/><rect x="12" y="28" width="2.4" height="1.6" fill="'+K+'"/>';
+    if(type==='USB-C') return '<rect x="18" y="25.5" width="16" height="9" rx="2" fill="'+K+'"'+o+'/>'
+      +'<rect x="8" y="27.6" width="11" height="4.8" rx="2.4" fill="'+M+'"'+o+'/>'
+      +'<rect x="10" y="29.4" width="7" height="1.2" rx=".6" fill="'+K+'"/>';
+    if(type==='USB-B') return '<rect x="18" y="25.5" width="16" height="9" rx="2" fill="'+K+'"'+o+'/>'
+      +'<path d="M8 26h11v8H8l-2-2v-4z" fill="'+M+'"'+o+'/>';
+    if(type==='XLR') return '<rect x="17" y="24" width="17" height="12" rx="2.5" fill="'+K+'"'+o+'/>'
+      +'<rect x="4" y="24.5" width="14" height="11" rx="2" fill="'+M+'"'+o+'/>'
+      +'<circle cx="8" cy="27.5" r="1" fill="'+K+'"/><circle cx="8" cy="32.5" r="1" fill="'+K+'"/><circle cx="12" cy="30" r="1" fill="'+K+'"/>';
+    if(type==='SPKC') return '<path d="M34 28.5H14" stroke="#c0392b" stroke-width="2.4"/><path d="M34 31.5H14" stroke="#1b1d21" stroke-width="2.4"/>'
+      +'<rect x="5" y="27.4" width="10" height="2.2" rx="1" fill="#d9b25c"/><rect x="5" y="30.4" width="10" height="2.2" rx="1" fill="#d9b25c"/>';   // สายลำโพงสองเส้น ปลายทองแดง
+    if(type==='LAN') return '<rect x="17" y="24.5" width="17" height="11" rx="2" fill="'+col+'"'+o+'/>'
+      +'<rect x="4" y="25" width="14" height="10" rx="1" fill="#d9dde3"'+o+'/><rect x="6" y="27" width="9" height="1.2" fill="#c8a24a"/><rect x="6" y="31.8" width="9" height="1.2" fill="#c8a24a"/>';   // หัว RJ45 ใส
+    if(type==='COAX') return '<rect x="16" y="25" width="18" height="10" rx="2.5" fill="#e07b1f"'+o+'/>'
+      +'<rect x="8" y="25.5" width="9" height="9" rx="1" fill="'+M+'"'+o+'/><rect x="2" y="28.8" width="7" height="2.4" rx="1" fill="'+M+'"/>';   // หัวโคแอกเชียลส้ม
+    if(type==='GND') return '<path d="M34 30H16" stroke="'+col+'" stroke-width="2.6"/><path d="M16 26.5h-10l-3 3.5 3 3.5h10z" fill="#d9b25c"'+o+'/><rect x="5" y="29" width="7" height="2" fill="#0b0c0e"/>';   // หางปลา (ขั้วกราวด์)
+    if(type==='XLRF'||type==='XLRM') return plugIcon('XLR',col)+'<text x="11" y="21" font-size="8" text-anchor="middle" fill="#e8ebf0">'+(type==='XLRF'?'♀':'♂')+'</text>';
+    if(type==='RCA2') return '<g transform="translate(0,-4) scale(1,.8)">'+plugIcon('RCA','#f1f2f4')+'</g><g transform="translate(0,10) scale(1,.8)">'+plugIcon('RCA','#e8392c')+'</g>';
+    return '';
+  }
+  function cableIcon(cab){ // หัวต่อโผล่ตั้งขึ้นจากถาด · สองหัวชนิดเดียวกันโชว์หัวเดียว ต่างชนิดโชว์คู่
+    var col=COLORS[cab.color], ends=cab.ends[0]===cab.ends[1]?[cab.ends[0]]:cab.ends, k=ends.length>1?1:1.15, s='';
+    ends.forEach(function(t,i){
+      var x=ends.length>1?(i?25:9):17, y=1+34*k;
+      s+='<path d="M'+x+' '+y+'V42" stroke="#0b0c0e" stroke-width="4.4"/><path d="M'+x+' '+y+'V42" stroke="'+col+'" stroke-width="2.8"/>'
+        +'<g transform="translate('+x+',1) scale('+k+') rotate(90) translate(0,-30)">'+plugIcon(t,col)+'</g>';   // plugIcon หันซ้าย หมุน 90° ให้หัวชี้ขึ้น
+    });
+    return '<svg class="ci" viewBox="0 0 34 42" aria-hidden="true">'+s+'</svg>';
+  }
+  function tagOf(c){ // ป้ายใต้หัวต่อในถาด · USB บอกชนิดหัวสองฝั่ง เช่น "USB A/C"
+    var e=c.ends, usb=/^USB-/;
+    if(usb.test(e[0])&&usb.test(e[1])) return 'USB '+(e[0]===e[1]?e[0].slice(4):e[0].slice(4)+'/'+e[1].slice(4));
+    return e[0]===e[1]||PLUG_TAG[e[0]]===PLUG_TAG[e[1]]?PLUG_TAG[e[0]]:PLUG_TAG[e[0]]+'/'+PLUG_TAG[e[1]];
+  }
+  var cardsEl=document.getElementById('cards'), CARD={};
+  L.cables.forEach(function(cab){
+    if(R.fullyFixed(cab))return;   // สายที่ต่อไว้ให้แล้วทั้งเส้นเป็นของบนโต๊ะ ไม่อยู่ในถาด
+    var b=document.createElement('button');b.type='button';b.className='cc';b.setAttribute('aria-label',cableFull(cab));
+    b.innerHTML=cableIcon(cab)+'<b>'+cab.len.toFixed(1)+' ม.</b><small>'+tagOf(cab)+'</small>';
+    b.addEventListener('click',function(){tapCard(cab.id);});
+    cardsEl.appendChild(b);CARD[cab.id]={b:b};
+  });
+  // อะแดปเตอร์: หัว 6.35 ชี้ขึ้น + ปลอกทองด้านล่างที่รับหัว 3.5 · แตะเพื่อขันเข้า/หมุนออก
+  var CARD_AD={};
+  (L.adapters||[]).forEach(function(ad){
+    var b=document.createElement('button');b.type='button';b.className='cc';b.setAttribute('aria-label',ad.name);
+    b.innerHTML='<svg class="ci" viewBox="0 0 34 42" aria-hidden="true"><g transform="translate(17,1) scale(1.1) rotate(90) translate(0,-30)">'+plugIcon(ad.to,'#c8a24a')+'</g>'
+      +'<rect x="11.5" y="36" width="11" height="6" rx="1.2" fill="#c8a24a" stroke="#0b0c0e" stroke-width=".6"/></svg>'
+      +'<b>'+PLUG_TAG[ad.from]+'→'+(ad.to==='TRS'?'6.35':PLUG_TAG[ad.to])+'</b><small>หัวแปลง</small>';
+    b.addEventListener('click',function(){tapAdapter(ad.id);});
+    cardsEl.appendChild(b);CARD_AD[ad.id]=b;
+  });
+  cardsEl.addEventListener('wheel',function(e){ // เลื่อนถาดสายด้วยล้อเมาส์แนวตั้งได้ด้วย
+    if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&cardsEl.scrollWidth>cardsEl.clientWidth){cardsEl.scrollLeft+=e.deltaY;e.preventDefault();}
+  },{passive:false});
+
+  /* ---------- game state ---------- */
+  var state=R.withFixed(L,{plugs:{}}), held=null, taps=0, won=false;   // withFixed = เสียบปลายที่ต่อตายไว้ (เช่นสายหูฟัง)
+  document.getElementById('tgtTxt').textContent=TARGET.toFixed(1);
+  if(L.budget) document.getElementById('tgtTxt').parentNode.firstChild.textContent='งบ ≤ ';
+
+  // จับเวลาเดินหน้า: เริ่มเมื่อหยิบสายเส้นแรก หยุดเมื่อผ่านด่าน (ถอดสายจนไม่ผ่าน = เดินต่อ) · "ถอดสายทั้งหมด" = เริ่มนับใหม่
+  var clock={t:0,since:null};
+  function elapsed(){return clock.t+(clock.since?performance.now()-clock.since:0);}
+  function clockRun(on){if(on&&!clock.since)clock.since=performance.now();if(!on&&clock.since){clock.t=elapsed();clock.since=null;}}
+  function fmt(ms,tenth){var s=Math.floor(ms/100)/10,m=Math.floor(s/60);s-=m*60;return m+':'+(s<10?'0':'')+(tenth?s.toFixed(1):Math.floor(s));}
+  setInterval(function(){var c=document.getElementById('clock');if(c)c.textContent='เวลา '+fmt(elapsed());},250);
+  // สถิติดีที่สุดของด่านนี้ เก็บในเบราว์เซอร์เครื่องนี้ (ถ้าเก็บไม่ได้ก็เล่นได้ปกติ)
+  var BEST_KEY='signal-flow-best-'+L.id;
+  function recordBest(ms,score){
+    var b={};try{b=JSON.parse(localStorage.getItem(BEST_KEY))||{};}catch(e){}
+    var newT=!b.time||ms<b.time, newS=!b.score||score>b.score;
+    if(newT)b.time=ms; if(newS)b.score=score;
+    try{localStorage.setItem(BEST_KEY,JSON.stringify(b));}catch(e){}
+    document.getElementById('rBest').innerHTML='สถิติดีที่สุด: เวลา '+fmt(b.time,true)+(newT?' <em>ใหม่!</em>':'')+' · คะแนน '+b.score+(newS?' <em>ใหม่!</em>':'');
+  }
+  // โลโก้ DJ LAB SIAM เด้งหมุนขึ้นกลางกระดาน ค้างให้เห็นแล้วจางหายเอง
+  var logoEl=document.getElementById('winLogo'), logoT=0;
+  function hideLogo(){clearTimeout(logoT);logoEl.hidden=true;logoEl.classList.remove('out');}
+  function showLogo(){
+    hideLogo(); void logoEl.offsetWidth; logoEl.hidden=false;   // เริ่มแอนิเมชันใหม่ทุกครั้ง
+    logoT=setTimeout(function(){logoEl.classList.add('out');logoT=setTimeout(hideLogo,450);},3400);
+  }
+  function celebrate(){ // FX ผ่านด่าน: วงแสงจากลำโพงทั้งสองข้าง + เศษกระดาษสีพุ่งขึ้นแล้วร่วง + ขอบกระดานเรืองเขียว
+    document.getElementById('board').classList.add('win');
+    SFX.win(); showLogo();
+    if(reduce)return;
+    var fx=document.getElementById('fx'), cols=['#f2b134','#ffffff','#bd2026','#3ccf7a','#6fb4ff'];
+    L.sounds.forEach(function(sd){
+      var b=new THREE.Box3().setFromObject(DEV[sd.dev]), s=toScreen(new THREE.Vector3((b.min.x+b.max.x)/2,b.max.y,(b.min.z+b.max.z)/2));
+      var r=document.createElement('i');r.className='ring';r.style.left=s[0]+'px';r.style.top=s[1]+'px';fx.appendChild(r);
+      for(var i=0;i<28;i++){
+        var p=document.createElement('i'), a=-Math.PI*(0.1+0.8*Math.random()), v=60+Math.random()*110;
+        p.style.left=s[0]+'px';p.style.top=s[1]+'px';p.style.background=cols[i%cols.length];p.style.animationDelay=(Math.random()*0.15).toFixed(2)+'s';
+        p.style.setProperty('--dx',(Math.cos(a)*v).toFixed(0)+'px');p.style.setProperty('--dy',(Math.sin(a)*v).toFixed(0)+'px');
+        p.style.setProperty('--r',(Math.random()*720-360).toFixed(0)+'deg');
+        fx.appendChild(p);
+      }
+    });
+    setTimeout(function(){fx.innerHTML='';},1800);
+  }
+  function isComplete(id){var p=R.plugsOf(state,id);return !!(p[0]&&p[1]);}
+  function updateTray(){
+    var used=0, inTray=Object.keys(CARD).length;
+    L.cables.forEach(function(cab){
+      var c=CARD[cab.id], complete=isComplete(cab.id), isHeld=held===cab.id;
+      if(!c)return;
+      if(complete) used++;
+      c.b.className='cc'+(isHeld?' held':'')+(complete?' used':'');
+      c.b.setAttribute('aria-pressed',isHeld?'true':'false');
+      c.b.title=cableFull(cab)+(isHeld?' · ถืออยู่':(complete?' · ต่อแล้ว (แตะเพื่อถอด)':''));
+    });
+    document.getElementById('trayInfo').textContent='ใช้ '+used+'/'+inTray+' เส้น';
+    (L.adapters||[]).forEach(function(ad){
+      var on=adapterOn(ad.id);
+      CARD_AD[ad.id].className='cc'+(on?' used':'');
+      CARD_AD[ad.id].title=ad.name+(on?' · ขันอยู่ที่หัวสาย (แตะเพื่อหมุนออก)':' · แตะเพื่อขันเข้าหัวสาย');
+    });
+  }
+  function adapterOn(id){return Object.keys(state.adapt||{}).filter(function(k){return state.adapt[k].id===id;})[0]||null;}
+  function tapAdapter(id){ // ขัน/หมุนอะแดปเตอร์ออก ที่ปลายสายที่ยังไม่ได้เสียบ (สายที่ถืออยู่ก่อน)
+    var ad=R.byId(L.adapters,id), on=adapterOn(id), res;
+    if(on){
+      res=R.detachAdapter(state,on);
+      if(!res.ok){SFX.deny();shake(CARD_AD[id]);toast('ดึงปลายสายออกจากช่องก่อน แล้วค่อยหมุนอะแดปเตอร์ออก','bad');return;}
+      state=res.state;render();SFX.unplug();toast('หมุนอะแดปเตอร์ออกแล้ว · หัวสายกลับเป็น '+tl(ad.from));return;
+    }
+    var cands=L.cables.filter(function(c){return c.ends.indexOf(ad.from)>=0;}).map(function(c){return c.id;});
+    if(held&&cands.indexOf(held)>=0)cands=[held];
+    cands.some(function(cid){res=R.attachAdapter(L,state,id,cid);return res.ok;});
+    if(!res||!res.ok){SFX.deny();shake(CARD_AD[id]);toast(res&&res.code==='plugged'?'ดึงปลายสายออกจากช่องก่อน แล้วค่อยขันอะแดปเตอร์':'ไม่มีหัวสาย '+tl(ad.from)+' ให้ขันอะแดปเตอร์','bad');return;}
+    state=res.state;if(!won)clockRun(true);render();SFX.plug();toast('ขันอะแดปเตอร์เข้าหัวสายแล้ว · ตอนนี้หัวสายเป็น '+tl(ad.to));
+  }
+  function toast(m,k){var t=document.getElementById('toast');t.textContent=m;t.className='toast'+(k?' '+k:'');}
+  function updateHud(ev){
+    var ch=document.getElementById('chips');ch.innerHTML='';
+    var h=document.createElement('div');h.className='chip'+(held?' hold':'');
+    var hc=held&&cableOf(held);   // ชื่อย่อ ไม่ให้ดันมาตรความยาวลงบรรทัดใหม่ (ชื่อเต็มอยู่ในข้อความแจ้ง)
+    h.textContent=hc?'ถืออยู่: '+tagOf(hc)+' '+COLOR_TH[hc.color]+' '+hc.len.toFixed(1)+' ม.':'ยังไม่ได้ถือสาย';ch.appendChild(h);
+    var n=document.createElement('div');n.className='chip';n.textContent='เสียบแล้ว '+taps+' ครั้ง';ch.appendChild(n);
+    var t=document.createElement('div');t.className='chip';t.id='clock';t.textContent='เวลา '+fmt(elapsed());ch.appendChild(t);
+    document.getElementById('lenTxt').textContent=ev.length.toFixed(1)+' ม.';
+    var fl=document.getElementById('fill');fl.style.width=Math.min(100,ev.length/BARMAX*100)+'%';fl.className='fill'+(ev.length>TARGET+1e-6?' over':'');
+    document.getElementById('tick').style.left=(TARGET/BARMAX*100)+'%';
+    document.getElementById('drop').disabled=!held;
+  }
+  function render(){
+    var ev=R.evaluate(L,state);
+    if(ev.solved)clockRun(false);else if(clock.t>0)clockRun(true);
+    buildCables(ev);updateTray();updateHud(ev);BGM.update(ev);
+    if(view)draw();
+    var res=document.getElementById('result');
+    if(ev.solved){
+      var sc=R.score(L,ev,taps), mism=ev.connections.some(function(c){return c.colorMismatch;});
+      document.getElementById('rTime').textContent=fmt(elapsed(),true);
+      if(!won){celebrate();recordBest(elapsed(),sc.score);}
+      document.getElementById('rDrags').textContent=taps;document.getElementById('rLen').textContent=ev.length.toFixed(1);
+      document.getElementById('rQ').textContent=ev.quality;document.getElementById('rScore').textContent=sc.score;
+      document.getElementById('rStars').textContent=new Array(sc.stars+1).join('★')+new Array(4-sc.stars).join('☆');
+      var qMsg=[];   // เหตุการณ์คุณภาพ: ซ้ายขวากลับด้าน · ต่อทางสำรองของด่าน (เช่น RCA แทน TRS)
+      if(ev.connections.some(function(c){return c.swapped;}))qMsg.push('ซ้ายขวากลับด้าน: ลำโพงมีเสียงแต่ซ้ายขวาสลับข้าง ถอดแล้วต่อให้ตรงตัวอักษร L/R');
+      if(ev.connections.some(function(c){return c.alt;}))qMsg.push(L.altMsg);
+      document.getElementById('rMsg').textContent=(qMsg.length?qMsg.join(' · ')
+        :(ev.length<=sc.target+1e-6?'ต่อถูกและใช้สายสั้นที่สุดที่พอ (เป้าหมาย '+sc.target.toFixed(1)+' ม.)':'ต่อถูกต้อง แต่ใช้สายรวม '+ev.length.toFixed(1)+' ม. ยาวกว่าเป้าหมาย '+sc.target.toFixed(1)+' ม. ลองเลือกสายที่สั้นลง'))
+        +(mism?' หมายเหตุ: สีสายบางเส้นไม่ตรงสีช่อง เสียงไม่เสียแต่ควรต่อให้ตรงสี':'');
+      res.classList.add('show');
+    } else {res.classList.remove('show');document.getElementById('board').classList.remove('win');hideLogo();}
+    won=ev.solved;
+    return ev;
+  }
+
+  /* ---------- actions ---------- */
+  function release(){ // วางสายที่ถืออยู่คืนถาด (ถอดปลายที่เสียบค้างอยู่ด้วย)
+    if(held&&!isComplete(held)) state=R.withFixed(L,R.unplugCable(state,held));
+    held=null;dangle=null;
+  }
+  function tapCard(id){
+    if(isComplete(id)){removeCable(id);return;}
+    if(held===id){release();render();SFX.back();toast('วางสายคืนถาดแล้ว');return;}
+    release();held=id;if(!won)clockRun(true);render();SFX.pick();
+    CARD[id].b.scrollIntoView({block:'nearest',inline:'nearest'});
+    toast('ถือ'+cableFull(cableOf(id))+' · ซูมแล้วแตะช่องต่อเพื่อเสียบ'+(anchorOf(id)?'ปลายที่เหลือ':'ปลายแรก'));
+  }
+  function removeCable(id){
+    if(R.fullyFixed(cableOf(id))){SFX.info();toast(cableFull(cableOf(id))+' ต่อไว้ให้แล้ว ด่านนี้ไม่ต้องแตะ','warn');return;}
+    if(held===id){held=null;dangle=null;}
+    state=R.withFixed(L,R.unplugCable(state,id));render();SFX.unplug();toast('ถอด'+cableFull(cableOf(id))+' คืนถาดแล้ว');
+  }
+  function shake(node){node.classList.remove('shake');void node.getBoundingClientRect();node.classList.add('shake');}
+  // เสียบไม่ได้: วงสีแดงที่ช่อง + ปลายสายในมือสั่น (ถ้ายังไม่มีปลายบนโต๊ะ การ์ดสายที่ถืออยู่สั่นแทน)
+  function deny(id){
+    SFX.deny();
+    var s=toScreen(JK[id].p), g=el('g',{'class':'nofx'},ov);
+    el('circle',{cx:f(s[0]),cy:f(s[1]),r:9,fill:'rgba(255,107,94,.35)',stroke:'#ff6b5e','stroke-width':2},g);
+    setTimeout(function(){g.remove();},600);
+    var grip=ov.querySelector('.grip'), gs=grip&&toScreen(looseEnd(anchorOf(held)));
+    shake(gs&&gs[0]>=0&&gs[0]<=W()&&gs[1]>=0&&gs[1]<=H()?grip:CARD[held].b);   // ปลายสายอยู่นอกจอ (ตอนซูม) ให้การ์ดสั่นแทน
+  }
+  function explain(r,cab,jack){
+    if(r.code==='type-mismatch'){
+      var p=R.plugsOf(state,cab.id), free=[0,1].filter(function(e){return !p[e];}).map(function(e){return R.endType(state,cab,e);});
+      var m=free.length===1?'ปลายที่เหลือของสายเส้นนี้เป็นหัว '+tl(free[0])+' เสียบช่อง '+tl(jack.type)+' ไม่ได้'
+        :'หัวต่อของสายเส้นนี้ ('+cableName(cab)+') เสียบช่อง '+tl(jack.type)+' ไม่ได้';
+      // ด่านที่มีอะแดปเตอร์: บอกทางแก้ (ขันเข้า / หมุนออก)
+      if((L.adapters||[]).some(function(a){return free.indexOf(a.from)>=0&&a.to===jack.type;})) m+=' · ขันอะแดปเตอร์ในถาดเข้าหัวสายก่อน';
+      else if(state.adapt&&state.adapt[cab.id]&&cab.ends.indexOf(jack.type)>=0) m+=' · หมุนอะแดปเตอร์ออกก่อน (แตะอะแดปเตอร์ในถาด)';
+      return m;
+    }
+    if(r.code==='same-direction'&&jack.type==='LAN') return 'ด่านนี้มีมิกเซอร์ด้วย ต่อ LAN ตรงเครื่องถึงเครื่องไม่ได้ · ต่อทุกเครื่องเข้าสวิตช์ฮับ';
+    if(r.code==='same-direction') return 'ต้องต่อ OUT เข้า IN: ปลายแรกอยู่ที่ช่อง'+(jack.dir==='out'?' OUT':' IN')+' ปลายที่สองต้องเข้าช่อง'+(jack.dir==='out'?' IN':' OUT');
+    if(r.code==='occupied') return jack.name+' มีสายเสียบอยู่แล้ว';
+    if(r.code==='same-device') return 'สายวนกลับเข้าเครื่องเดิมไม่ได้ ปลายอีกด้านต้องไปเครื่องอื่น';
+    if(r.code==='too-short') return 'สายเส้นนี้ยาว '+cab.len.toFixed(1)+' ม. สั้นเกินไป เสียบไม่ถึง ระยะนี้ต้องใช้สายยาวอย่างน้อยประมาณ '+(Math.ceil(r.need*10)/10).toFixed(1)+' ม. กด "วางสายคืน" แล้วเลือกเส้นที่ยาวกว่า';
+    return 'เสียบไม่ได้';
+  }
+  function pullEnd(id){ // ดึงปลายที่เสียบอยู่ออก แล้วถือสายนั้นต่อ
+    var occ=R.occupantAt(L,state,id), j=R.byId(L.jacks,occ.jack);   // ช่องย่อยของหัว RCA คู่ = ดึงหัวคู่ออก
+    if(R.fullyFixed(cableOf(occ.cableId))){SFX.info();toast(cableFull(cableOf(occ.cableId))+' ต่อไว้ให้แล้ว ด่านนี้ไม่ต้องแตะ','warn');return;}
+    var back=held&&held!==occ.cableId&&!isComplete(held)&&R.plugsOf(state,held).some(Boolean)?held:null;   // สายที่ถือค้างครึ่งเส้นจะถูกวางคืนถาด
+    if(held&&held!==occ.cableId)release();
+    state=R.unplugEnd(state,occ.cableId,occ.end);held=occ.cableId;dangle=null;render();SFX.unplug();
+    toast((back?'วาง'+cableFull(cableOf(back))+' คืนถาดแล้ว · ':'')+'ดึงปลายออกจาก '+j.name+' · ถือ'+cableFull(cableOf(held))+' อยู่');
+  }
+  function srcNames(to){ // ชื่อกลุ่มช่องต้นทางที่ยอมรับของคู่ที่ปลายทางเป็น to เช่น "BOOTH" / "MASTER 1 / MASTER 2" / "ซับ"
+    var pr=L.pairs.filter(function(p){return [p].concat(p.alt||[],p.also||[]).some(function(q){return q.to===to;})&&p.srcs;})[0];
+    var out=[]; (pr?pr.srcs:[]).forEach(function(id){var n=R.byId(L.jacks,id).name.split(' · ')[0];if(out.indexOf(n)<0)out.push(n);});
+    return out.join(' / ');
+  }
+  function freeTypes(cid){var c=cableOf(cid),p=R.plugsOf(state,cid);return [0,1].filter(function(e){return !p[e];}).map(function(e){return R.endType(state,c,e);});}
+  function tapJack(id){
+    // ถือหัว RCA คู่อยู่แล้วแตะช่อง L หรือ R = เสียบเข้าช่องคู่ที่ครอบสองช่องนั้น
+    var pair=L.jacks.filter(function(q){return q.covers&&q.covers.indexOf(id)>=0;})[0];
+    if(pair&&held&&freeTypes(held).indexOf(pair.type)>=0&&!R.accepts(R.byId(L.jacks,id),freeTypes(held)[0]))id=pair.id;
+    var j=R.byId(L.jacks,id);
+    if(j.usable&&R.occupantAt(L,state,id)){pullEnd(id);return;}
+    if(!j.usable){toast(j.name+': '+j.hint,held?'bad':'warn');if(held)deny(id);else SFX.info();return;}
+    if(!held){SFX.info();toast('เลือกสายจากถาดด้านบนก่อน แล้วค่อยคลิกช่องต่อ','warn');return;}
+    taps++;
+    var cab=cableOf(held), r=R.tryPlug(L,state,held,id);
+    if(!r.ok){render();toast(explain(r,cab,j),'bad');deny(id);return;}
+    state=r.state;dangle=null;SFX.plug();
+    if(!isComplete(held)){render();toast('เสียบปลายแรกที่ '+j.name+' แล้ว · แตะช่องของอีกเครื่อง หรือลากปลายสายไปวาง');return;}
+    var doneId=held;held=null;
+    var ev=render(), cn=ev.connections.filter(function(c){return c.cableId===doneId;})[0];
+    if(ev.solved) toast(L.winMsg+(ev.connections.some(function(c){return c.colorMismatch;})?' (สีสายบางเส้นไม่ตรงสีช่อง เสียงไม่เสียแต่ควรต่อให้ตรงสี)':''),'good');
+    else if(ev.overBudget) toast('เกินงบสาย: ใช้สายรวม '+ev.length.toFixed(1)+' ม. งบมี '+L.budget.toFixed(1)+' ม. · เปลี่ยนเป็นเส้นที่สั้นลง','bad');
+    else if(ev.crossings.length) toast('สายตัดกัน: '+ev.crossings.map(function(c){return cableFull(cableOf(c[0]))+' กับ '+cableFull(cableOf(c[1]));}).join(' · ')+' · ลองเปลี่ยนช่องให้เส้นสายไม่ไขว้กัน','bad');
+    else if(cn.trap) toast('ยังไม่นับ: '+cn.trap,'bad');
+    else if(cn.wrongSrc) toast('มีเสียง แต่ยังไม่นับ: '+R.byId(L.jacks,cn.to).name+' ต้องรับสัญญาณจาก '+srcNames(cn.to)+' · ลองดูหน้าที่ของช่องอีกครั้ง','bad');
+    else if(!cn.live) toast('ต่อแล้ว แต่ต้นทาง ('+R.byId(L.jacks,cn.from).name+') ยังไม่มีสัญญาณ · ต้องต่อสายที่ส่งสัญญาณเข้าเครื่องนี้ก่อน','warn');
+    else if(cn.alt) toast('ต่อแล้ว '+L.altMsg,'warn');
+    else if(cn.swapped) toast('ต่อแล้ว แต่ช่อง '+R.byId(L.jacks,cn.from).ch+' ไปเข้า '+R.byId(L.jacks,cn.to).ch+' ซ้ายขวากลับด้าน','warn');
+    else if(cn.colorMismatch) toast('ต่อแล้ว แต่สีสายไม่ตรงสีช่อง เสียงไม่เสียแต่ควรต่อให้ตรงสีเพื่อไม่สับสน','warn');
+    else toast('ต่อ '+cableFull(cableOf(doneId))+' แล้ว ต่อข้างที่เหลือ');
+  }
+  document.getElementById('drop').addEventListener('click',function(){if(!held)return;release();render();SFX.back();toast('วางสายคืนถาดแล้ว');});
+  document.getElementById('reset').addEventListener('click',function(){
+    var hadAd=Object.keys(state.adapt||{}).length>0;
+    state=R.withFixed(L,{plugs:{}});held=null;dangle=null;taps=0;clock={t:0,since:null};render();SFX.unplug();
+    toast('ถอดสายทั้งหมด'+(hadAd?'และหมุนอะแดปเตอร์ออก':'')+'แล้ว เริ่มใหม่ได้เลย');
+  });
+  document.getElementById('back').addEventListener('click',function(){setView(home);});
+
+  /* ---------- pointer: ล้อเมาส์/ถ่างนิ้ว = ซูม · ลากพื้นที่ว่าง = เลื่อนภาพ · แตะช่อง = เสียบ/ดึงปลาย · ลากปลายสาย ได้ไกลสุดเท่าความยาวสาย ---------- */
+  var drag=null, press=null, pan=null, pinch=null, touches={}, ray=new THREE.Raycaster();
+  function local(e){var r=stage.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+  function setRay(p){ray.setFromCamera(new THREE.Vector2(p[0]/W()*2-1,-(p[1]/H())*2+1),cam);}
+  function jackAt(p){ // ช่องที่ใกล้ที่สุดภายในรัศมีจุดแตะของช่องนั้น
+    var best=null,bd=1e9;
+    Object.keys(HOT).forEach(function(id){var h=HOT[id],d=Math.hypot(h.s[0]-p[0],h.s[1]-p[1]);if(d<=Math.max(5,h.r)+2&&d<bd){bd=d;best=id;}});
+    return best;
+  }
+  function cableAt(p){setRay(p);var h=ray.intersectObjects(cableMeshes,false)[0];return h?h.object.userData.cable:null;}
+  function deskPoint(p){setRay(p);var pt=new THREE.Vector3();return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-DESK_Y),pt)?pt:null;}
+  function airPoint(p,A){ // จุดใต้นิ้วบนระนาบที่หันหากล้องผ่านช่องที่เสียบอยู่ (ปลายสายลอยตามนิ้ว) · ต่ำกว่าโต๊ะ = ไถลบนโต๊ะ · นิ้วอยู่บนเครื่อง = ปลายสายวางบนผิวเครื่องตรงใต้นิ้ว (ไม่กระโดดอ้อม)
+    setRay(p);var pt=new THREE.Vector3();
+    if(!ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(DIR,A),pt))return null;
+    var hit=ray.intersectObjects(Object.keys(DEV).map(function(id){return DEV[id];}),true)[0];
+    if(hit&&hit.distance<ray.ray.origin.distanceTo(pt))pt=hit.point.addScaledVector(ray.ray.direction,-0.01);
+    return pt.y<DESK_Y?deskPoint(p):pt;
+  }
+  function clampReach(A,P,len){ // ตรงกับกติกาใน rules.js: ระยะ × slack ต้องไม่เกินความยาวสาย
+    var max=len/L.slack, d=P.distanceTo(A);
+    return d<=max?P:A.clone().lerp(P,max/d);
+  }
+  function dropEnd(){ // ปล่อยกลางอากาศ: ปลายสายตกลงโต๊ะ (นอกฐานเครื่อง)
+    if(!dangle||dangle.y<=DESK_Y+1e-4){render();return;}
+    var from=dangle.clone(), to=pushOut(new THREE.Vector3(dangle.x,DESK_Y,dangle.z)), t0=performance.now();
+    if(reduce){dangle=to;render();SFX.thud();return;}
+    (function step(now){
+      if(drag||!held||!dangle)return;   // ผู้เล่นจับปลายสายอีกครั้ง หรือวางสายคืนระหว่างตก
+      var k=Math.min(1,(now-t0)/220); dangle=from.clone().lerp(to,k*k);
+      if(k<1){buildCables(R.evaluate(L,state));draw();requestAnimationFrame(step);}else{render();SFX.thud();}
+    })(t0);
+  }
+  function handleTap(p){
+    var j=jackAt(p);if(j){tapJack(j);return;}
+    var c=cableAt(p);if(c)removeCable(c);
+  }
+  function two(){var k=Object.keys(touches),a=touches[k[0]],b=touches[k[1]];return {d:Math.hypot(a[0]-b[0],a[1]-b[1]),m:[(a[0]+b[0])/2,(a[1]+b[1])/2]};}
+  stage.addEventListener('wheel',function(e){
+    if(!view)return; e.preventDefault();
+    zoomAt(local(e),Math.exp(-e.deltaY*0.0015));
+  },{passive:false});
+  stage.addEventListener('pointerdown',function(e){
+    if(e.button>0||!view||e.target.closest('.back'))return;
+    touches[e.pointerId]=[e.clientX,e.clientY];
+    if(Object.keys(touches).length===2){drag=null;press=null;pan=null;pinch=two();return;}   // สองนิ้ว = ซูม/เลื่อน
+    var p=local(e);
+    stage.setPointerCapture(e.pointerId);
+    if(e.target.closest('.grip')&&held&&anchorOf(held)){drag={x0:e.clientX,y0:e.clientY,moved:false};e.preventDefault();return;}
+    var j=jackAt(p);
+    if(j&&R.byId(L.jacks,j).usable&&R.occupantAt(L,state,j)&&!R.fullyFixed(cableOf(R.occupantAt(L,state,j).cableId))){pullEnd(j);if(anchorOf(held))drag={x0:e.clientX,y0:e.clientY,moved:false};return;}
+    press={x0:e.clientX,y0:e.clientY}; pan={x:e.clientX,y:e.clientY};
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(touches[e.pointerId])touches[e.pointerId]=[e.clientX,e.clientY];
+    if(pinch&&Object.keys(touches).length===2){
+      var t=two(), r=stage.getBoundingClientRect();
+      zoomAt([t.m[0]-r.left,t.m[1]-r.top],t.d/pinch.d); panBy(t.m[0]-pinch.m[0],t.m[1]-pinch.m[1]); pinch=t; return;
+    }
+    if(pan&&!drag){
+      if(press&&Math.hypot(e.clientX-press.x0,e.clientY-press.y0)>8)press=null;   // ขยับเกิน = ไม่นับเป็นการแตะ
+      if(!press&&zoomed())panBy(e.clientX-pan.x,e.clientY-pan.y);
+      pan={x:e.clientX,y:e.clientY}; return;
+    }
+    if(!drag)return;
+    if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>4)drag.moved=true;
+    if(!drag.moved)return;
+    var A=anchorOf(held), P=A&&airPoint(local(e),A.p); if(!P)return;
+    var Q=clampReach(A.p,P,cableOf(held).len); dangle=Q===P?Q:pushOutBox(Q);   // ดันออกจากตัวเครื่องเฉพาะตอนติดระยะสาย
+    buildCables(R.evaluate(L,state));draw();
+  });
+  stage.addEventListener('pointerup',function(e){
+    delete touches[e.pointerId];
+    if(pinch){if(Object.keys(touches).length<2)pinch=null;press=null;pan=null;return;}
+    pan=null;
+    var p=local(e);
+    if(drag){
+      var moved=drag.moved;drag=null;
+      if(!moved){render();return;}
+      var j=jackAt(p);
+      if(j&&R.occupantAt(L,state,j)){render();toast(R.byId(L.jacks,j).name+' มีสายเสียบอยู่แล้ว','bad');deny(j);return;}
+      if(j){tapJack(j);return;}
+      dropEnd();return;
+    }
+    if(press){var pr=press;press=null;if(Math.hypot(e.clientX-pr.x0,e.clientY-pr.y0)<8)handleTap(p);}
+  });
+  stage.addEventListener('pointercancel',function(e){delete touches[e.pointerId];drag=null;press=null;pan=null;pinch=null;render();});
+  if(window.ResizeObserver) new ResizeObserver(function(){if(view){sizeStage();draw();}}).observe(stage);
+  else window.addEventListener('resize',function(){if(view){sizeStage();draw();}});
+  sizeStage();
+
+  /* ---------- advice box ---------- */
+  var ADVICE=L.advice;   // ข้อความกล่องคำแนะนำอยู่ในไฟล์ข้อมูลด่าน
+  var advIdx=0, advEl=document.getElementById('advice');
+  function showAdvice(i){
+    advIdx=i;var a=ADVICE[i];
+    document.getElementById('advTag').textContent='ตัวแปรใหม่ '+(i+1)+' / '+ADVICE.length;document.getElementById('advTitle').textContent=a.title;
+    document.getElementById('advBody').textContent=a.body;document.getElementById('advHow').textContent=a.how;
+    var dots=document.getElementById('advDots');dots.innerHTML='';
+    ADVICE.forEach(function(_,k){var b=document.createElement('b');if(k===i)b.className='on';dots.appendChild(b);});
+    document.getElementById('advOk').textContent=(i<ADVICE.length-1)?'ถัดไป':'เข้าใจแล้ว';
+    advEl.hidden=false;
+  }
+  document.getElementById('advOk').addEventListener('click',function(){
+    if(advIdx<ADVICE.length-1)showAdvice(advIdx+1);else advEl.hidden=true;
+  });
+  document.getElementById('adv').addEventListener('click',function(){showAdvice(0);});
+  var helpEl=document.getElementById('help');
+  document.getElementById('helpBtn').addEventListener('click',function(){advEl.hidden=true;helpEl.hidden=false;});
+  document.getElementById('helpOk').addEventListener('click',function(){helpEl.hidden=true;});
+
+  render();toast('เลือกสายจากถาดด้านบน ซูมด้วยล้อเมาส์หรือถ่างนิ้ว แล้วแตะช่องต่อเพื่อเสียบ');showAdvice(0);
+})();
+</script>
+</body>
+</html>
