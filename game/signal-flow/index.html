@@ -241,6 +241,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
               <div class="stat"><b id="rScore">0</b><span>คะแนนตัวอย่าง</span></div>
             </div>
             <p class="best" id="rBest"></p>
+            <p class="best" id="rRank" hidden></p>
             <p id="rMsg" style="margin:0 0 8px;font-size:13px;color:var(--dim)"></p>
           </div>
           <p class="toast glass" id="toast" role="status" aria-live="polite"></p>
@@ -265,7 +266,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
         </div>
         <div class="advice" id="lock" hidden>
           <div class="card glass">
-            <div class="tag">สมาชิกเท่านั้น</div>
+            <div class="tag" id="lockTag">สมาชิกเท่านั้น</div>
             <h2 id="lockTitle"></h2>
             <p id="lockBody"></p>
             <div class="row" style="justify-content:flex-end;gap:6px"><button id="lockFree" type="button">เล่น Phase 1–2 ฟรี</button><button class="amber" id="lockLogin" type="button"></button></div>
@@ -279,7 +280,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="vendor/GLTFLoader.js"></script>
 <script src="vendor/RoomEnvironment.js"></script>
 <!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
-<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/"};</script>
+<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/","scores":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-scores","board":"/game/#leaderboard"};</script>
 <script src="rules.js?v=55"></script>
 <script src="level1.js?v=55"></script>
 <script src="level2.js?v=55"></script>
@@ -309,6 +310,15 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="p2level13.js?v=55"></script>
 <script src="p2level14.js?v=55"></script>
 <script>
+// ความคืบหน้า (บังคับเฉพาะฉบับเว็บ · ในเครื่อง/Artifact เปิดได้ทุกด่านไว้ตรวจ): ด่าน n เล่นได้เมื่อผ่านด่าน n−1 · Phase p เล่นได้เมื่อผ่าน Phase ก่อนหน้าครบทุกด่าน
+// ผ่านแล้วกลับมาเล่นซ้ำได้เสมอ · "ผ่าน" = มีสถิติดีที่สุดในเครื่องนี้ (signal-flow-best-<id> รวมสถิติเก่า) หรือมีคะแนนบน Leader Board (SF_ME.levels)
+var SF_PN={1:12,2:14,3:14,4:12};
+function sfPassed(p,n){
+  if(window.SF_ME&&(SF_ME.levels||[]).some(function(l){return l.phase===p&&l.level===n;}))return true;
+  try{return !!localStorage.getItem('signal-flow-best-p'+p+'-l'+n);}catch(e){return false;}
+}
+function sfFirstOpen(p){for(var n=1;n<SF_PN[p];n++)if(!sfPassed(p,n))return n;return SF_PN[p];}   // ด่านสูงสุดที่เล่นได้ใน Phase นี้
+function sfPhaseOpen(p){for(var q=1;q<p;q++)for(var n=1;n<=SF_PN[q];n++)if(!sfPassed(q,n))return false;return true;}
 function sfStart(){
   // เลือกด่านจาก ?phase=P&level=N (ค่าเริ่มต้น Phase 1 ด่าน 1) · ปุ่ม "ด่านถัดไป" โหลดหน้าใหม่ด้วยด่านถัดไป
   // ไฟล์ด่าน: Phase 1 = SFLevelN · Phase 2 ขึ้นไป = SFP<P>LevelN · Phase ที่ยังไม่มีด่านกดไม่ได้ (ยกเว้น Phase สมาชิกของฉบับเว็บ: กดได้ เปิดเป็นหน้าล็อก)
@@ -319,8 +329,11 @@ function sfStart(){
   function lvUrl(p,n){return p===1?'?level='+n:'?phase='+p+'&level='+n;}
   var LEVELS=phaseLevels(PH);
   var LV=Math.max(1,Math.min(LEVELS.length,parseInt(Q.get('level'),10)||1));
+  var GATE=!!window.SF_MEMBERS, LOCKED_LV=0;   // ฉบับเว็บ: ล็อกตามความคืบหน้า · ?level= ที่ยังล็อก = ไปด่านสูงสุดที่เล่นได้
+  if(GATE&&!LOCK&&!sfPhaseOpen(PH))LOCK={reason:'prev'};
+  if(GATE&&!LOCK&&LV>sfFirstOpen(PH)){LOCKED_LV=LV;LV=sfFirstOpen(PH);history.replaceState(null,'',lvUrl(PH,LV));}
   [].forEach.call(document.querySelectorAll('.phases .ph'),function(s,i){
-    var p=i+1; s.classList.toggle('on',p===PH); s.classList.toggle('lk',MEM.indexOf(p)>=0);
+    var p=i+1; s.classList.toggle('on',p===PH); s.classList.toggle('lk',MEM.indexOf(p)>=0||(GATE&&!sfPhaseOpen(p)));
     if(p!==PH&&(phaseLevels(p).length||MEM.indexOf(p)>=0)){s.classList.add('go');s.tabIndex=0;s.setAttribute('role','link');
       s.addEventListener('click',function(){location.search=lvUrl(p,1);});
       s.addEventListener('keydown',function(e){if(e.key==='Enter')location.search=lvUrl(p,1);});}  });
@@ -330,13 +343,18 @@ function sfStart(){
       not_member:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','บัญชีนี้ยังไม่ได้เป็นสมาชิก · สมัครสมาชิกได้ที่ร้าน หรือทักทีมงานทาง LINE @djlabsiam'],
       soon:['Phase '+PH+' เร็วๆ นี้','กำลังเตรียมด่านสำหรับสมาชิก · ระหว่างนี้เล่น Phase 1–2 ได้ฟรี'],
       error:['ตรวจสิทธิ์สมาชิกไม่สำเร็จ','เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้งในอีกสักครู่']}[LOCK.reason]||[];
-    document.getElementById('lvlNo').textContent='Phase '+PH; document.getElementById('lvlTitle').textContent=LOCK.reason==='soon'?'เร็วๆ นี้':'สำหรับสมาชิก';
+    var QP=1;while(QP+1<PH&&sfPhaseOpen(QP+1))QP++;   // Phase ที่ยังเล่นไม่ครบ (สำหรับ prev)
+    if(LOCK.reason==='prev')LT=['Phase '+PH+' ยังล็อก','ผ่าน Phase '+QP+' ให้ครบ '+SF_PN[QP]+' ด่านก่อน แล้ว Phase นี้จะเปิดเอง'];
+    document.getElementById('lockTag').textContent=LOCK.reason==='prev'?'ยังล็อก':'สมาชิกเท่านั้น';
+    document.getElementById('lockFree').hidden=LOCK.reason==='prev';
+    document.getElementById('lvlNo').textContent='Phase '+PH; document.getElementById('lvlTitle').textContent=LOCK.reason==='soon'?'เร็วๆ นี้':LOCK.reason==='prev'?'ยังล็อก':'สำหรับสมาชิก';
     document.getElementById('lvlSel').parentNode.hidden=true; document.getElementById('hudo').hidden=true;
     document.getElementById('loading').hidden=true; document.getElementById('advice').hidden=true;
     document.getElementById('lockTitle').textContent=LT[0]; document.getElementById('lockBody').textContent=LT[1];
     var lb=document.getElementById('lockLogin'); lb.hidden=LOCK.reason==='soon';
-    lb.textContent=LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':'เข้าสู่ระบบสมาชิก';
+    lb.textContent=LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':LOCK.reason==='prev'?'เล่นต่อ Phase '+QP:'เข้าสู่ระบบสมาชิก';
     lb.addEventListener('click',function(){if(LOCK.reason==='error')location.reload();
+      else if(LOCK.reason==='prev')location.search=lvUrl(QP,sfFirstOpen(QP));
       else location.href=SF_MEMBERS.login+'?next='+encodeURIComponent(location.pathname+'?phase='+PH);});   // หน้าสมาชิกพากลับได้เฉพาะ /game/signal-flow/
     document.getElementById('lockFree').addEventListener('click',function(){location.search=lvUrl(1,1);});
     document.getElementById('lock').hidden=false; return;
@@ -367,9 +385,10 @@ function sfStart(){
   // เลือกด่านได้ทุกด่าน · ✓ = เคยผ่านบนเครื่องนี้ (มีสถิติดีที่สุดเก็บไว้) · "เริ่มด่านใหม่" = โหลดด่านเดิมใหม่ทั้งหน้า
   var sel=document.getElementById('lvlSel');
   LEVELS.forEach(function(lv,i){
-    var done=false;try{done=!!localStorage.getItem('signal-flow-best-'+lv.id);}catch(e){}
-    var o=document.createElement('option');o.value=i+1;o.textContent='ด่าน '+(i+1)+(done?' ✓':'');o.selected=i+1===LV;sel.appendChild(o);
+    var done=sfPassed(lv.phase,lv.number), shut=GATE&&i+1>sfFirstOpen(PH);   // ฉบับเว็บ: ด่านที่ยังไม่ปลดล็อกเลือกไม่ได้
+    var o=document.createElement('option');o.value=i+1;o.textContent='ด่าน '+(i+1)+(done?' ✓':shut?' (ล็อก)':'');o.disabled=shut;o.selected=i+1===LV;sel.appendChild(o);
   });
+  if(LOCKED_LV)setTimeout(function(){toast('ด่าน '+LOCKED_LV+' ยังล็อก · ผ่านด่าน '+LV+' ก่อน','warn');},0);
   sel.addEventListener('change',function(){location.search=lvUrl(PH,+sel.value);});
   document.getElementById('restart').addEventListener('click',function(){location.reload();});
 
@@ -899,6 +918,9 @@ function sfStart(){
 
   /* ---------- game state ---------- */
   var state=R.withFixed(L,{plugs:{}}), held=null, taps=0, won=false;   // withFixed = เสียบปลายที่ต่อตายไว้ (เช่นสายหูฟัง)
+  // MOVES = ทุกการกระทำที่เปลี่ยนสายตั้งแต่เริ่มด่าน (ส่งให้ game-scores เล่นซ้ำแล้วคิดคะแนนเอง · ส่งเฉพาะสมาชิกที่ตั้งชื่อเล่นแล้ว)
+  //   ['p',สาย,ช่อง] แตะเสียบ (= taps++) · ['u',สาย,ปลาย] ดึงปลายออก · ['r',สาย] ถอด/วางคืนถาด · ['a',อะแดปเตอร์,สาย] / ['d',สาย]
+  var MOVES=[];
   document.getElementById('tgtTxt').textContent=TARGET.toFixed(1);
   if(L.budget) document.getElementById('tgtTxt').parentNode.firstChild.textContent='งบ ≤ ';
 
@@ -916,6 +938,25 @@ function sfStart(){
     if(newT)b.time=ms; if(newS)b.score=score;
     try{localStorage.setItem(BEST_KEY,JSON.stringify(b));}catch(e){}
     document.getElementById('rBest').innerHTML='สถิติดีที่สุด: เวลา '+fmt(b.time,true)+(newT?' <em>ใหม่!</em>':'')+' · คะแนน '+b.score+(newS?' <em>ใหม่!</em>':'');
+  }
+  // Leader Board (ฉบับเว็บ): สมาชิกที่ตั้งชื่อเล่นแล้ว → ส่ง MOVES ให้ game-scores คิดคะแนน · ล็อกอินแต่ยังไม่มีชื่อ → ชวนตั้งชื่อ
+  //   ไม่ล็อกอิน / ไม่ใช่สมาชิก / ตรวจ me ไม่ได้ (SF_ME = null) → ไม่ส่งอะไร · ส่งไม่สำเร็จก็เล่นต่อได้ปกติ
+  function lbLine(h){var p=document.getElementById('rRank');p.innerHTML=h;p.hidden=!h;}
+  function lbSubmit(ms){
+    var M=window.SF_MEMBERS, me=window.SF_ME, tok=window.SF_TOKEN;
+    if(!M||!M.scores||!me||!tok)return;
+    var join='<a href="'+M.login+'?next='+encodeURIComponent(location.pathname+lvUrl(L.phase,L.number))+'">';
+    if(!me.nickname){lbLine(join+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board');return;}
+    lbLine('กำลังส่งคะแนน…');
+    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},
+      body:JSON.stringify({action:'submit',game:'signal-flow',phase:L.phase,level:L.number,moves:MOVES,timeMs:Math.round(ms)})})
+      .then(function(r){return r.json().catch(function(){return null;}).then(function(j){return {s:r.status,j:j};});})
+      .then(function(x){
+        if(x.s===200&&x.j&&x.j.stored)lbLine('อันดับ <b>#'+(+x.j.level_rank)+'</b> ในด่านนี้ · อันดับรวม #'+(+x.j.total_rank)+' · <a href="'+M.board+'">ดู Leader Board</a>');
+        else if(x.s===200&&x.j&&x.j.reason==='no_nickname')lbLine(join+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board');
+        else if(x.s===401)lbLine('การเข้าสู่ระบบหมดอายุ · '+join+'เข้าสู่ระบบ</a> เพื่อส่งคะแนน');
+        else lbLine('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');
+      }).catch(function(){lbLine('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');});
   }
   // โลโก้ DJ LAB SIAM เด้งหมุนขึ้นกลางกระดาน ค้างให้เห็นแล้วจางหายเอง
   var logoEl=document.getElementById('winLogo'), logoT=0;
@@ -966,13 +1007,13 @@ function sfStart(){
     if(on){
       res=R.detachAdapter(state,on);
       if(!res.ok){SFX.deny();shake(CARD_AD[id]);toast('ดึงปลายสายออกจากช่องก่อน แล้วค่อยหมุนอะแดปเตอร์ออก','bad');return;}
-      state=res.state;render();SFX.unplug();toast('หมุนอะแดปเตอร์ออกแล้ว · หัวสายกลับเป็น '+tl(ad.from));return;
+      state=res.state;MOVES.push(['d',on]);render();SFX.unplug();toast('หมุนอะแดปเตอร์ออกแล้ว · หัวสายกลับเป็น '+tl(ad.from));return;
     }
-    var cands=L.cables.filter(function(c){return c.ends.indexOf(ad.from)>=0;}).map(function(c){return c.id;});
+    var cands=L.cables.filter(function(c){return c.ends.indexOf(ad.from)>=0;}).map(function(c){return c.id;}), onCab=null;
     if(held&&cands.indexOf(held)>=0)cands=[held];
-    cands.some(function(cid){res=R.attachAdapter(L,state,id,cid);return res.ok;});
+    cands.some(function(cid){res=R.attachAdapter(L,state,id,cid);onCab=cid;return res.ok;});
     if(!res||!res.ok){SFX.deny();shake(CARD_AD[id]);toast(res&&res.code==='plugged'?'ดึงปลายสายออกจากช่องก่อน แล้วค่อยขันอะแดปเตอร์':'ไม่มีหัวสาย '+tl(ad.from)+' ให้ขันอะแดปเตอร์','bad');return;}
-    state=res.state;if(!won)clockRun(true);render();SFX.plug();toast('ขันอะแดปเตอร์เข้าหัวสายแล้ว · ตอนนี้หัวสายเป็น '+tl(ad.to));
+    state=res.state;MOVES.push(['a',id,onCab]);if(!won)clockRun(true);render();SFX.plug();toast('ขันอะแดปเตอร์เข้าหัวสายแล้ว · ตอนนี้หัวสายเป็น '+tl(ad.to));
   }
   function toast(m,k){var t=document.getElementById('toast');t.textContent=m;t.className='toast'+(k?' '+k:'');}
   function updateHud(ev){
@@ -996,7 +1037,7 @@ function sfStart(){
     if(ev.solved){
       var sc=R.score(L,ev,taps), mism=ev.connections.some(function(c){return c.colorMismatch;});
       document.getElementById('rTime').textContent=fmt(elapsed(),true);
-      if(!won){celebrate();recordBest(elapsed(),sc.score);}
+      if(!won){celebrate();recordBest(elapsed(),sc.score);lbSubmit(elapsed());}
       document.getElementById('rDrags').textContent=taps;document.getElementById('rLen').textContent=ev.length.toFixed(1);
       document.getElementById('rQ').textContent=ev.quality;document.getElementById('rScore').textContent=sc.score;
       document.getElementById('rStars').textContent=new Array(sc.stars+1).join('★')+new Array(4-sc.stars).join('☆');
@@ -1014,7 +1055,7 @@ function sfStart(){
 
   /* ---------- actions ---------- */
   function release(){ // วางสายที่ถืออยู่คืนถาด (ถอดปลายที่เสียบค้างอยู่ด้วย)
-    if(held&&!isComplete(held)) state=R.withFixed(L,R.unplugCable(state,held));
+    if(held&&!isComplete(held)){if(R.plugsOf(state,held).some(Boolean))MOVES.push(['r',held]);state=R.withFixed(L,R.unplugCable(state,held));}
     held=null;dangle=null;
   }
   function tapCard(id){
@@ -1027,7 +1068,7 @@ function sfStart(){
   function removeCable(id){
     if(R.fullyFixed(cableOf(id))){SFX.info();toast(cableFull(cableOf(id))+' ต่อไว้ให้แล้ว ด่านนี้ไม่ต้องแตะ','warn');return;}
     if(held===id){held=null;dangle=null;}
-    state=R.withFixed(L,R.unplugCable(state,id));render();SFX.unplug();toast('ถอด'+cableFull(cableOf(id))+' คืนถาดแล้ว');
+    state=R.withFixed(L,R.unplugCable(state,id));MOVES.push(['r',id]);render();SFX.unplug();toast('ถอด'+cableFull(cableOf(id))+' คืนถาดแล้ว');
   }
   function shake(node){node.classList.remove('shake');void node.getBoundingClientRect();node.classList.add('shake');}
   // เสียบไม่ได้: วงสีแดงที่ช่อง + ปลายสายในมือสั่น (ถ้ายังไม่มีปลายบนโต๊ะ การ์ดสายที่ถืออยู่สั่นแทน)
@@ -1061,7 +1102,7 @@ function sfStart(){
     if(R.fullyFixed(cableOf(occ.cableId))){SFX.info();toast(cableFull(cableOf(occ.cableId))+' ต่อไว้ให้แล้ว ด่านนี้ไม่ต้องแตะ','warn');return;}
     var back=held&&held!==occ.cableId&&!isComplete(held)&&R.plugsOf(state,held).some(Boolean)?held:null;   // สายที่ถือค้างครึ่งเส้นจะถูกวางคืนถาด
     if(held&&held!==occ.cableId)release();
-    state=R.unplugEnd(state,occ.cableId,occ.end);held=occ.cableId;dangle=null;render();SFX.unplug();
+    state=R.unplugEnd(state,occ.cableId,occ.end);MOVES.push(['u',occ.cableId,occ.end]);held=occ.cableId;dangle=null;render();SFX.unplug();
     toast((back?'วาง'+cableFull(cableOf(back))+' คืนถาดแล้ว · ':'')+'ดึงปลายออกจาก '+j.name+' · ถือ'+cableFull(cableOf(held))+' อยู่');
   }
   function srcNames(to){ // ชื่อกลุ่มช่องต้นทางที่ยอมรับของคู่ที่ปลายทางเป็น to เช่น "BOOTH" / "MASTER 1 / MASTER 2" / "ซับ"
@@ -1078,7 +1119,7 @@ function sfStart(){
     if(j.usable&&R.occupantAt(L,state,id)){pullEnd(id);return;}
     if(!j.usable){toast(j.name+': '+j.hint,held?'bad':'warn');if(held)deny(id);else SFX.info();return;}
     if(!held){SFX.info();toast('เลือกสายจากถาดด้านบนก่อน แล้วค่อยคลิกช่องต่อ','warn');return;}
-    taps++;
+    taps++;MOVES.push(['p',held,id]);
     var cab=cableOf(held), r=R.tryPlug(L,state,held,id);
     if(!r.ok){render();toast(explain(r,cab,j),'bad');deny(id);return;}
     state=r.state;dangle=null;SFX.plug();
@@ -1099,7 +1140,7 @@ function sfStart(){
   document.getElementById('drop').addEventListener('click',function(){if(!held)return;release();render();SFX.back();toast('วางสายคืนถาดแล้ว');});
   document.getElementById('reset').addEventListener('click',function(){
     var hadAd=Object.keys(state.adapt||{}).length>0;
-    state=R.withFixed(L,{plugs:{}});held=null;dangle=null;taps=0;clock={t:0,since:null};render();SFX.unplug();
+    state=R.withFixed(L,{plugs:{}});held=null;dangle=null;taps=0;MOVES=[];clock={t:0,since:null};render();SFX.unplug();
     toast('ถอดสายทั้งหมด'+(hadAd?'และหมุนอะแดปเตอร์ออก':'')+'แล้ว เริ่มใหม่ได้เลย');
   });
   document.getElementById('back').addEventListener('click',function(){setView(home);});
@@ -1223,18 +1264,30 @@ function sfStart(){
 // Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลย · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
 (function(){
   var M=window.SF_MEMBERS, ph=parseInt(new URLSearchParams(location.search).get('phase'),10)||1;
-  if(!M||M.phases.indexOf(ph)<0){sfStart();return;}
-  if(M.soon.indexOf(ph)>=0){window.SF_LOCK={reason:'soon'};sfStart();return;}
-  document.getElementById('loading').textContent='กำลังตรวจสิทธิ์สมาชิก…';
+  if(!M){sfStart();return;}
   // session ของหน้าสมาชิก (assets/js/member.js · คีย์เดียวกัน) — อ่านอย่างเดียว ไม่ต่ออายุเอง (กันชนกับ member.js ที่หมุน refresh token)
   // ใกล้หมดอายุ = ส่งไป /member/?next= ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
   var s=null;try{s=JSON.parse(localStorage.getItem('djl-member-session')||'null');}catch(e){}
-  var tok=s&&s.access_token, exp=s&&s.expires_at;
+  var tok=s&&s.access_token, exp=s&&s.expires_at, live=!!tok&&!(exp&&exp-Date.now()/1000<=60);
+  window.SF_TOKEN=live?tok:null;
+  // Leader Board + ความคืบหน้าบนบัญชี: ล็อกอินอยู่ = ถาม game-scores (me) ครั้งเดียวต่อหน้า · ไม่ล็อกอิน = ไม่เรียกอะไรเลย
+  //   ไม่ใช่สมาชิก / ล้ม / ช้าเกิน 4 วินาที = SF_ME null (ใช้ความคืบหน้าในเครื่องอย่างเดียว ไม่ส่งคะแนน)
+  var me=!(M.scores&&live)?Promise.resolve(null):Promise.race([
+    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({action:'me',game:'signal-flow'})})
+      .then(function(r){return r.ok?r.json():null;}),
+    new Promise(function(done){setTimeout(function(){done(null);},4000);})]).catch(function(){return null;});
+  me.then(function(j){
+  window.SF_ME=j&&j.ok===true?{nickname:j.nickname||null,levels:j.levels||[]}:null;
+  if(M.phases.indexOf(ph)<0){sfStart();return;}
+  if(M.soon.indexOf(ph)>=0){window.SF_LOCK={reason:'soon'};sfStart();return;}
+  if(!sfPhaseOpen(ph)){window.SF_LOCK={reason:'prev'};sfStart();return;}   // ยังไม่ผ่าน Phase ก่อนหน้า = ไม่ต้องดึงด่าน
+  document.getElementById('loading').textContent='กำลังตรวจสิทธิ์สมาชิก…';
   (!tok?Promise.resolve('login'):exp&&exp-Date.now()/1000<=60?Promise.resolve('expired'):fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({phase:ph})})
       .then(function(r){return r.json().catch(function(){return null;}).then(function(j){
         if(r.ok&&j&&j.ok===true&&typeof j.js==='string'){new Function(j.js)();return null;}
         return r.status===401?'login':r.status===403?'not_member':r.status===404?'soon':'error';});}))
   .catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason};sfStart();});
+  });
 })();
 </script>
 </body>
