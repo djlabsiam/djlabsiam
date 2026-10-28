@@ -11,6 +11,19 @@
   var ctx = { code: '', phone: '' };   // kept in memory only, between "identify" and "verify"
   var resendTimer = null;
 
+  /* ---- ?next= : a way back to the shop's game after signing in. Only paths under /game/signal-flow/ (no other site, no // \ : .. % or spaces); anything else is ignored ---- */
+  function safeNext(q) {
+    var p = new URLSearchParams(q).get('next');   // decoded once; anything still %-encoded is refused below
+    if (!p || p.indexOf('/game/signal-flow/') !== 0 || /\/\/|\\|:|\.\.|%|[\x00-\x20\x7f]/.test(p)) return null;
+    return p;
+  }
+  var NEXT = safeNext(location.search);
+  function backLink() {   // shown only on the signed-in profile; never redirects by itself
+    if (!NEXT || $('b-next')) return;
+    var a = document.createElement('a'); a.id = 'b-next'; a.className = 'btn pri'; a.href = NEXT; a.textContent = 'กลับไปเล่นเกม';
+    $('v-profile').insertBefore(a, $('b-logout'));
+  }
+
   /* ---- storage (always inside try: private windows can refuse) ---- */
   function load() { try { var s = JSON.parse(localStorage.getItem(STORE) || 'null'); return s && s.access_token && s.refresh_token ? s : null; } catch (e) { return null; } }
   function save(s) { try { localStorage.setItem(STORE, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at || 0 })); } catch (e) { } }
@@ -83,6 +96,7 @@
         $('p-line').textContent = linked ? 'ผูก LINE แล้ว' : 'ยังไม่ได้ผูก LINE';
         $('b-linkline').hidden = linked || D.line !== '1';
         say('m-profile', '');
+        backLink();
         show('profile');
       });
     });
