@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Signal Flow — เกมต่อสายเครื่องเสียง | DJ LAB SIAM</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&family=Barlow+Condensed:wght@500;700&display=swap">
+<link rel="stylesheet" href="vendor/fonts.css">
 <style>
-/* Layout: one screen, no page scroll. One control panel (level, buttons, length meter, cable tray of plug heads) above the 3D desk,
-   which takes the rest of the height. Toast and result sit on the desk; how-to-play opens as a dialog.
+/* Layout: one screen, no page scroll. Level + buttons on top; below, the 3D desk takes the rest of the height and everything else
+   floats on it as frosted glass (status + length meter + cable tray, patch sheet, toast, result, dialogs). The home view fits the desk
+   below the glass deck (--inset). How-to-play opens as a dialog.
    Look: real 3D models in a dim room. One committed dark theme; amber marks advice, green marks success. */
 :root{
   --bg:#0f1217; --panel:#171b22; --panel-2:#1f2530; --line:#2d3542; --fg:#e8ebf0; --dim:#9aa3b2;
   --amber:#f2b134; --ok:#3ccf7a; --bad:#ff6b5e; --cool:#6fb4ff;
+  --glass:rgba(22,27,35,.46); --glass-line:rgba(255,255,255,.12);
   --f-body:"Prompt","Noto Sans Thai",system-ui,sans-serif; --f-cond:"Barlow Condensed","Prompt",sans-serif;
   color-scheme:dark;
 }
@@ -32,7 +34,7 @@ h1{font-family:var(--f-cond);font-weight:700;font-size:clamp(22px,4vw,30px);lett
 .lvl{flex:1 1 180px;min-width:0;font-family:var(--f-cond);font-size:20px;font-weight:700;letter-spacing:.03em;line-height:1.1}
 .lvl span{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--dim);letter-spacing:0}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);padding:2px 9px;border-radius:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--glass-line);background:rgba(255,255,255,.06);padding:2px 9px;border-radius:4px;font-size:13px;font-variant-numeric:tabular-nums}
 .chip.hold{border-color:var(--amber)}
 .meter{flex:1 1 220px;font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .meter span{white-space:nowrap}
@@ -52,9 +54,14 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .ov .grip{pointer-events:all;cursor:grab}
 .ov .grip:active{cursor:grabbing}
-.back{position:absolute;top:8px;left:8px;z-index:2;background:rgba(23,27,34,.92)}
-/* ใบแพตช์ของสถานที่: แสดงตลอด มุมขวาบน · แตะทะลุได้ */
-.patch{position:absolute;top:8px;right:8px;z-index:2;pointer-events:none;background:rgba(23,27,34,.94);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:6px;padding:6px 10px 8px;font-size:12px;line-height:1.5;min-width:150px}
+/* กระจกขุ่น: กรอบทุกส่วนที่ลอยบนโต๊ะ 3D */
+.glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:8px;-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);box-shadow:0 8px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07)}
+/* แถบลอยบนสุดของกระดาน: สถานะ + มาตรความยาว + ถาดสาย · ใบแพตช์ใต้แถบ ชิดขวา */
+.hudo{position:absolute;top:8px;left:8px;right:8px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+.deck{align-self:stretch;pointer-events:auto;padding:6px 10px;display:flex;flex-direction:column;gap:6px}
+.back{position:absolute;top:var(--inset,8px);left:8px;z-index:2}
+/* ใบแพตช์ของสถานที่: แสดงตลอด ใต้แถบลอย ชิดขวา · แตะทะลุได้ */
+.patch{pointer-events:none;border-top:3px solid var(--amber);padding:6px 10px 8px;font-size:12px;line-height:1.5;min-width:150px}
 .patch[hidden]{display:none}
 .patch b{display:block;font-family:var(--f-cond);letter-spacing:.08em;color:var(--amber);font-size:13px;margin-bottom:2px}
 .patch ol{margin:0;padding:0;list-style:none;display:grid;gap:0 12px}
@@ -62,17 +69,16 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .patch li i{font-style:normal;color:var(--dim);min-width:12px;text-align:right}
 .patch li.dj{color:var(--fg);font-weight:700}
 .patch li.dj i{color:var(--amber)}
-/* จอแคบ: ใบแพตช์เป็นแถบบนสุดของกระดาน ไม่บังโต๊ะ 3D (กระดานแบ่งความสูงให้) */
-@media (max-width:600px){.board.hp{display:flex;flex-direction:column}.board.hp .stage{position:relative;flex:1;inset:auto}
-  .patch{position:static;border:0;border-bottom:1px solid var(--line);border-radius:0;font-size:11px;line-height:1.4;padding:3px 8px 4px;min-width:0}.patch b{font-size:12px;margin:0}.patch ol{grid-template-columns:repeat(4,auto);gap:0 8px;justify-content:start}.patch li{gap:3px}}
+/* จอแคบ: ใบแพตช์เป็นแถบเต็มกว้างใต้แถบลอย · ภาพรวมโต๊ะ 3D อยู่ใต้ทั้งสองแถบ (--inset) */
+@media (max-width:600px){.patch{align-self:stretch;font-size:11px;line-height:1.4;padding:3px 8px 4px;min-width:0}.patch b{font-size:12px;margin:0}.patch ol{grid-template-columns:repeat(4,auto);gap:0 8px;justify-content:start}.patch li{gap:3px}}
 .loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--dim);font-size:14px;text-align:center;padding:16px}
 .dock{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-.toast{margin:0;padding:6px 10px;font-size:13px;line-height:1.45;background:rgba(23,27,34,.94);border:1px solid var(--line);border-left:4px solid var(--dim);border-radius:4px}
+.toast{margin:0;padding:6px 10px;font-size:13px;line-height:1.45;border-left:4px solid var(--dim)}
 .toast:empty{display:none}
 .toast.bad{border-left-color:var(--bad)} .toast.good{border-left-color:var(--ok)} .toast.warn{border-left-color:var(--amber)}
-.advice{position:absolute;inset:0;background:rgba(6,8,11,.72);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
+.advice{position:absolute;inset:0;background:rgba(6,8,11,.5);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
 .advice[hidden]{display:none}
-.card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:6px;padding:14px 16px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:8px;max-height:100%;overflow:auto}
+.card{border-top:3px solid var(--amber);padding:14px 16px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:8px;max-height:100%;overflow:auto}
 .card .tag{font-family:var(--f-cond);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-size:14px}
 .card h2{font-size:17px;margin:0;line-height:1.3}
 .card p{margin:0;color:#cfd5df;font-size:14px}
@@ -82,17 +88,17 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .dots{display:flex;gap:5px}
 .dots b{width:7px;height:7px;border-radius:50%;background:var(--line)}
 .dots b.on{background:var(--amber)}
-.tray{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:6px;min-width:0}
+.tray{display:flex;gap:10px;align-items:center;border-top:1px solid var(--glass-line);padding-top:6px;min-width:0}
 .tray .tl{flex:0 0 auto;font-family:var(--f-cond);font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);line-height:1.2}
 .tray .tl span{display:block;font-family:var(--f-body);font-size:12px;letter-spacing:0;text-transform:none}
 .cards{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px;scrollbar-color:var(--line) transparent}
-.cc{flex:0 0 52px;display:flex;flex-direction:column;align-items:center;gap:0;padding:3px 2px 2px;background:var(--panel-2)}
+.cc{flex:0 0 52px;display:flex;flex-direction:column;align-items:center;gap:0;padding:3px 2px 2px;background:rgba(255,255,255,.06);border-color:var(--glass-line)}
 .cc .ci{display:block;width:34px;height:42px}
 .cc b{font-family:var(--f-cond);font-size:14px;letter-spacing:.02em;line-height:1.1;font-variant-numeric:tabular-nums}
 .cc small{font-family:var(--f-cond);font-size:11px;color:var(--dim);line-height:1.1;letter-spacing:.04em}
 .cc.held{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
 .cc.used{opacity:.5}
-.result{display:none;pointer-events:auto;background:rgba(23,27,34,.96);border:1px solid var(--ok);border-radius:6px;padding:10px 12px}
+.result{display:none;pointer-events:auto;border-color:var(--ok);padding:10px 12px}
 .result.show{display:block;animation:rise .35s ease-out}
 @keyframes rise{from{transform:translateY(14px);opacity:0}}
 .board.win{border-color:var(--ok);box-shadow:0 0 26px rgba(60,207,122,.35);transition:box-shadow .4s,border-color .4s}
@@ -113,7 +119,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .best em{font-style:normal;color:var(--amber);font-weight:700}
 .result h3{margin:0 0 6px;font-family:var(--f-cond);font-size:20px;letter-spacing:.04em;color:var(--ok);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
 .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:6px}
-.stat{background:var(--panel-2);border-radius:4px;padding:4px 8px}
+.stat{background:rgba(255,255,255,.06);border-radius:4px;padding:4px 8px}
 .stat b{display:block;font-family:var(--f-cond);font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:11px;color:var(--dim);line-height:1.2;display:block}
 .stars{font-size:20px;letter-spacing:4px;color:var(--amber)}
@@ -147,31 +153,35 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
           <div class="lvl"><b id="lvlNo" style="font:inherit"></b><span id="lvlTitle"></span></div>
           <div class="row" style="gap:6px"><select id="lvlSel" aria-label="เลือกด่าน"></select><button id="adv" type="button">คำแนะนำ</button><button id="helpBtn" type="button">วิธีเล่น</button><button id="drop" type="button">วางสายคืน</button><button id="reset" type="button">ถอดสายทั้งหมด</button><button id="restart" type="button">เริ่มด่านใหม่</button></div>
         </div>
-        <div class="row">
-          <div class="chips" id="chips"></div>
-          <div class="meter" title="เส้นประ = เป้าหมายความยาวสายรวม">
-            <span>สายรวม <span id="lenTxt">0.0 ม.</span></span>
-            <div class="track"><div class="fill" id="fill"></div><div class="tick" id="tick"></div></div>
-            <span>เป้า <span id="tgtTxt"></span> ม.</span>
-          </div>
-        </div>
-        <div class="tray" aria-label="ถาดสาย">
-          <div class="tl">ถาดสาย<span id="trayInfo"></span></div>
-          <div class="cards" id="cards"></div>
-        </div>
       </div>
 
       <div class="board" id="board">
-        <aside class="patch" id="patch" aria-label="ใบแพตช์" hidden><b>ใบแพตช์</b><ol id="patchList"></ol></aside>
+        <div class="hudo" id="hudo">
+          <div class="deck glass" id="deck">
+            <div class="row">
+              <div class="chips" id="chips"></div>
+              <div class="meter" title="เส้นประ = เป้าหมายความยาวสายรวม">
+                <span>สายรวม <span id="lenTxt">0.0 ม.</span></span>
+                <div class="track"><div class="fill" id="fill"></div><div class="tick" id="tick"></div></div>
+                <span>เป้า <span id="tgtTxt"></span> ม.</span>
+              </div>
+            </div>
+            <div class="tray" aria-label="ถาดสาย">
+              <div class="tl">ถาดสาย<span id="trayInfo"></span></div>
+              <div class="cards" id="cards"></div>
+            </div>
+          </div>
+          <aside class="patch glass" id="patch" aria-label="ใบแพตช์" hidden><b>ใบแพตช์</b><ol id="patchList"></ol></aside>
+        </div>
         <div class="stage" id="stage">
           <canvas id="cv"></canvas>
           <svg class="ov" id="ov" aria-hidden="false"></svg>
           <div class="fx" id="fx" aria-hidden="true"></div>
-          <button class="back" id="back" type="button" hidden>ดูทั้งโต๊ะ</button>
+          <button class="back glass" id="back" type="button" hidden>ดูทั้งโต๊ะ</button>
           <p class="loading" id="loading">กำลังโหลดโมเดล 3D…</p>
         </div>
         <div class="advice" id="advice" role="dialog" aria-modal="true" aria-labelledby="advTitle">
-          <div class="card">
+          <div class="card glass">
             <div class="tag" id="advTag">ตัวแปรใหม่</div>
             <h2 id="advTitle"></h2>
             <p id="advBody"></p>
@@ -181,7 +191,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
         </div>
         <div class="winlogo" id="winLogo" hidden><img src="assets/djlabsiam-logo.png" alt="DJ LAB SIAM"></div>
         <div class="dock">
-          <div class="result" id="result" aria-live="polite">
+          <div class="result glass" id="result" aria-live="polite">
             <h3>ผ่านด่าน<span class="stars" id="rStars" aria-label="ดาว"></span></h3>
             <div class="stats">
               <div class="stat"><b id="rTime">0:00.0</b><span>เวลา</span></div>
@@ -194,10 +204,10 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
             <p id="rMsg" style="margin:0 0 8px;font-size:13px;color:var(--dim)"></p>
             <button type="button" id="nextBtn" disabled>ด่านถัดไป (ยังไม่เปิดในตัวอย่าง)</button>
           </div>
-          <p class="toast" id="toast" role="status" aria-live="polite"></p>
+          <p class="toast glass" id="toast" role="status" aria-live="polite"></p>
         </div>
         <div class="advice" id="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
-          <div class="card">
+          <div class="card glass">
             <div class="tag" id="helpTitle">วิธีเล่น</div>
             <ul>
           <li>คลิกสายในถาดด้านบนเพื่อหยิบ (เลื่อนถาดซ้ายขวาเพื่อดูสายทั้งหมด)</li>
@@ -218,9 +228,9 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
     </section>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="vendor/RoomEnvironment.js"></script>
 <!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
 <script src="rules.js?v=55"></script>
 <script src="level1.js?v=55"></script>
@@ -298,7 +308,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
     if(L.patch.ret) L.patch.ret.list.forEach(function(t,i){ // ช่องส่งกลับ A–D (จากคอนโซลมอนิเตอร์)
       var c='ABCD'[i], li=document.createElement('li');if(L.patch.ret.dj[c])li.className='dj';
       var n=document.createElement('i');n.textContent=c;li.appendChild(n);li.appendChild(document.createTextNode(t));document.getElementById('patchList').appendChild(li);});
-    document.getElementById('patch').hidden=false; document.getElementById('board').classList.add('hp');
+    document.getElementById('patch').hidden=false;
   }
   if(LEVELS[LV]){var nb=document.getElementById('nextBtn');nb.disabled=false;nb.textContent='ด่านถัดไป →';
     nb.addEventListener('click',function(){location.search=lvUrl(PH,LV+1);});}
@@ -459,8 +469,14 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
       x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);}
     var right=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,0), up=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,1);
     c.addScaledVector(right,(x0+x1)/2).addScaledVector(up,(y0+y1)/2);
-    return {target:c,halfH:Math.max((y1-y0)/2,(x1-x0)/2/(W()/H()))*pad};
+    var hh=Math.max((y1-y0)/2*H()/(H()-INSET),(x1-x0)/2/(W()/H()))*pad;   // วางโต๊ะในพื้นที่ใต้แถบลอย
+    c.addScaledVector(up,INSET*hh/H());
+    return {target:c,halfH:hh};
   }
+  // ความสูงที่แถบลอยบังด้านบนกระดาน (จอแคบนับใบแพตช์ด้วย เพราะเต็มกว้าง)
+  var INSET=0, hudo=document.getElementById('hudo');
+  function inset(){var el=matchMedia('(max-width:600px)').matches?hudo:document.getElementById('deck');
+    return Math.max(0,Math.min(H()*0.5,el.getBoundingClientRect().bottom-stage.getBoundingClientRect().top+6));}
   function zoomed(){return !!home&&view.halfH<home.halfH*0.999;}
   function setView(v){
     if(v.halfH>=home.halfH*0.999) v={target:home.target.clone(),halfH:home.halfH};   // ถอยสุด = กลับภาพรวม
@@ -479,6 +495,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
     var w=W(), h=stage.clientHeight;   // กระดานกินความสูงที่เหลือของจอ (เกมจอเดียว)
     renderer.setSize(w,h,false);
     ov.setAttribute('viewBox','0 0 '+w+' '+h);
+    INSET=inset(); document.getElementById('board').style.setProperty('--inset',INSET+'px');
     if(view){home=fitBox(V(L.overview[0]),V(L.overview[1]),1.02);setView(home);}
   }
   function toScreen(v){var p=v.clone().project(cam);return [(p.x+1)/2*W(),(1-p.y)/2*H()];}
@@ -1121,7 +1138,10 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
     if(press){var pr=press;press=null;if(Math.hypot(e.clientX-pr.x0,e.clientY-pr.y0)<8)handleTap(p);}
   });
   stage.addEventListener('pointercancel',function(e){delete touches[e.pointerId];drag=null;press=null;pan=null;pinch=null;render();});
-  if(window.ResizeObserver) new ResizeObserver(function(){if(view){sizeStage();draw();}}).observe(stage);
+  if(window.ResizeObserver){ new ResizeObserver(function(){if(view){sizeStage();draw();}}).observe(stage);
+    // แถบลอยสูงขึ้น/ลดลง (ตัดบรรทัด · ใบแพตช์โผล่): คำนวณภาพรวมใหม่ · ถ้ากำลังซูมอยู่ไม่ดึงภาพกลับ
+    new ResizeObserver(function(){if(!view||Math.abs(inset()-INSET)<1)return;var z=zoomed();INSET=inset();
+      document.getElementById('board').style.setProperty('--inset',INSET+'px');home=fitBox(V(L.overview[0]),V(L.overview[1]),1.02);if(!z)setView(home);}).observe(hudo); }
   else window.addEventListener('resize',function(){if(view){sizeStage();draw();}});
   sizeStage();
 
