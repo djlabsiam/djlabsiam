@@ -430,6 +430,27 @@ ok('href="https://open.spotify.com/show/15ihoWgHK0fzmoyvvVqA2a" target="_blank" 
 ok("#clips [hidden]{display:none!important}" in c, "content: the CSS rule that makes the hidden attribute win over .btn is missing (the 'load more' and play buttons would show when they should not)")
 ok("ytcta" not in c and "<h2>คลิปบน YouTube</h2>" not in c, "content: the old bottom 'YouTube clips' block must stay removed (the channel button at the top and the empty state already link to the channel)")
 
+# ---- /member/: member sign-in. Not linked, noindex, no Meta Pixel, no pop-up; talks only to the shop's Supabase (member-auth function · web_member_me · token refresh); never shows an e-mail ----
+mp = os.path.join(SITE, "member", "index.html")
+ok(os.path.exists(mp), "member/index.html is missing (run tools/build_pages.py)")
+if os.path.exists(mp):
+    mh, mj = read(mp), read(os.path.join(SITE, "assets", "js", "member.js"))
+    ok(bool(re.search(r'name="robots" content="noindex,nofollow"', mh)) and "/member/" not in read(os.path.join(SITE, "sitemap.xml")), "member: must be noindex,nofollow and absent from sitemap.xml")
+    ok("meta-pixel.js" not in mh and "data-pixel" not in mh and "popup.js" not in mh and "fbq(" not in mh, "member: no Meta Pixel and no pop-up on the sign-in page (member codes / phone numbers are typed here)")
+    ok(mh.count("<h1") == 1 and 'id="mem"' in mh, "member: expected one <h1> and the #mem container")
+    _mv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "member.js"), "rb").read()).hexdigest()[:8]
+    ok(mh.count(f'<script src="/assets/js/member.js?v={_mv}" defer></script>') == 1, f"member: member.js must be on the page once with the current version {_mv} (run tools/build_pages.py)")
+    ok(re.search(r'data-fn="https://[a-z0-9]+\.supabase\.co/functions/v1/member-auth"', mh) is not None, "member: data-fn must be the shop's member-auth function address")
+    ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function", mj), "member.js must not use innerHTML/outerHTML/insertAdjacentHTML/document.write/eval")
+    ok(not re.search(r"signInWithOtp|resetPasswordForEmail|signUp|getUser|user\.email|\.email\b|supabase-js|jsdelivr|unpkg|cdnjs", mj), "member.js: never show or request an e-mail, never use the standard Supabase e-mail sign-in calls, never load a library")
+    ok(mj.count("static.line-scdn.net") == 1 and "function loadLiff" in mj and mj.count("loadLiff()") == 3, "member.js: the LINE script address must appear once and be loaded only through loadLiff() after a press")
+    ok("localStorage.setItem(STORE, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at || 0 }))" in mj, "member.js: the only thing kept in the browser is the session tokens (never password / phone / member code)")
+    ok(all(a in mj for a in ("'request_otp'", "'verify_otp'", "'login'", "'link_line'", "'me'")) and "p.length < 10" in mj and "> 72" in mj and "grant_type=refresh_token" in mj, "member.js: it must use the five member-auth actions and check the password rules (>= 10 characters, <= 72 bytes, not digits only / one repeated character) before sending")
+    ok("'ขอรหัสใหม่ได้ในอีก '" in mj and "n = 60" in mj, "member.js: the resend button must stay closed for 60 seconds")
+    ok("ส่งไปที่" not in mj and "ไม่พบสมาชิก" not in mj, "member.js: never say where the code was sent or that the member was not found (the server answers with one generic message)")
+    ok("เปิด 12:00–20:00" in mh and "ตรวจกล่องสแปม" in mh, "member: the help line (staff hours + spam folder) must sit under the code forms")
+    ok(all(f'id="v-{v}"' in mh for v in ("boot", "login", "first", "verify", "line", "profile")), "member: one of the six screens is missing")
+
 print(f"check_pages: {passes} passed, {len(fails)} failed · courses.json md5 {md5}")
 for f in fails:
     print("  FAIL", f)

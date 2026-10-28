@@ -526,7 +526,7 @@ GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
 
-def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra="", head_extra=""):
+def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra="", head_extra="", bare=False):   # bare = no Meta Pixel and no pop-up (member sign-in page)
     li = "".join(f'<a href="{h}"{" class=on aria-current=page" if k == active else ""}>{t}</a>' for t, h, k in NAV)
     strip = ('<div class="topbar"><div><span><b>ตัวแทนจำหน่ายอย่างเป็นทางการ</b> Pioneer DJ · AlphaTheta · NEO by OYAIDE</span>'
              '<span>Lido Connect ชั้น 2 สยามสแควร์ · เปิดทุกวัน 12:00–20:00</span></div></div>')
@@ -543,7 +543,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<div class="rackband">{RACK}</div>'
             '<div class="foot-cols"><div><b>DJ LAB SIAM</b><p>Lido Connect ชั้น 2, Siam Square Soi 3<br>ปทุมวัน กรุงเทพฯ 10330</p></div>'
             '<div><p>เปิด 12:00–20:00 น. ทุกวัน<br>02-252-5868 · 088-656-0464<br>LINE @djlabsiam</p></div>'
-            '<div><a href="/privacy.html">นโยบายความเป็นส่วนตัว</a></div></div>' + PIXEL_ROW +
+            '<div><a href="/privacy.html">นโยบายความเป็นส่วนตัว</a></div></div>' + ('' if bare else PIXEL_ROW) +
             f'<p class="credit">{CREDIT}</p></div></footer>')
     ldj = "".join(f'<script type="application/ld+json">{json.dumps(x, ensure_ascii=False).replace("</", "<" + chr(92) + "/")}</script>' for x in (ld or []))
     og = (f'<meta property="og:type" content="website"><meta property="og:url" content="{ORIGIN}{path}"><meta property="og:title" content="{E(title)}">'
@@ -560,8 +560,8 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<link rel="icon" href="/favicon.ico" sizes="any">\n<link rel="icon" href="/favicon-512.png" type="image/png" sizes="512x512">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
-            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{PIXEL_SCRIPT}'
-            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{popup_tag()}{script}</body>\n</html>\n')
+            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{"" if bare else PIXEL_SCRIPT}'
+            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{"" if bare else popup_tag()}{script}</body>\n</html>\n')
 
 
 # ───────── /courses/ ─────────
@@ -1412,6 +1412,84 @@ def shop_page():
                  active="shop", script=js, css_extra=SHOP_CSS)
 
 
+# ───────── /member/ (member sign-in · NOT linked from the menu, noindex, no Meta Pixel, no pop-up) ─────────
+MEMBER_CSS = """
+.mem{max-width:560px;margin:0 auto;display:grid;gap:18px}
+.mem .card{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg,24px);padding:28px;display:grid;gap:16px}
+.mem h2{font-size:24px}
+.mem label{display:grid;gap:6px;font-weight:600;font-size:15px}
+.mem input{font:400 17px var(--font-family-body);min-height:52px;padding:12px 16px;border:1.5px solid var(--lab-line);border-radius:14px;background:#faf9f6;width:100%}
+.mem input:focus{outline:3px solid var(--text-primary);outline-offset:2px}
+.mem .hint{font-weight:400;font-size:13px;color:var(--text-muted)}
+.mem .btn{justify-content:center;width:100%;min-height:52px}
+.mem .btn[disabled]{opacity:.6;cursor:not-allowed}
+.mem .mm{margin:0;padding:12px 14px;border-radius:12px;background:var(--lab-tint);color:var(--brand-press,#8f0f16);font-size:15px}
+.mem .mm.ok{background:#EEF6EF;color:#1F5130}
+.mem [hidden]{display:none}
+.mem .lk{background:none;border:0;padding:8px 0;font:600 15px var(--font-family-body);text-decoration:underline;cursor:pointer;color:inherit;min-height:44px}
+.mem .help{font-size:14px;color:var(--text-muted)}
+.mem dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.mem dt{color:var(--text-muted)}.mem dd{margin:0;font-weight:600}
+"""
+
+
+def member_page():
+    api, key = book_backend()
+    liff = re.search(r"const LIFF_ID='([0-9]+-[A-Za-z0-9]+)'", io.open(os.path.join(SITE, "book", "index.html"), encoding="utf-8").read())
+    if not liff:
+        die("cannot read LIFF_ID from book/index.html")
+    fn = api.replace("/rest/v1/rpc/", "/functions/v1/member-auth")
+    with io.open(os.path.join(SITE, "assets", "js", "member.js"), "rb") as fh:
+        ver = hashlib.md5(fh.read()).hexdigest()[:8]
+
+    def view(i, title, inner):
+        return f'<section class="card" id="v-{i}" hidden aria-labelledby="h-{i}"><h2 id="h-{i}">{title}</h2>{inner}</section>'
+    help_ = ('<p class="help">ไม่ได้รับรหัส หรือยังไม่เคยให้อีเมลกับร้าน ติดต่อพนักงานที่ร้าน (เปิด 12:00–20:00) หรือทัก LINE @djlabsiam · '
+             'ถ้ารอสักครู่ยังไม่เห็นอีเมล ลองตรวจกล่องสแปมด้วย</p>')
+    views = (
+        view("boot", "กำลังโหลด…", '<p class="help" role="status">กำลังตรวจสอบการเข้าสู่ระบบ</p>')
+        + view("login", "เข้าสู่ระบบสมาชิก",
+               '<form id="f-login" novalidate style="display:grid;gap:16px">'
+               '<label>รหัสสมาชิก<input id="l-code" inputmode="numeric" autocomplete="username" required><span class="hint">เลขรหัสสมาชิกที่ร้านให้ไว้</span></label>'
+               '<label>รหัสผ่าน<input id="l-pw" type="password" autocomplete="current-password" required></label>'
+               '<button class="btn pri" id="b-login" data-label="เข้าสู่ระบบ" type="submit">เข้าสู่ระบบ</button>'
+               '<p class="mm" id="m-login" role="alert" hidden></p></form>'
+               '<button class="lk" id="go-first" type="button">เข้าใช้ครั้งแรก / ลืมรหัสผ่าน</button>')
+        + view("first", "เข้าใช้ครั้งแรก / ลืมรหัสผ่าน",
+               '<p class="help">กรอกรหัสสมาชิกและเบอร์โทรที่ลงทะเบียนกับร้าน ระบบจะส่งรหัสยืนยัน 6 หลักไปที่อีเมลที่ร้านมีไว้ (ถ้ามี) เพื่อให้คุณตั้งรหัสผ่านของตัวเอง</p>'
+               '<form id="f-first" novalidate style="display:grid;gap:16px">'
+               '<label>รหัสสมาชิก<input id="f-code" inputmode="numeric" autocomplete="off" required></label>'
+               '<label>เบอร์โทรที่ลงทะเบียนกับร้าน<input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0xx-xxx-xxxx" required></label>'
+               '<button class="btn pri" id="b-first" data-label="ส่งรหัสยืนยัน" type="submit">ส่งรหัสยืนยัน</button>'
+               '<p class="mm" id="m-first" role="alert" hidden></p></form>' + help_
+               + '<button class="lk" id="go-login" type="button">กลับไปเข้าสู่ระบบ</button>')
+        + view("verify", "ใส่รหัสยืนยันและตั้งรหัสผ่าน",
+               '<p class="mm ok" id="m-verify" role="status" hidden></p>'
+               '<form id="f-verify" novalidate style="display:grid;gap:16px">'
+               '<label>รหัสยืนยัน 6 หลักจากอีเมล<input id="v-otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required></label>'
+               '<label>รหัสผ่านใหม่<input id="v-pw" type="password" autocomplete="new-password" required>'
+               '<span class="hint">ยาวอย่างน้อย 10 ตัวอักษร ไม่ใช่ตัวเลขล้วน ไม่ใช่ตัวอักษรตัวเดียวซ้ำกัน</span></label>'
+               '<label>ยืนยันรหัสผ่านใหม่<input id="v-pw2" type="password" autocomplete="new-password" required></label>'
+               '<button class="btn pri" id="b-verify" data-label="ตั้งรหัสผ่านและเข้าสู่ระบบ" type="submit">ตั้งรหัสผ่านและเข้าสู่ระบบ</button></form>'
+               '<button class="btn sec" id="b-resend" data-label="ขอรหัสใหม่" type="button" disabled>ขอรหัสใหม่</button>' + help_
+               + '<button class="lk" id="back-first" type="button">กลับไปแก้รหัสสมาชิก/เบอร์โทร</button>')
+        + view("line", "ผูก LINE กับบัญชีสมาชิก",
+               '<p class="help">ตั้งรหัสผ่านสำเร็จแล้ว คุณผูก LINE กับบัญชีสมาชิกได้ (ไม่บังคับ ข้ามไปก่อนแล้วกลับมาผูกทีหลังจากหน้าสมาชิกได้) เมื่อกดผูก ระบบจะเปิดหน้าเข้าสู่ระบบของ LINE</p>'
+               '<button class="btn pri" id="b-line" data-label="ผูก LINE" type="button">ผูก LINE</button>'
+               '<button class="btn sec" id="b-skip" data-label="ข้ามไปก่อน" type="button">ข้ามไปก่อน</button>'
+               '<p class="mm" id="m-line" role="alert" hidden></p>')
+        + view("profile", "สมาชิก DJ LAB SIAM",
+               '<dl><dt>ชื่อ</dt><dd id="p-name"></dd><dt>รหัสสมาชิก</dt><dd id="p-code"></dd><dt>LINE</dt><dd id="p-line"></dd></dl>'
+               '<button class="btn pri" id="b-linkline" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
+               '<p class="mm" id="m-profile" role="alert" hidden></p>'
+               '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>'))
+    body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
+            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{E(liff.group(1))}" data-line="1">{views}'
+            '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
+    return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True,
+                 script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
+
+
 def write(path, text):
     full = os.path.join(A.out, path.strip("/").replace("/", os.sep), "index.html")
     os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -1424,6 +1502,7 @@ made = [write("/courses/", courses_page())]
 for t in TEACHERS:
     made.append(write(f"/teachers/{slug(t['name'])}/", teacher_page(t)))
 made.append(write("/content/", content_page()))
+made.append(write("/member/", member_page()))
 made.append(write(A.home, home_page()))
 made.append(write(A.shop, shop_page()))
 for p, n in made:
