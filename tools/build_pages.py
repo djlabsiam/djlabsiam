@@ -1546,8 +1546,8 @@ a.pb:hover{background:var(--lab-paper);box-shadow:0 6px 14px rgba(15,15,15,.12)}
 .gh .go .btn{min-height:48px;font-size:17px}
 .gh .sub{font-size:14px;color:var(--text-muted)}
 .gh .gc.soon{border-color:#777}
-.gh .gc.soon .cv svg{filter:saturate(.6) brightness(.8)}
-.gh .gc.soon .ov{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.42)}
+.gh .gc.soon .cv svg{filter:saturate(.75) brightness(.9)}
+.gh .gc.soon .ov{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.28)}
 .gh .gc.soon .ov b{font:800 clamp(22px,4vw,34px)/1 var(--font-family-display);color:#fff;letter-spacing:.1em;border:3px solid #fff;border-radius:10px;padding:8px 16px;transform:rotate(-4deg);background:rgba(0,0,0,.35)}
 .gh .gc.soon .in{color:#444}
 .gh .lbcard{background:#fff;border:1.5px dashed #777;border-radius:var(--radius-lg,24px);padding:22px;display:grid;gap:12px}
@@ -1579,13 +1579,47 @@ def game_cover_signal():
             '<text x="42" y="98" fill="#bbb" font-family="Prompt,sans-serif" font-weight="600" font-size="15" letter-spacing="3">ต่อสายให้ถึงปลายทาง</text></svg>')
 
 
-def game_cover_next():
-    # generic cover for the "new game on the way" card (no game name yet): vinyl + sound arcs
-    return ('<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ภาพปกเกมใหม่: แผ่นเสียงและคลื่นเสียง">'
-            '<rect width="640" height="360" fill="#0F0F0F"/>'
-            '<g fill="none" stroke="#fff" stroke-width="3"><circle cx="260" cy="180" r="130"/><circle cx="260" cy="180" r="100" stroke="#444" stroke-width="2"/><circle cx="260" cy="180" r="70" stroke="#444" stroke-width="2"/></g>'
-            f'<circle cx="260" cy="180" r="38" fill="{GAME_RED}"/><circle cx="260" cy="180" r="6" fill="#0F0F0F"/>'
-            f'<g fill="none" stroke="{GAME_RED}" stroke-width="6" stroke-linecap="round"><path d="M430 130Q460 180 430 230"/><path d="M470 100Q520 180 470 260"/><path d="M510 70Q580 180 510 290"/></g></svg>')
+def _svg(label, inner):
+    return (f'<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="{label}"><rect width="640" height="360" fill="#0F0F0F"/>' + inner + '</svg>')
+
+
+def game_cover_floor():
+    # Dance Floor Acoustics: a dance floor seen from above, two speakers and a sub, sound arcs spreading evenly
+    return _svg("ภาพปกเกม Dance Floor Acoustics: ผังฟลอร์เต้นรำ ตู้ลำโพง และวงคลื่นเสียง",
+                '<g fill="none" stroke="#262626" stroke-width="1"><path d="M60 60h520M60 120h520M60 180h520M60 240h520M60 300h520M60 60v240M140 60v240M220 60v240M300 60v240M380 60v240M460 60v240M540 60v240"/></g>'
+                '<rect x="60" y="60" width="520" height="240" rx="12" fill="none" stroke="#fff" stroke-width="3"/>'
+                '<g fill="#0F0F0F" stroke="#fff" stroke-width="3"><rect x="30" y="100" width="34" height="56" rx="6"/><rect x="30" y="204" width="34" height="56" rx="6"/><rect x="288" y="26" width="64" height="30" rx="6"/></g>'
+                f'<g fill="none" stroke="{GAME_RED}" stroke-width="5" stroke-linecap="round"><path d="M100 140Q130 180 100 220"/><path d="M140 110Q190 180 140 250"/><path d="M180 84Q250 180 180 276"/><path d="M270 84Q320 140 370 84"/><path d="M250 100Q320 190 390 100"/></g>'
+                '<g fill="#fff"><circle cx="470" cy="150" r="7"/><circle cx="520" cy="210" r="7"/><circle cx="430" cy="230" r="7"/><circle cx="500" cy="110" r="7"/></g>')
+
+
+def game_cover_request():
+    # Request Line: a booth (deck line + mixer) with request slips arriving from the crowd side
+    return _svg("ภาพปกเกม Request Line: บูธดีเจกับใบคำขอเพลงที่ส่งมาจากฝูงชน",
+                '<g fill="none" stroke="#fff" stroke-width="3"><rect x="150" y="190" width="340" height="100" rx="10"/><circle cx="220" cy="240" r="34"/><circle cx="420" cy="240" r="34"/><rect x="282" y="205" width="76" height="70" rx="6"/></g>'
+                f'<g fill="{GAME_RED}"><circle cx="220" cy="240" r="9"/><circle cx="420" cy="240" r="9"/></g>'
+                '<g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><rect x="70" y="50" width="120" height="64" rx="8" transform="rotate(-6 130 82)"/><rect x="260" y="36" width="120" height="64" rx="8"/><rect x="450" y="52" width="120" height="64" rx="8" transform="rotate(6 510 84)"/></g>'
+                f'<g stroke="{GAME_RED}" stroke-width="5" stroke-linecap="round"><path d="M92 72l58-6M92 92l40-4"/><path d="M282 58h76M282 78h50"/><path d="M472 72l58 6M472 92l40 4"/></g>'
+                '<g fill="none" stroke="#555" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"><path d="M130 120L200 190M320 106V190M510 124L440 190"/></g>')
+
+
+def game_cover_resonance():
+    # Resonance: a glass cracking as a sound wave peaks, a record at the base
+    return _svg("ภาพปกเกม Resonance: แก้วที่แตกร้าวเมื่อคลื่นเสียงตรงความถี่",
+                '<g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M270 60H370L350 160Q345 190 320 190Q295 190 290 160Z"/><path d="M320 190V250M270 250H370"/></g>'
+                f'<g fill="none" stroke="{GAME_RED}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M300 70l14 34-18 18 20 30"/><path d="M345 78l-10 26 14 16"/></g>'
+                f'<path d="M30 300Q70 240 110 300T190 300T270 300T350 300T430 300T510 300T610 300" fill="none" stroke="{GAME_RED}" stroke-width="6" stroke-linecap="round"/>'
+                '<g fill="none" stroke="#555" stroke-width="2"><path d="M60 90Q100 50 140 90T220 90"/><path d="M420 90Q460 50 500 90T580 90"/></g>')
+
+
+def game_cover_rim():
+    # Rim: a record seen from above, a small marker travelling round its edge, scratch arcs inside (own style: vinyl, no arcade tunnel)
+    return _svg("ภาพปกเกม Rim: แผ่นเสียงมองจากด้านบนกับจุดวิ่งรอบขอบแผ่น",
+                '<g fill="none" stroke="#fff" stroke-width="3"><circle cx="320" cy="180" r="140"/><circle cx="320" cy="180" r="112" stroke="#444" stroke-width="2"/><circle cx="320" cy="180" r="84" stroke="#444" stroke-width="2"/></g>'
+                f'<circle cx="320" cy="180" r="46" fill="{GAME_RED}"/><circle cx="320" cy="180" r="7" fill="#0F0F0F"/>'
+                f'<path d="M180 180A140 140 0 0 1 320 40" fill="none" stroke="{GAME_RED}" stroke-width="9" stroke-linecap="round"/>'
+                '<g fill="#fff"><circle cx="320" cy="40" r="13"/></g>'
+                '<g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M470 170q30 10 60 0"/><path d="M110 200q30 10 60 0"/></g>')
 
 
 def game_phase_btn(n, name, kind):
@@ -1598,6 +1632,20 @@ def game_phase_btn(n, name, kind):
 
 
 GAME_PHASES = [(1, "BEGINNER", 12, "free"), (2, "AMATEUR", 14, "free"), (3, "PROFESSIONAL DJ", 14, "mem"), (4, "SOUND ENGINEER", 12, "off")]
+
+
+GAME_NEXT = [   # games announced by the owner (28 Oct): names are plan names and may change when built · cover, name, one sentence, tags
+    ("Dance Floor Acoustics", "วางตู้ลำโพงและซับให้เสียงดังเท่ากันทั่วฟลอร์", ["เล่นบนมือถือ"], game_cover_floor),
+    ("Request Line", "คุมบูธตามคำขอเพลงของฝูงชน และแก้เหตุขัดข้องให้ทัน", ["เล่นบนมือถือ"], game_cover_request),
+    ("Resonance", "สแครชให้ตรงความถี่จนแก้วและผลึกแตก", ["ใช้เครื่อง DJ", "เล่นบนมือถือ"], game_cover_resonance),
+    ("Rim", "หมุนแผ่นพายานยิงฝ่าอุโมงค์วงกลม", ["ใช้เครื่อง DJ"], game_cover_rim),
+]
+
+
+def game_soon_card(k, name, desc, tags, cover):
+    chips = '<span class="chip2">เร็วๆ นี้</span>' + "".join(f'<span class="chip2">{E(t)}</span>' for t in tags)
+    return (f'<article class="gc soon" aria-labelledby="gn{k}" aria-disabled="true"><div class="cv">{cover()}<div class="ov"><b>COMING SOON</b></div></div>'
+            f'<div class="in"><h3 id="gn{k}">{E(name)}</h3><p>{E(desc)}</p><div class="meta">{chips}</div></div></article>')
 
 
 def game_page():
@@ -1618,9 +1666,7 @@ def game_page():
             f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
             '<div class="go"><a class="btn pri" id="gh-go" href="/game/signal-flow/">เริ่มเล่น</a><span class="sub" id="gh-sub"></span></div>'
             '</div></article>'
-            f'<article class="gc soon" aria-labelledby="gn"><div class="cv">{game_cover_next()}<div class="ov"><b>COMING SOON</b></div></div><div class="in">'
-            '<h3 id="gn">เกมใหม่กำลังมา</h3><p>กำลังเตรียมเกมทดสอบทักษะ DJ ตัวต่อไป ติดตามได้ที่หน้านี้</p>'
-            '<div class="meta"><span class="chip2">เร็วๆ นี้</span></div></div></article>'
+            + "".join(game_soon_card(k, *g) for k, g in enumerate(GAME_NEXT)) +
             '</div></section>'
             f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
             '<div class="lbcard" id="lbsoon"><span class="chip2">เร็วๆ นี้</span>'
