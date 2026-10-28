@@ -519,7 +519,7 @@ def minify_css(c):
 RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book")]  # Shop is appended below when --shop /shop/ ; Members when that page exists
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("สมาชิก", "/member/", "member")]  # Shop is appended below when --shop /shop/
 if A.shop == "/shop/":
     NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
 GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data-depth="14">'
@@ -1412,7 +1412,7 @@ def shop_page():
                  active="shop", script=js, css_extra=SHOP_CSS)
 
 
-# ───────── /member/ (member sign-in · NOT linked from the menu, noindex, no Meta Pixel, no pop-up) ─────────
+# ───────── /member/ (member sign-in · linked from the menu, noindex, no Meta Pixel, no pop-up) ─────────
 MEMBER_CSS = """
 .mem{max-width:560px;margin:0 auto;display:grid;gap:18px}
 .mem .card{background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg,24px);padding:28px;display:grid;gap:16px}
@@ -1487,7 +1487,7 @@ def member_page():
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
             f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
-    return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True,
+    return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True, active="member",
                  script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
