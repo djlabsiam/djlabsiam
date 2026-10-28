@@ -453,6 +453,29 @@ if os.path.exists(mp):
     ok(bool(_ml and _bl) and _ml.group(1) == "2010938781-AaiycM1b" and _ml.group(1) != _bl.group(1), "member: /member/ must use its own LIFF app (2010938781-AaiycM1b, endpoint /member/, scope openid), different from the booking page's LIFF_ID")
     ok(all(f'id="v-{v}"' in mh for v in ("boot", "login", "first", "verify", "line", "profile")), "member: one of the six screens is missing")
 
+# ---- /game/: game hub. Public + indexable (in sitemap), no sample data, no calls to the shop's database, only the player's own localStorage is read ----
+gp = os.path.join(SITE, "game", "index.html")
+ok(os.path.exists(gp), "game/index.html is missing (run tools/build_pages.py)")
+if os.path.exists(gp):
+    gh, gj = read(gp), read(os.path.join(SITE, "assets", "js", "gamehub.js"))
+    gmain = gh[gh.index('<div class="gh">'):gh.index('</main>')] if '<div class="gh">' in gh else ""
+    ok("https://djlabsiam.com/game/" in re.findall(r"<loc>([^<]+)</loc>", read(os.path.join(SITE, "sitemap.xml"))) and "noindex" not in gh, "game: must be indexable and listed in sitemap.xml")
+    ok("https://djlabsiam.com/game/signal-flow/" not in read(os.path.join(SITE, "sitemap.xml")), "game: /game/signal-flow/ must not be in sitemap.xml (not asked for)")
+    ok(gh.count("<h1") == 1 and 'rel="canonical" href="https://djlabsiam.com/game/"' in gh and 'name="description"' in gh, "game: expected one <h1>, canonical and description")
+    ok("เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี" in gh and "ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น" in gh, "game: the lede the owner chose is missing")
+    ok(not re.search(r"เกมตัวอย่าง|ตัวอย่าง|แบบร่าง|DRAFT|lorem|ชื่อสมมติ", gmain, re.I), "game: no sample / draft text may be on the live page")
+    ok(not re.search(r"Pioneer|AlphaTheta|DJM-|CDJ-|NEO by|OYAIDE|cover-signal-flow|<img", gmain), "game: covers must be our own SVG artwork, no product names / logos / images in the game list")
+    ok(not re.search(r"https?://(?!djlabsiam\.com)", gmain) and not re.search(r"fonts\.g|cdn|jsdelivr|unpkg", gh), "game: no outside address in the game list, no CDN")
+    ok(gmain.count('class="gc"') == 1 and gmain.count('class="gc soon"') == 1 and "เกมใหม่กำลังมา" in gmain and gmain.count("COMING SOON") == 1, "game: expected the Signal Flow card and ONE generic coming-soon card with the COMING SOON overlay")
+    ok(all(f"Phase {n}" in gmain and nm in gmain and f"{c} ด่าน" in gmain for n, nm, c in ((1, "BEGINNER", 12), (2, "AMATEUR", 14), (3, "PROFESSIONAL DJ", 14), (4, "SOUND ENGINEER", 12))) and "4 Phase · 52 ด่าน" in gmain, "game: Phase 1–4 names / level counts (12·14·14·12 = 52) must be right")
+    ok(all(f'href="/game/signal-flow/?phase={n}"' in gmain for n in (1, 2, 3)) and 'href="/game/signal-flow/?phase=4"' not in gmain and gmain.count('class="stamp">ฟรี!</i>') == 2, "game: Phase 1–3 link to the game, Phase 4 is not a link, free stamp on Phase 1–2 only")
+    ok("เพื่อรับโลโก้" not in gh, "game: the 'receive the logo' wording must stay out")
+    ok('id="lb" hidden' in gh and '<tbody id="lbody"></tbody>' in gh and "เร็วๆ นี้" in gmain.split("Leader Board", 1)[-1], "game: Leader Board is a coming-soon card; its table frame stays hidden and empty (no data yet)")
+    ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|fetch\(|XMLHttpRequest|sendBeacon|supabase|WebSocket", gj), "gamehub.js: read localStorage only; never send anything, never build HTML from strings")
+    _gv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb").read()).hexdigest()[:8]
+    ok(gh.count(f'<script src="/assets/js/gamehub.js?v={_gv}" defer></script>') == 1, f"game: gamehub.js must be on the page once with the current version {_gv} (run tools/build_pages.py)")
+    ok(all(f'<a href="/game/"{" class=on aria-current=page" if k == "game" else ""}>เกม</a>' in s_ for k, s_ in (("game", gh), ("home", SRC.get("home", "")), ("courses", SRC.get("courses", "")))), "game: the menu item 'เกม' must point at /game/ (and be highlighted on the hub)")
+
 print(f"check_pages: {passes} passed, {len(fails)} failed · courses.json md5 {md5}")
 for f in fails:
     print("  FAIL", f)

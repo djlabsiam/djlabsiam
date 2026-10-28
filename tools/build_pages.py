@@ -525,7 +525,7 @@ def minify_css(c):
 RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("เกม", "/game/signal-flow/", "game")]  # Shop is appended below when --shop /shop/ · Member is NOT in this list: it is its own button next to the LINE button (desktop and phone)
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("เกม", "/game/", "game")]  # Shop is appended below when --shop /shop/ · Member is NOT in this list: it is its own button next to the LINE button (desktop and phone)
 if A.shop == "/shop/":
     NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
 PERSON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0117 0z"/></svg>'
@@ -1499,6 +1499,124 @@ def member_page():
                  script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
+# ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
+GAME_CSS = """
+.gh{max-width:1120px;margin:0 auto;display:grid;gap:34px}
+.gh h2{font-size:26px;margin:0}
+.gh p{margin:0}
+.gh .games{display:grid;gap:18px}
+.gh .gc{display:grid;grid-template-columns:1fr;background:#fff;border:1.5px solid #111;border-radius:var(--radius-lg,24px);overflow:hidden}
+.gh .cv{aspect-ratio:16/9;background:#0F0F0F;position:relative;overflow:hidden}
+.gh .cv svg{width:100%;height:100%;display:block}
+.gh .in{padding:20px;display:grid;gap:12px;align-content:center}
+.gh .gc h3{font-size:26px;margin:0}
+.gh .meta{display:flex;flex-wrap:wrap;gap:8px}
+.gh .chip2{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--lab-line);background:var(--lab-paper);font:700 14px var(--font-family-display)}
+.gh .chip2.live{background:var(--brand-base);color:#fff;border-color:var(--brand-base)}
+.gh .pgrid{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.gh .pb{position:relative;display:grid;gap:2px;min-height:64px;padding:12px;border:1.5px solid #111;border-radius:14px;background:#fff;color:#111;text-decoration:none}
+.gh .pb b{font:800 16px var(--font-family-display)}
+.gh .pb span{font:600 12.5px var(--font-family-body);letter-spacing:.02em;color:#555}
+a.pb:hover{background:var(--lab-paper);box-shadow:0 6px 14px rgba(15,15,15,.12)}
+.gh .pb.mem{background:#111;color:#fff}.gh .pb.mem span{color:#ddd}a.pb.mem:hover{background:#2a2a2a}
+.gh .pb.off{background:#efede7;border-color:#bbb;color:#777}.gh .pb.off span{color:#888}
+.gh .stamp{position:absolute;top:-10px;right:-6px;transform:rotate(7deg);background:#fff;color:var(--brand-base);border:2px solid var(--brand-base);border-radius:8px;padding:0 8px;font:800 14px/22px var(--font-family-display);font-style:normal;box-shadow:0 2px 0 rgba(190,35,41,.25)}
+.gh .stamp.dk{color:#fff;background:#111;border-color:#111;box-shadow:none;font-size:12.5px}
+.gh .stamp.gr{color:#777;background:#efede7;border-color:#aaa;box-shadow:none;font-size:12.5px}
+.gh .go{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.gh .go .btn{min-height:48px;font-size:17px}
+.gh .sub{font-size:14px;color:var(--text-muted)}
+.gh .gc.soon{border-color:#777}
+.gh .gc.soon .cv svg{filter:saturate(.6) brightness(.8)}
+.gh .gc.soon .ov{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.42)}
+.gh .gc.soon .ov b{font:800 clamp(22px,4vw,34px)/1 var(--font-family-display);color:#fff;letter-spacing:.1em;border:3px solid #fff;border-radius:10px;padding:8px 16px;transform:rotate(-4deg);background:rgba(0,0,0,.35)}
+.gh .gc.soon .in{color:#444}
+.gh .lbcard{background:#fff;border:1.5px dashed #777;border-radius:var(--radius-lg,24px);padding:22px;display:grid;gap:12px}
+.gh .lbcard .chip2{justify-self:start}
+.gh .tabs2{display:flex;flex-wrap:wrap;gap:8px}
+.gh .tabs2 button{min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #111;background:#fff;font:700 15px var(--font-family-display);color:#111}
+.gh .tabs2 button[aria-selected=true]{background:#111;color:#fff}
+.gh .lb{width:100%;border-collapse:collapse;font-size:16px}
+.gh .lb th,.gh .lb td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--lab-line)}
+.gh .lb th{font-size:13px;color:var(--text-muted);font-weight:700}
+@media(min-width:760px){.gh .gc{grid-template-columns:minmax(260px,42%) 1fr}.gh .cv{aspect-ratio:auto;min-height:250px}.gh .in{padding:26px 30px}}
+"""
+
+GAME_RED = "#BD2026"
+GAME_CABLE = "M70 250H190Q220 250 220 220V150Q220 120 250 120H330Q360 120 360 150V210Q360 240 390 240H450Q480 240 480 210V130Q480 100 510 100H570"
+
+
+def game_cover_signal():
+    # own artwork: a signal cable running through patch points (brand red / black / white, line style). No product renders, no third-party logos.
+    return ('<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ภาพปก Signal Flow: สายสัญญาณวิ่งผ่านจุดต่อไปยังปลายทาง">'
+            '<rect width="640" height="360" fill="#0F0F0F"/>'
+            '<g stroke="#262626" stroke-width="1"><path d="M0 45h640M0 90h640M0 135h640M0 180h640M0 225h640M0 270h640M0 315h640"/><path d="M80 0v360M160 0v360M240 0v360M320 0v360M400 0v360M480 0v360M560 0v360"/></g>'
+            f'<path d="{GAME_CABLE}" fill="none" stroke="{GAME_RED}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+            f'<path d="{GAME_CABLE}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2 14" stroke-linecap="round"/>'
+            '<g fill="#0F0F0F" stroke="#fff" stroke-width="3"><circle cx="220" cy="185" r="11"/><circle cx="360" cy="180" r="11"/><circle cx="480" cy="170" r="11"/></g>'
+            '<g stroke="#fff" stroke-width="3" fill="#0F0F0F"><rect x="30" y="228" width="44" height="44" rx="8"/><rect x="566" y="78" width="44" height="44" rx="8"/></g>'
+            f'<g fill="{GAME_RED}"><circle cx="52" cy="250" r="9"/><circle cx="588" cy="100" r="9"/></g>'
+            '<text x="40" y="70" fill="#fff" font-family="Prompt,sans-serif" font-weight="800" font-size="38" letter-spacing="2">SIGNAL FLOW</text>'
+            '<text x="42" y="98" fill="#bbb" font-family="Prompt,sans-serif" font-weight="600" font-size="15" letter-spacing="3">ต่อสายให้ถึงปลายทาง</text></svg>')
+
+
+def game_cover_next():
+    # generic cover for the "new game on the way" card (no game name yet): vinyl + sound arcs
+    return ('<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ภาพปกเกมใหม่: แผ่นเสียงและคลื่นเสียง">'
+            '<rect width="640" height="360" fill="#0F0F0F"/>'
+            '<g fill="none" stroke="#fff" stroke-width="3"><circle cx="260" cy="180" r="130"/><circle cx="260" cy="180" r="100" stroke="#444" stroke-width="2"/><circle cx="260" cy="180" r="70" stroke="#444" stroke-width="2"/></g>'
+            f'<circle cx="260" cy="180" r="38" fill="{GAME_RED}"/><circle cx="260" cy="180" r="6" fill="#0F0F0F"/>'
+            f'<g fill="none" stroke="{GAME_RED}" stroke-width="6" stroke-linecap="round"><path d="M430 130Q460 180 430 230"/><path d="M470 100Q520 180 470 260"/><path d="M510 70Q580 180 510 290"/></g></svg>')
+
+
+def game_phase_btn(n, name, kind):
+    if kind == "off":
+        return f'<span class="pb off" aria-disabled="true" aria-label="Phase {n} {name} เร็วๆ นี้"><b>Phase {n}</b><span>{name}</span><i class="stamp gr">เร็วๆ นี้</i></span>'
+    stamp = '<i class="stamp">ฟรี!</i>' if kind == "free" else '<i class="stamp dk">สมาชิก</i>'
+    who = "ฟรี" if kind == "free" else "เฉพาะสมาชิก"
+    return (f'<a class="pb{" mem" if kind == "mem" else ""}" href="/game/signal-flow/?phase={n}" aria-label="เล่น Phase {n} {name} {who}">'
+            f'<b>Phase {n}</b><span>{name}</span>{stamp}</a>')
+
+
+GAME_PHASES = [(1, "BEGINNER", 12, "free"), (2, "AMATEUR", 14, "free"), (3, "PROFESSIONAL DJ", 14, "mem"), (4, "SOUND ENGINEER", 12, "off")]
+
+
+def game_page():
+    total = sum(p[2] for p in GAME_PHASES)
+    btns = "".join(game_phase_btn(n, f"{nm} · {c} ด่าน", k) for n, nm, c, k in GAME_PHASES)
+    # Leader Board table frame, kept hidden until the data function exists (no rows, no sample data): game tab → total score → Phase 1–4
+    lb_tabs = ('<button type="button" role="tab" aria-selected="true" data-p="0">คะแนนรวมทั้งเกม</button>'
+               + "".join(f'<button type="button" role="tab" aria-selected="false" data-p="{n}">Phase {n}</button>' for n, _, _, _ in GAME_PHASES))
+    body = ('<section class="hero"><h1>เกม</h1><p class="lede">เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี · ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น</p></section>'
+            '<div class="gh">'
+            '<section aria-labelledby="gl"><h2 id="gl" class="vh">รายชื่อเกม</h2><div class="games">'
+            f'<article class="gc" aria-labelledby="sf"><div class="cv">{game_cover_signal()}</div><div class="in">'
+            '<h3 id="sf">Signal Flow</h3>'
+            '<p>ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง ยิ่งเฟสสูงยิ่งซับซ้อน</p>'
+            f'<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">{len(GAME_PHASES)} Phase · {total} ด่าน</span></div>'
+            f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
+            '<div class="go"><a class="btn pri" id="gh-go" href="/game/signal-flow/">เริ่มเล่น</a><span class="sub" id="gh-sub"></span></div>'
+            '</div></article>'
+            f'<article class="gc soon" aria-labelledby="gn"><div class="cv">{game_cover_next()}<div class="ov"><b>COMING SOON</b></div></div><div class="in">'
+            '<h3 id="gn">เกมใหม่กำลังมา</h3><p>กำลังเตรียมเกมทดสอบทักษะ DJ ตัวต่อไป ติดตามได้ที่หน้านี้</p>'
+            '<div class="meta"><span class="chip2">เร็วๆ นี้</span></div></div></article>'
+            '</div></section>'
+            '<section aria-labelledby="lbh"><h2 id="lbh">Leader Board</h2>'
+            '<div class="lbcard" id="lbsoon"><span class="chip2">เร็วๆ นี้</span>'
+            '<p>กระดานอันดับกำลังจะมา ทุกคนเปิดดูอันดับได้ เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น · อันดับรวมทั้งเกม และแยกตาม Phase</p></div>'
+            f'<div id="lb" hidden><div class="tabs2" role="tablist" aria-label="เลือกอันดับ">{lb_tabs}</div>'
+            '<div style="overflow-x:auto"><table class="lb" aria-live="polite"><caption class="sub" id="lbcap"></caption>'
+            '<thead><tr><th>อันดับ</th><th>ชื่อเล่น</th><th>ด่านที่ผ่าน</th><th>เวลารวม</th></tr></thead><tbody id="lbody"></tbody></table></div>'
+            '<p class="sub">ทุกคนดูอันดับได้ · เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น ตั้งชื่อเล่นที่หน้าสมาชิก · กระดานนี้เพื่อความสนุก</p></div>'
+            '</section></div>')
+    with io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb") as fh:
+        ver = hashlib.md5(fh.read()).hexdigest()[:8]
+    return shell("/game/", "เกม DJ ทดสอบทักษะ เล่นฟรี — DJ LAB SIAM",
+                 "เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี ด่านพิเศษและการจัดอันดับสำหรับสมาชิก DJ LAB SIAM สยามสแควร์", body, active="game", css_extra=GAME_CSS,
+                 script=f'<script src="/assets/js/gamehub.js?v={ver}" defer></script>\n')
+
+
+
 def write(path, text):
     full = os.path.join(A.out, path.strip("/").replace("/", os.sep), "index.html")
     os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -1512,6 +1630,7 @@ for t in TEACHERS:
     made.append(write(f"/teachers/{slug(t['name'])}/", teacher_page(t)))
 made.append(write("/content/", content_page()))
 made.append(write("/member/", member_page()))
+made.append(write("/game/", game_page()))
 made.append(write(A.home, home_page()))
 made.append(write(A.shop, shop_page()))
 for p, n in made:
