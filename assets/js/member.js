@@ -1,5 +1,5 @@
 /* Member sign-in page (/member/). Talks only to the shop's Supabase project: the Edge Function "member-auth" (request_otp · verify_otp · login · link_line · me),
-   the RPC web_member_me and the Auth token-refresh address. No library, no other third party — except the LINE LIFF script, which is loaded ONLY after the member presses "link LINE".
+   the RPC web_member_me, the Edge Function "game-scores" (Leader Board nickname) and the Auth token-refresh address. No library, no other third party — except the LINE LIFF script, which is loaded ONLY after the member presses "link LINE".
    The browser never receives or shows an e-mail address (the Supabase session carries a made-up address: never display it). Everything is written with textContent. */
 (function () {
   var root = document.getElementById('mem');
@@ -42,11 +42,11 @@
 
   /* ---- calls ---- */
   var NET = 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง หรือทักทีมงานทาง LINE @djlabsiam';
-  function call(body, token) {
+  function call(body, token, url) {
     var h = { 'Content-Type': 'application/json', apikey: KEY };
     if (token) h.Authorization = 'Bearer ' + token;
     var c = new AbortController(), t = setTimeout(function () { c.abort(); }, 20000);
-    return fetch(FN, { method: 'POST', headers: h, body: JSON.stringify(body), signal: c.signal })
+    return fetch(url || FN, { method: 'POST', headers: h, body: JSON.stringify(body), signal: c.signal })
       .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }, function () { return { status: r.status, j: null }; }); })
       .then(function (x) { clearTimeout(t); return x; }, function () { clearTimeout(t); return { status: 0, j: null }; });
   }
@@ -98,9 +98,62 @@
         say('m-profile', '');
         backLink();
         show('profile');
+        loadBoard(tok);
       });
     });
   }
+
+  /* ---- game Leader Board (Edge Function "game-scores"): nickname · hide · delete — only for the signed-in member; the token always comes from fresh().
+     The page shows what the function returns (nickname, rank, numbers); never a name, phone, code or e-mail from the member's record. ---- */
+  var GAMES = D.games || '';
+  function gcall(body, tok) { return call(body, tok, GAMES); }
+  function ms(t) { t = Number(t) || 0; var m = Math.floor(t / 60000), s = ((t % 60000) / 1000).toFixed(1); return m + ':' + (Number(s) < 10 ? '0' : '') + s; }
+  function boardMsg(text, ok) { say('m-board', text, ok); }
+  function paintBoard(me) {
+    var nick = typeof me.nickname === 'string' ? me.nickname : '', n = me.levels && me.levels.length ? me.levels.length : 0, t = me.total, st = $('bd-state');
+    if (nick && t) st.textContent = 'ชื่อเล่นบนกระดาน: ' + nick + ' · อันดับ ' + t.rank + ' · ผ่าน ' + t.passed + ' ด่าน · คะแนนรวม ' + t.score + ' · เวลารวม ' + ms(t.time_ms);
+    else if (nick) st.textContent = 'ชื่อเล่นบนกระดาน: ' + nick + ' · ยังไม่มีคะแนนที่ขึ้นกระดาน เล่นเกมเพื่อเริ่มสะสมคะแนน';
+    else if (n) st.textContent = 'ตอนนี้คุณไม่ได้ขึ้นกระดาน (คะแนนเดิม ' + n + ' ด่านยังเก็บไว้) ตั้งชื่อเล่นเพื่อกลับขึ้นกระดาน';
+    else st.textContent = 'ยังไม่ได้เข้าร่วมกระดาน ตั้งชื่อเล่นเพื่อให้คะแนนของคุณขึ้นกระดาน';
+    var b = $('b-nick'); b.dataset.label = nick ? 'บันทึกชื่อเล่นใหม่' : 'เข้าร่วมกระดาน'; b.textContent = b.dataset.label;
+    if (document.activeElement !== $('n-nick')) $('n-nick').value = nick;
+    $('f-nick').hidden = false; $('b-hide').hidden = !nick; $('b-del').hidden = !(nick || n); $('bd-cf').hidden = true;
+  }
+  function loadBoard(tok) {
+    var box = $('p-board'); if (!GAMES || !box) return;
+    gcall({ action: 'me', game: 'signal-flow' }, tok).then(function (x) {
+      if (x.j && x.j.ok === true) { box.hidden = false; paintBoard(x.j); return; }
+      var e = errOf(x);
+      if (e.code === 'not_member' || e.code === 'unauthorized') { box.hidden = true; return; }
+      box.hidden = false; $('bd-state').textContent = 'ตอนนี้ดูข้อมูลกระดานคะแนนไม่ได้';
+      $('f-nick').hidden = $('b-hide').hidden = $('b-del').hidden = $('bd-cf').hidden = true; boardMsg(e.message);
+    });
+  }
+  function boardAct(btn, body, okText) {   // one action → message → refresh the card
+    busy(btn, true, 'กำลังทำรายการ…'); boardMsg('');
+    return fresh().then(function (tok) {
+      if (!tok) { show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return null; }
+      return gcall(body, tok).then(function (x) {
+        busy(btn, false);
+        if (x.j && x.j.ok === true) { boardMsg(typeof okText === 'function' ? okText(x.j) : okText, true); loadBoard(tok); return x.j; }
+        var e = errOf(x);
+        if (e.code === 'unauthorized') { clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return null; }
+        boardMsg(e.message); return null;
+      });
+    });
+  }
+  $('f-nick').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('n-nick').value.trim().replace(/\s+/g, ' ');
+    if (v.length < 3 || v.length > 16) { boardMsg('ชื่อเล่นต้องยาว 3–16 ตัวอักษร'); $('n-nick').focus(); return; }
+    boardAct($('b-nick'), { action: 'nickname', nickname: v }, 'บันทึกชื่อเล่นแล้ว');
+  });
+  $('b-hide').addEventListener('click', function () { boardAct($('b-hide'), { action: 'hide' }, 'ซ่อนจากกระดานแล้ว ชื่อเล่นหายไป คะแนนเดิมยังเก็บไว้'); });
+  $('b-del').addEventListener('click', function () { $('bd-cf').hidden = false; $('bd-cft').tabIndex = -1; $('bd-cft').focus(); });
+  $('b-delno').addEventListener('click', function () { $('bd-cf').hidden = true; $('b-del').focus(); });
+  $('b-delyes').addEventListener('click', function () {
+    boardAct($('b-delyes'), { action: 'delete' }, function (j) { return 'ลบคะแนนและชื่อเล่นทั้งหมดแล้ว' + (typeof j.scores === 'number' ? ' (' + j.scores + ' รายการ)' : ''); });
+  });
 
   /* ---- forms ---- */
   $('f-login').addEventListener('submit', function (e) {

@@ -1438,6 +1438,9 @@ MEMBER_CSS = """
 .mem .help{font-size:14px;color:var(--text-muted)}
 .mem dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
 .mem dt{color:var(--text-muted)}.mem dd{margin:0;font-weight:600}
+.mem .bd{display:grid;gap:12px;border-top:1px solid var(--lab-line);padding-top:18px}.mem .bd h3{font-size:19px;margin:0}
+.mem .bd .cf{display:grid;gap:10px;padding:14px;border:1.5px solid var(--brand-base);border-radius:14px;background:var(--lab-tint)}
+.mem .bd a.lk2{font-weight:600;min-height:44px;display:inline-flex;align-items:center}
 """
 
 
@@ -1491,9 +1494,24 @@ def member_page():
                '<dl><dt>ชื่อ</dt><dd id="p-name"></dd><dt>รหัสสมาชิก</dt><dd id="p-code"></dd><dt>LINE</dt><dd id="p-line"></dd></dl>'
                '<button class="btn pri" id="b-linkline" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
                '<p class="mm" id="m-profile" role="alert" hidden></p>'
+               '<section class="bd" id="p-board" aria-labelledby="h-board" hidden>'
+               '<h3 id="h-board">กระดานคะแนนเกม Leader Board</h3>'
+               '<p class="help" id="bd-state" role="status"></p>'
+               '<form id="f-nick" novalidate style="display:grid;gap:12px">'
+               '<label>ชื่อเล่นบนกระดาน<input id="n-nick" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false">'
+               '<span class="hint">ยาว 3–16 ตัว ใช้ไทย อังกฤษ ตัวเลข ช่องว่าง . _ - ได้ · ไม่ควรใช้ชื่อจริงหรือข้อมูลติดต่อ · เปลี่ยนได้วันละ 5 ครั้ง</span></label>'
+               '<button class="btn pri" id="b-nick" data-label="เข้าร่วมกระดาน" type="submit">เข้าร่วมกระดาน</button></form>'
+               '<p class="mm" id="m-board" role="alert" hidden></p>'
+               '<button class="btn sec" id="b-hide" data-label="ซ่อนจากกระดาน" type="button" hidden>ซ่อนจากกระดาน</button>'
+               '<button class="btn sec" id="b-del" data-label="ลบคะแนนทั้งหมดของฉัน" type="button" hidden>ลบคะแนนทั้งหมดของฉัน</button>'
+               '<div class="cf" id="bd-cf" role="alertdialog" aria-labelledby="bd-cft" hidden>'
+               '<b id="bd-cft">ลบคะแนนและชื่อเล่นทั้งหมดของคุณ?</b><span>ลบแล้วย้อนกลับไม่ได้ ต้องเล่นใหม่เพื่อกลับขึ้นกระดาน</span>'
+               '<button class="btn pri" id="b-delyes" data-label="ยืนยันลบทั้งหมด" type="button">ยืนยันลบทั้งหมด</button>'
+               '<button class="btn sec" id="b-delno" type="button">ยกเลิก</button></div>'
+               '<a class="lk2" href="/game/#leaderboard">ดู Leader Board</a></section>'
                '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>'))
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
-            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1">{views}'
+            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True, active="member",
                  script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
@@ -1502,6 +1520,7 @@ def member_page():
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
 GAME_CSS = """
 .gh{max-width:1120px;margin:0 auto;display:grid;gap:34px}
+.gh [hidden]{display:none}
 .gh h2{font-size:26px;margin:0}
 .gh p{margin:0}
 .gh .games{display:grid;gap:18px}
@@ -1582,18 +1601,20 @@ GAME_PHASES = [(1, "BEGINNER", 12, "free"), (2, "AMATEUR", 14, "free"), (3, "PRO
 
 
 def game_page():
-    total = sum(p[2] for p in GAME_PHASES)
+    total = sum(p[2] for p in GAME_PHASES if p[3] != "off")   # levels playable now (Phase 4 is not open yet)
+    api, key = book_backend()
+    games_fn = api.replace("/rest/v1/rpc/", "/functions/v1/game-scores")
     btns = "".join(game_phase_btn(n, f"{nm} · {c} ด่าน", k) for n, nm, c, k in GAME_PHASES)
     # Leader Board table frame, kept hidden until the data function exists (no rows, no sample data): game tab → total score → Phase 1–4
     lb_tabs = ('<button type="button" role="tab" aria-selected="true" data-p="0">คะแนนรวมทั้งเกม</button>'
-               + "".join(f'<button type="button" role="tab" aria-selected="false" data-p="{n}">Phase {n}</button>' for n, _, _, _ in GAME_PHASES))
+               + "".join(f'<button type="button" role="tab" aria-selected="false" data-p="{n}"{" disabled" if k == "off" else ""}>Phase {n}{" (เร็วๆ นี้)" if k == "off" else ""}</button>' for n, _, _, k in GAME_PHASES))
     body = ('<section class="hero"><h1>เกม</h1><p class="lede">เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี · ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น</p></section>'
             '<div class="gh">'
             '<section aria-labelledby="gl"><h2 id="gl" class="vh">รายชื่อเกม</h2><div class="games">'
             f'<article class="gc" aria-labelledby="sf"><div class="cv">{game_cover_signal()}</div><div class="in">'
             '<h3 id="sf">Signal Flow</h3>'
             '<p>ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง ยิ่งเฟสสูงยิ่งซับซ้อน</p>'
-            f'<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">{len(GAME_PHASES)} Phase · {total} ด่าน</span></div>'
+            f'<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">{len(GAME_PHASES)} Phase · {total} ด่านที่เล่นได้ตอนนี้</span></div>'
             f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
             '<div class="go"><a class="btn pri" id="gh-go" href="/game/signal-flow/">เริ่มเล่น</a><span class="sub" id="gh-sub"></span></div>'
             '</div></article>'
@@ -1601,12 +1622,12 @@ def game_page():
             '<h3 id="gn">เกมใหม่กำลังมา</h3><p>กำลังเตรียมเกมทดสอบทักษะ DJ ตัวต่อไป ติดตามได้ที่หน้านี้</p>'
             '<div class="meta"><span class="chip2">เร็วๆ นี้</span></div></div></article>'
             '</div></section>'
-            '<section aria-labelledby="lbh"><h2 id="lbh">Leader Board</h2>'
+            f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
             '<div class="lbcard" id="lbsoon"><span class="chip2">เร็วๆ นี้</span>'
             '<p>กระดานอันดับกำลังจะมา ทุกคนเปิดดูอันดับได้ เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น · อันดับรวมทั้งเกม และแยกตาม Phase</p></div>'
             f'<div id="lb" hidden><div class="tabs2" role="tablist" aria-label="เลือกอันดับ">{lb_tabs}</div>'
             '<div style="overflow-x:auto"><table class="lb" aria-live="polite"><caption class="sub" id="lbcap"></caption>'
-            '<thead><tr><th>อันดับ</th><th>ชื่อเล่น</th><th>ด่านที่ผ่าน</th><th>เวลารวม</th></tr></thead><tbody id="lbody"></tbody></table></div>'
+            '<thead><tr><th>อันดับ</th><th>ชื่อเล่น</th><th>ด่านที่ผ่าน</th><th>คะแนนรวม</th><th>เวลารวม</th></tr></thead><tbody id="lbody"></tbody></table></div>'
             '<p class="sub">ทุกคนดูอันดับได้ · เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น ตั้งชื่อเล่นที่หน้าสมาชิก · กระดานนี้เพื่อความสนุก</p></div>'
             '</section></div>')
     with io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb") as fh:
