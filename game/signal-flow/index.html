@@ -144,6 +144,35 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 </style>
 </head>
 <body>
+<!-- แถบบนของฉบับเว็บ djlabsiam.com (build-web.mjs แทรกหลัง <body> · ฉบับในเครื่อง/Artifact ไม่มี)
+     สีและหน้าตาตามหัวเว็บ (พื้นขาว โลโก้หมึก ปุ่มสมาชิกดำ) · สูง 44px · ไม่เรียกอะไรออกไป (สถานะสมาชิกอ่านจาก localStorage ของหน้าสมาชิก)
+     ลิงก์ "เกมทั้งหมด" อยู่ระหว่าง games ⋯ /games — ใส่เฉพาะเมื่อ build ด้วย --games (หน้า /game/ ขึ้นจริงแล้วเท่านั้น) -->
+<style>
+.sitebar{display:flex;align-items:center;gap:4px 14px;height:44px;margin:-10px -16px 8px;padding:0 16px;background:#fff;color:#1A1A1A;border-bottom:3px solid #BE2329;font-family:var(--f-body)}
+.sitebar a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;min-height:36px;font-size:14px;font-weight:500;white-space:nowrap}
+.sitebar a:hover{color:#BE2329}
+.sitebar a:focus-visible{outline:2px solid #BE2329;outline-offset:2px}
+.sitebar .sb-logo img{display:block;width:96px;height:32px}
+.sitebar .sb-mem{margin-left:auto;gap:6px;padding:0 14px;min-height:32px;border-radius:999px;background:#0F0F0F;color:#fff;font-weight:700}
+.sitebar .sb-mem:hover{color:#fff;background:#333}
+.sitebar .sb-mem svg{width:16px;height:16px;flex:none}
+.sitebar .sb-mem i{display:none;width:7px;height:7px;border-radius:50%;background:#3DD68C}
+.sitebar .sb-mem.in i{display:block}
+.wrap{height:calc(100dvh - 62px)}
+@media (max-width:600px){.sitebar{gap:10px}.sitebar .sb-logo img{width:78px;height:26px}.sitebar .sb-long{display:none}.sitebar a{font-size:13px}.sitebar .sb-mem{padding:0 12px}}
+</style>
+<nav class="sitebar" aria-label="เว็บไซต์ DJ LAB SIAM">
+  <a class="sb-logo" href="/"><img src="/assets/img/logo-ink-252.png" srcset="/assets/img/logo-ink-252.png 1x, /assets/img/logo-ink-504.png 2x" width="96" height="32" alt="DJ LAB SIAM — หน้าแรก"></a>
+  <a href="/">← กลับ<span class="sb-long">เว็บไซต์</span></a>
+  
+  <a class="sb-mem" id="sbMem" href="/member/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0117 0z"/></svg><span id="sbMemTxt">เข้าสู่ระบบ</span><i aria-hidden="true"></i></a>
+</nav>
+<script>
+(function(){ // มี session ที่ยังไม่หมดอายุ = ล็อกอินอยู่ (อ่านอย่างเดียว · คีย์เดียวกับ assets/js/member.js)
+  var s=null;try{s=JSON.parse(localStorage.getItem('djl-member-session')||'null');}catch(e){}
+  if(s&&s.access_token&&(!s.expires_at||s.expires_at>Date.now()/1000)){document.getElementById('sbMem').className+=' in';document.getElementById('sbMemTxt').textContent='สมาชิก';}
+})();
+</script>
 <div class="wrap">
   <header class="top">
     <h1>Signal Flow</h1>
