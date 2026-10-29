@@ -1520,7 +1520,7 @@ def member_page():
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
 GAME_CSS = """
 .gh{max-width:1120px;margin:0 auto;display:grid;gap:34px}
-.gh [hidden]{display:none}
+.gh [hidden]{display:none!important}   /* same specificity as .lbcard{display:grid}: only !important wins whatever the order */
 .gh h2{font-size:26px;margin:0}
 .gh p{margin:0}
 .gh .games{display:grid;gap:18px}
