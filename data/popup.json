@@ -33,15 +33,15 @@
   "items": [
     {
       "type": "podcast",
-      "title": "DJ LAB SIAM Podcast EP#3 | DJ WARAH",
+      "title": "DJ LAB SIAM Podcast EP#4 | DJ KAMIKO",
       "text": "ตอนล่าสุดของ DJ LAB SIAM Podcast",
-      "img": "podcast-ep3.webp",
-      "imgM": "podcast-ep3-m.webp",
-      "alt": "ปก DJ LAB SIAM Podcast EP#3 แขกรับเชิญ DJ WARAH: ก้าวไปข้างหน้า เพื่อวนกลับมาเสมอ",
+      "img": "podcast-ep4.webp",
+      "imgM": "podcast-ep4-m.webp",
+      "alt": "ปก DJ LAB SIAM Podcast EP#4 แขกรับเชิญ DJ KAMIKO: จากคำแนะนำสู่การค้นพบตัวตน",
       "bare": true,
-      "link": "https://www.youtube.com/watch?v=SgUkWhB7hIY",
+      "link": "https://www.youtube.com/watch?v=bC4nGX2qyfc",
       "cta": "ดูบน YouTube",
-      "embed": "https://open.spotify.com/embed/episode/3B7Og5Y0zAiONlPtgnecQq"
+      "embed": "https://open.spotify.com/embed/episode/2u3IEhoxLDrIMKhcIRPOWr"
     },
     {
       "type": "facebook",
