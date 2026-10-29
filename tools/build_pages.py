@@ -1506,6 +1506,7 @@ def member_page():
                '<button class="btn sec" id="b-del" data-label="ลบคะแนนทั้งหมดของฉัน" type="button" hidden>ลบคะแนนทั้งหมดของฉัน</button>'
                '<div class="cf" id="bd-cf" role="alertdialog" aria-labelledby="bd-cft" hidden>'
                '<b id="bd-cft">ลบคะแนนและชื่อเล่นทั้งหมดของคุณ?</b><span>ลบแล้วย้อนกลับไม่ได้ ต้องเล่นใหม่เพื่อกลับขึ้นกระดาน</span>'
+               '<span>ความคืบหน้าของเกมที่บันทึกในบัญชีจะหายด้วย ถ้าเปิดเกมจากเครื่องอื่น จะต้องเล่นใหม่ตั้งแต่ Phase 1</span>'
                '<button class="btn pri" id="b-delyes" data-label="ยืนยันลบทั้งหมด" type="button">ยืนยันลบทั้งหมด</button>'
                '<button class="btn sec" id="b-delno" type="button">ยกเลิก</button></div>'
                '<a class="lk2" href="/game/#leaderboard">ดู Leader Board</a></section>'
