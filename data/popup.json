@@ -32,6 +32,18 @@
   },
   "items": [
     {
+      "type": "news",
+      "title": "เปิด SYNC! first mix with DJ LAB SIAM · 7–8 พ.ย. 2569",
+      "text": "กิจกรรมฟรี ลองมิกซ์เพลงครั้งแรกกับ DJ LAB SIAM เล่นได้ใน 10 นาที · 7–8 พ.ย. 2569 เวลา 15:00–19:00 น. ที่ Siam Square One ทางลาดหน้า Shop FILA",
+      "img": "event-sync-nov.webp",
+      "imgM": "event-sync-nov-m.webp",
+      "alt": "โปสเตอร์กิจกรรมเปิด SYNC! 7–8 พ.ย. 2569 เวลา 15:00–19:00 น. Siam Square One ทางลาดหน้า Shop FILA เข้าร่วมฟรี",
+      "bare": true,
+      "link": "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691",
+      "cta": "ดูรายละเอียดบน Facebook",
+      "until": "2026-11-08"
+    },
+    {
       "type": "podcast",
       "title": "DJ LAB SIAM Podcast EP#4 | DJ KAMIKO",
       "text": "ตอนล่าสุดของ DJ LAB SIAM Podcast",
