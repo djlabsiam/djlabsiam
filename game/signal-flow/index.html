@@ -310,15 +310,17 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="p2level13.js?v=55"></script>
 <script src="p2level14.js?v=55"></script>
 <script>
-// ความคืบหน้า (บังคับเฉพาะฉบับเว็บ · ในเครื่อง/Artifact เปิดได้ทุกด่านไว้ตรวจ): ด่าน n เล่นได้เมื่อผ่านด่าน n−1 · Phase p เล่นได้เมื่อผ่าน Phase ก่อนหน้าครบทุกด่าน
-// ผ่านแล้วกลับมาเล่นซ้ำได้เสมอ · "ผ่าน" = มีสถิติดีที่สุดในเครื่องนี้ (signal-flow-best-<id> รวมสถิติเก่า) หรือมีคะแนนบน Leader Board (SF_ME.levels)
+// ความคืบหน้า (บังคับเฉพาะฉบับเว็บ · ในเครื่อง/Artifact เปิดได้ทุกด่านไว้ตรวจ): เล่นได้ถึงด่านสูงสุดที่เคยผ่านใน Phase นั้น + 1
+//   Phase p เล่นได้เมื่อผ่าน Phase ก่อนหน้าครบทุกด่าน หรือเคยผ่านด่านใดก็ได้ใน Phase p แล้ว (เจ้าของสั่ง 29 ต.ค. — คนที่เคยไปถึงแล้วไม่ต้องย้อนเล่นช่องว่าง)
+//   คนใหม่ (ไม่มีสถิติ) เล่นตามลำดับ · ผ่านแล้วเล่นซ้ำได้เสมอ · "ผ่าน" = มีสถิติดีที่สุดในเครื่องนี้ (signal-flow-best-<id> รวมสถิติเก่า) หรือมีคะแนนบน Leader Board (SF_ME.levels)
 var SF_PN={1:12,2:14,3:14,4:12};
 function sfPassed(p,n){
   if(window.SF_ME&&(SF_ME.levels||[]).some(function(l){return l.phase===p&&l.level===n;}))return true;
   try{return !!localStorage.getItem('signal-flow-best-p'+p+'-l'+n);}catch(e){return false;}
 }
-function sfFirstOpen(p){for(var n=1;n<SF_PN[p];n++)if(!sfPassed(p,n))return n;return SF_PN[p];}   // ด่านสูงสุดที่เล่นได้ใน Phase นี้
-function sfPhaseOpen(p){for(var q=1;q<p;q++)for(var n=1;n<=SF_PN[q];n++)if(!sfPassed(q,n))return false;return true;}
+function sfFirstOpen(p){for(var n=SF_PN[p];n>=1;n--)if(sfPassed(p,n))return Math.min(n+1,SF_PN[p]);return 1;}   // ด่านสูงสุดที่เล่นได้ใน Phase นี้
+function sfPhaseDone(p){for(var n=1;n<=SF_PN[p];n++)if(!sfPassed(p,n))return false;return true;}
+function sfPhaseOpen(p){if(p===1||sfPhaseDone(p-1))return true;for(var n=1;n<=SF_PN[p];n++)if(sfPassed(p,n))return true;return false;}
 function sfStart(){
   // เลือกด่านจาก ?phase=P&level=N (ค่าเริ่มต้น Phase 1 ด่าน 1) · ปุ่ม "ด่านถัดไป" โหลดหน้าใหม่ด้วยด่านถัดไป
   // ไฟล์ด่าน: Phase 1 = SFLevelN · Phase 2 ขึ้นไป = SFP<P>LevelN · Phase ที่ยังไม่มีด่านกดไม่ได้ (ยกเว้น Phase สมาชิกของฉบับเว็บ: กดได้ เปิดเป็นหน้าล็อก)
