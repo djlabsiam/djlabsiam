@@ -1,34 +1,20 @@
 /* /game/ —
-   1) the main button: reads only the player's own progress (localStorage "signal-flow-best-<id>", written by the game) to say "start" or "continue". Nothing is sent.
-      Phase 1–2 level ids are p1-l1…p1-l12 / p2-l1…p2-l14; Phase 3–4 levels come from the server, so the hub only knows Phase 1–2.
+   1) the main button: reads only the player's own progress to say "start" or "continue" — the SAME rules as the game and /member/ (assets/js/sfprogress.js:
+      the highest open Phase that is not finished, at the game's first open level). This page does not ask the account for results (that needs a token), so only this browser's stats count. Nothing is sent or written.
    2) the Leader Board: asks the Edge Function "game-scores" (action "board", public: no token, no member data is sent). Rows hold only nickname + numbers. Written with textContent.
       If the function does not answer, the "coming soon" card stays and nothing else on the page changes. */
 (function () {
-  var go = document.getElementById('gh-go'), sub = document.getElementById('gh-sub');
-  if (go && sub) {
-    var PH = [[1, 12], [2, 14]], done = {}, any = false;
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (k && k.indexOf('signal-flow-best-') === 0) { done[k.slice(17)] = 1; any = true; }
-      }
-    } catch (e) { any = false; }
-    if (any) {
-      var passed = 0, total = 0, next = null;
-      PH.forEach(function (p) {
-        for (var n = 1; n <= p[1]; n++) {
-          total++;
-          if (done['p' + p[0] + '-l' + n]) passed++;
-          else if (!next) next = [p[0], n];
-        }
-      });
+  var go = document.getElementById('gh-go'), sub = document.getElementById('gh-sub'), SP = window.sfProgress;
+  if (go && sub && SP) {
+    var r = SP.resume();
+    if (r.passed) {
       go.textContent = 'เล่นต่อ';
-      if (next) {
-        go.href = '/game/signal-flow/' + (next[0] === 1 ? '?level=' + next[1] : '?phase=' + next[0] + '&level=' + next[1]);
-        sub.textContent = 'ต่อที่ Phase ' + next[0] + ' ด่าน ' + next[1] + ' · ผ่านแล้ว ' + passed + ' / ' + total + ' ด่านใน Phase 1–2 (อ่านจากเครื่องนี้)';
+      if (r.next) {
+        go.href = '/game/signal-flow/' + (r.next[0] === 1 ? '?level=' + r.next[1] : '?phase=' + r.next[0] + '&level=' + r.next[1]);
+        sub.textContent = 'ต่อที่ Phase ' + r.next[0] + ' ด่าน ' + r.next[1] + ' · ผ่านแล้ว ' + r.passed + ' / ' + r.total + ' ด่านใน Phase 1–3 (อ่านจากเครื่องนี้)';
       } else {
-        go.href = '/game/signal-flow/?phase=3';
-        sub.textContent = 'ผ่าน Phase 1–2 ครบแล้ว · ต่อที่ Phase 3 (สมาชิก)';
+        go.href = '/game/signal-flow/';
+        sub.textContent = 'ผ่านครบทุกด่านที่เปิดอยู่แล้ว (อ่านจากเครื่องนี้)';
       }
     }
   }

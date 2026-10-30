@@ -182,26 +182,12 @@
     });
   });
 
-  /* ---- game card: where the player stopped. sf-resume:start = the game's own progress rules, copied word for word from game/signal-flow/index.html
-     (tools/check_pages.py keeps the two in step). "Passed" = a result saved on the account (game-scores `me`, only for members who joined the board) or in this browser (read only). ---- */
-var SF_PN={1:12,2:14,3:14,4:12};
-function sfPassed(p,n){
-  if(window.SF_ME&&(SF_ME.levels||[]).some(function(l){return l.phase===p&&l.level===n;}))return true;
-  try{return !!localStorage.getItem('signal-flow-best-p'+p+'-l'+n);}catch(e){return false;}
-}
-function sfFirstOpen(p){for(var n=SF_PN[p];n>=1;n--)if(sfPassed(p,n))return Math.min(n+1,SF_PN[p]);return 1;}
-function sfPhaseDone(p){for(var n=1;n<=SF_PN[p];n++)if(!sfPassed(p,n))return false;return true;}
-function sfPhaseOpen(p){if(p===1||sfPhaseDone(p-1))return true;for(var n=1;n<=SF_PN[p];n++)if(sfPassed(p,n))return true;return false;}
-  function sfResume() {   // Phase 4 is not open yet → only Phase 1–3 count. Resume = the highest open Phase that is not finished, at the game's first open level
-    var per = {}, passed = 0, next = null, p, n;
-    for (p = 1; p <= 3; p++) { per[p] = 0; for (n = 1; n <= SF_PN[p]; n++) if (sfPassed(p, n)) per[p]++; passed += per[p]; }
-    if (passed) for (p = 3; p >= 1; p--) if (sfPhaseOpen(p) && !sfPhaseDone(p)) { next = [p, sfFirstOpen(p)]; break; }
-    return { passed: passed, next: next, per: per };
-  }
-  /* sf-resume:end */
+  /* ---- game card: where the player stopped. The rules are the game's own, shared with /game/ in assets/js/sfprogress.js (read only: account results from game-scores `me`
+     — only for members who joined the board — plus this browser's own stats). ---- */
   function paintGame() {
-    var r = sfResume(), go = $('g-go'), st = $('g-state'); if (!go || !st) return;
-    [1, 2, 3].forEach(function (p) { var e = document.querySelector('#p-game .pgr[data-p="' + p + '"]'); if (e) e.textContent = 'ผ่านแล้ว ' + r.per[p] + '/' + SF_PN[p] + ' ด่าน'; });
+    var SP = window.sfProgress, go = $('g-go'), st = $('g-state'); if (!SP || !go || !st) return;
+    var r = SP.resume();
+    [1, 2, 3].forEach(function (p) { var e = document.querySelector('#p-game .pgr[data-p="' + p + '"]'); if (e) e.textContent = 'ผ่านแล้ว ' + r.per[p] + '/' + SP.PN[p] + ' ด่าน'; });
     go.hidden = false;
     if (!r.passed) { st.textContent = 'ยังไม่ได้เริ่มเล่น'; go.textContent = 'เริ่มเล่น Phase 1 ด่าน 1'; go.href = '/game/signal-flow/?phase=1&level=1'; }
     else if (r.next) { st.textContent = 'เล่นค้างอยู่: Phase ' + r.next[0] + ' ด่าน ' + r.next[1]; go.textContent = 'เล่นต่อ'; go.href = '/game/signal-flow/?phase=' + r.next[0] + '&level=' + r.next[1]; }

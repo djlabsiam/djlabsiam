@@ -467,10 +467,13 @@ if os.path.exists(mp):
     _gm = read(os.path.join(SITE, "game", "signal-flow", "index.html"))
     _norm = lambda t: re.sub(r"\s+", "", re.sub(r"//[^\n]*", "", t))
     _gf = re.search(r"var SF_PN=.*?function sfPhaseOpen[^\n]*\n", _gm, re.S)
-    _mf = re.search(r"sf-resume:start.*?\n(var SF_PN=.*?function sfPhaseOpen[^\n]*\n)", mj, re.S)
-    ok(_gf is not None and _mf is not None and _norm(_gf.group(0)) == _norm(_mf.group(1)), "member.js: the game's progress rules (SF_PN · sfPassed · sfFirstOpen · sfPhaseDone · sfPhaseOpen) must be word for word the same as in game/signal-flow/index.html — copy them again if the game changed them, then run node tools/test_member_resume.mjs")
-    _sf = mj[mj.index("sf-resume:start"):mj.index("function paintGame")]
-    ok(not re.search(r"fetch\(|call\(|setItem|removeItem|sendBeacon", _sf), "member.js: the resume logic only reads (no request, no localStorage write)")
+    _sp = read(os.path.join(SITE, "assets", "js", "sfprogress.js"))
+    _mf = re.search(r"sf-rules:start \*/\n(var SF_PN=.*?function sfPhaseOpen[^\n]*\n)", _sp, re.S)
+    ok(_gf is not None and _mf is not None and _norm(_gf.group(0)) == _norm(_mf.group(1)), "sfprogress.js: the game's progress rules (SF_PN · sfPassed · sfFirstOpen · sfPhaseDone · sfPhaseOpen) must be word for word the same as in game/signal-flow/index.html — copy them again if the game changed them, then run node tools/test_member_resume.mjs")
+    ok(not re.search(r"fetch\(|XMLHttpRequest|setItem|removeItem|sendBeacon|innerHTML|document\.", _sp), "sfprogress.js: it only reads (no request, no localStorage write, no DOM)")
+    ok("function sfPassed" not in mj and "function sfPassed" not in read(os.path.join(SITE, "assets", "js", "gamehub.js")) and "SF_PN" not in mj, "member.js / gamehub.js: the progress rules live only in sfprogress.js (no second copy)")
+    _svs = f'<script src="/assets/js/sfprogress.js?v={hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "sfprogress.js"), "rb").read()).hexdigest()[:8]}" defer></script>'
+    ok(mh.count(_svs) == 1 and mh.index(_svs) < mh.index("/assets/js/member.js"), "member: sfprogress.js (current version) must load once, before member.js (run tools/build_pages.py)")
     ok('id="g-state"' in mh and 'id="g-go"' in mh and mh.count('class="pgr"') == 3 and 'data-p="4"' not in mh and "นับจากเครื่องนี้ และคะแนนที่บันทึกบนบัญชี (เฉพาะผู้เข้าร่วมกระดาน)" in mh, "member: the game card needs the 'where you stopped' row, progress under Phase 1–3 (not 4) and the honest note")
     ok(all(a in mj for a in ("action: 'me', game: 'signal-flow'", "action: 'nickname'", "action: 'hide'", "action: 'delete'")) and "action: 'submit'" not in mj and "$('bd-cf').hidden = false" in mj and "b-delyes" in mj, "member.js: Leader Board needs me · nickname · hide · delete (two-step confirm) and must never call submit")
 
@@ -498,6 +501,8 @@ if os.path.exists(gp):
     ok('id="leaderboard"' in gh and re.search(r'<section id="leaderboard"[^>]* data-fn="https://[a-z0-9]+\.supabase\.co/functions/v1/game-scores"', gh) is not None, "game: the Leader Board section needs id=leaderboard and the game-scores address")
     ok("ยังไม่มีใครขึ้นกระดาน" in gj and "ลองใหม่อีกครั้งในสักครู่" in gj, "gamehub.js: empty and error messages are missing")
     _gv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb").read()).hexdigest()[:8]
+    _svg_ = f'<script src="/assets/js/sfprogress.js?v={hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "sfprogress.js"), "rb").read()).hexdigest()[:8]}" defer></script>'
+    ok(gh.count(_svg_) == 1 and gh.index(_svg_) < gh.index("/assets/js/gamehub.js"), "game: sfprogress.js (current version) must load once, before gamehub.js (run tools/build_pages.py)")
     ok(gh.count(f'<script src="/assets/js/gamehub.js?v={_gv}" defer></script>') == 1, f"game: gamehub.js must be on the page once with the current version {_gv} (run tools/build_pages.py)")
     ok(all(f'<a href="/game/"{" class=on aria-current=page" if k == "game" else ""}>เกม</a>' in s_ for k, s_ in (("game", gh), ("home", SRC.get("home", "")), ("courses", SRC.get("courses", "")))), "game: the menu item 'เกม' must point at /game/ (and be highlighted on the hub)")
 

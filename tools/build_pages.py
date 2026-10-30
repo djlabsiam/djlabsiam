@@ -1448,6 +1448,13 @@ MEMBER_CSS = """
 MEMBER_LIFF_ID = "2010938781-AaiycM1b"
 
 
+def sf_script_tag():
+    # shared Signal Flow progress rules (member.js and gamehub.js both use them) — must load before them
+    with io.open(os.path.join(SITE, "assets", "js", "sfprogress.js"), "rb") as fh:
+        v = hashlib.md5(fh.read()).hexdigest()[:8]
+    return f'<script src="/assets/js/sfprogress.js?v={v}" defer></script>\n'
+
+
 # Member page phase 1 (owner approved 30 Oct): card with avatar · game card · perks skeleton.
 # The avatar picker stores ONE value per account (member-auth: `me` returns member.avatar · action `set_avatar`; migration 074). AVATAR_PICKER_LIVE=False hides it again.
 AVATAR_PICKER_LIVE = True
@@ -1582,7 +1589,7 @@ def member_page():
             f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS + member_extra_css(), bare=True, active="member",
-                 script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
+                 script=sf_script_tag() + f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
@@ -1748,7 +1755,7 @@ def game_page():
         ver = hashlib.md5(fh.read()).hexdigest()[:8]
     return shell("/game/", "เกม DJ ทดสอบทักษะ เล่นฟรี — DJ LAB SIAM",
                  "เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี ด่านพิเศษและการจัดอันดับสำหรับสมาชิก DJ LAB SIAM สยามสแควร์", body, active="game", css_extra=GAME_CSS,
-                 script=f'<script src="/assets/js/gamehub.js?v={ver}" defer></script>\n')
+                 script=sf_script_tag() + f'<script src="/assets/js/gamehub.js?v={ver}" defer></script>\n')
 
 
 
