@@ -461,6 +461,9 @@ if os.path.exists(mp):
     ok(re.search(r'id="p-perks"[^>]* hidden', mh) is not None and '<div id="perks-body"></div>' in mh, "member: the perks section must stay hidden and empty until the owner gives the text")
     ok("/assets/js/" in mh and not re.search(r"fonts\.g|cdn|jsdelivr|unpkg", mh), "member: no outside font / library")
     ok(".mem [hidden]{display:none!important}" in mh, "member: the CSS must keep '.mem [hidden]{display:none!important}' — otherwise '.mem .bd{display:grid}' shows hidden sections")
+    _pt, _pe = read(os.path.join(SITE, "privacy.html")), read(os.path.join(SITE, "privacy-en.html"))
+    ok("และอวาตาร์ที่คุณเลือก (ภาพสำเร็จรูป 1 ใน 6 แบบของร้าน ไม่ใช่รูปถ่ายของคุณ)" in _pt and "<strong>อวาตาร์ที่เลือก</strong> — เก็บที่บัญชีสมาชิกเว็บ เห็นได้เฉพาะเจ้าของบัญชี ไม่แสดงบนกระดานคะแนน" in _pt and "ปรับปรุงล่าสุด 30 ตุลาคม 2569" in _pt, "privacy.html: the avatar sentence, the retention item and the date (30 ต.ค. 2569) must be there (owner confirmed the wording)")
+    ok("and the avatar you chose (one of the shop's 6 ready-made pictures, not a photo of you)" in _pe and "<strong>Chosen avatar</strong>" in _pe and "Last updated: 30 October 2026" in _pe, "privacy-en.html: the avatar sentence, the retention item and the date must be there")
     ok(all(a in mj for a in ("action: 'me', game: 'signal-flow'", "action: 'nickname'", "action: 'hide'", "action: 'delete'")) and "action: 'submit'" not in mj and "$('bd-cf').hidden = false" in mj and "b-delyes" in mj, "member.js: Leader Board needs me · nickname · hide · delete (two-step confirm) and must never call submit")
 
 # ---- /game/: game hub. Public + indexable (in sitemap), no sample data, no calls to the shop's database, only the player's own localStorage is read ----
