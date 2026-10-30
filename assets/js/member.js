@@ -92,6 +92,7 @@
         if (!me.j || me.j.ok !== true) { var e = errOf(me); if (e.code === 'unauthorized' || e.code === 'not_member') { clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); } else { $('p-name').textContent = 'สมาชิก DJ LAB SIAM'; show('profile'); say('m-profile', e.message); } return; }
         $('p-name').textContent = row && row.full_name ? row.full_name : 'สมาชิก DJ LAB SIAM';
         $('p-code').textContent = me.j.member.code;
+        paintAvatar(me.j.member.avatar);
         var linked = !!me.j.member.line_linked;
         $('p-line').textContent = linked ? 'ผูก LINE แล้ว' : 'ยังไม่ได้ผูก LINE';
         $('b-linkline').hidden = linked || D.line !== '1';
@@ -155,11 +156,28 @@
     boardAct($('b-delyes'), { action: 'delete' }, function (j) { return 'ลบคะแนนและชื่อเล่นทั้งหมดแล้ว' + (typeof j.scores === 'number' ? ' (' + j.scores + ' รายการ)' : ''); });
   });
 
-  /* ---- avatar picker: preview only. The section is hidden until the back end can store one value; nothing is saved or sent from here yet ---- */
+  /* ---- avatar: one of six shop-made pictures, stored on the account (member-auth: `me` returns member.avatar · action set_avatar). Never kept in the browser, never sent to the game board ---- */
+  var AVK = ['vinyl', 'phones', 'cdj', 'fader', 'wave', 'user'], avSaved = 'user', avPick = 'user';
+  function avMark(k) { [].forEach.call(document.querySelectorAll('#av-pick .av-opt'), function (x) { x.setAttribute('aria-pressed', x.dataset.k === k ? 'true' : 'false'); }); }
+  function avCard(k) { var b = document.querySelector('#av-pick .av-opt[data-k="' + k + '"]'), av = $('p-av'); if (!b || !av) return; av.dataset.k = k; av.replaceChildren(b.firstElementChild.cloneNode(true)); }
+  function paintAvatar(k) {   // k = what the account has saved (null/unknown = not chosen yet → the plain "user" picture)
+    k = AVK.indexOf(k) >= 0 ? k : 'user'; avSaved = avPick = k; avCard(k); avMark(k); $('b-avsave').disabled = true;
+  }
   [].forEach.call(document.querySelectorAll('#av-pick .av-opt'), function (b) {
-    b.addEventListener('click', function () {
-      [].forEach.call(document.querySelectorAll('#av-pick .av-opt'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-      var av = $('p-av'); av.dataset.k = b.dataset.k; av.replaceChildren(b.firstElementChild.cloneNode(true));
+    b.addEventListener('click', function () { avPick = b.dataset.k; avMark(avPick); say('m-avatar', ''); $('b-avsave').disabled = avPick === avSaved; });
+  });
+  $('b-avsave').addEventListener('click', function () {
+    var btn = $('b-avsave'), want = avPick;
+    busy(btn, true, 'กำลังบันทึก…'); say('m-avatar', '');
+    fresh().then(function (tok) {
+      if (!tok) { busy(btn, false); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
+      return call({ action: 'set_avatar', avatar: want }, tok).then(function (x) {
+        busy(btn, false);
+        if (x.j && x.j.ok === true) { paintAvatar(x.j.avatar || want); say('m-avatar', 'บันทึกอวาตาร์แล้ว', true); return; }
+        var e = errOf(x);
+        if (e.code === 'unauthorized' || e.code === 'not_member') { clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
+        btn.disabled = avPick === avSaved; say('m-avatar', e.message);
+      });
     });
   });
 

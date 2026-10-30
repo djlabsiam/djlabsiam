@@ -1449,8 +1449,8 @@ MEMBER_LIFF_ID = "2010938781-AaiycM1b"
 
 
 # Member page phase 1 (owner approved 30 Oct): card with avatar · game card · perks skeleton.
-# The avatar picker needs one stored value (back end not built yet) → it stays hidden until AVATAR_PICKER_LIVE is switched on; nothing is saved or sent from it.
-AVATAR_PICKER_LIVE = False
+# The avatar picker stores ONE value per account (member-auth: `me` returns member.avatar · action `set_avatar`; migration 074). AVATAR_PICKER_LIVE=False hides it again.
+AVATAR_PICKER_LIVE = True
 AVATARS = [("vinyl", "แผ่นเสียง"), ("phones", "หูฟัง"), ("cdj", "เครื่องเล่น CDJ"), ("fader", "เฟเดอร์"), ("wave", "คลื่นเสียง"), ("user", "ไม่เลือกรูป")]
 
 
@@ -1476,6 +1476,7 @@ def member_avatar_html():
     return (f'<section class="bd" id="p-avatar" aria-labelledby="h-avatar"{"" if AVATAR_PICKER_LIVE else " hidden"}>'
             '<h3 id="h-avatar">เลือกอวาตาร์ของคุณ</h3>'
             f'<div class="av-pick" id="av-pick" role="group" aria-label="เลือกอวาตาร์">{opts}</div>'
+            '<p class="mm" id="m-avatar" role="alert" hidden></p>'
             '<button class="btn pri" id="b-avsave" data-label="บันทึกอวาตาร์" type="button" disabled>บันทึกอวาตาร์</button></section>')
 
 
