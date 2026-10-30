@@ -458,7 +458,14 @@ if os.path.exists(mp):
     ok("action: 'set_avatar'" in mj and "localStorage" not in _av and "gcall" not in _av and not re.search(r"gcall\([^)]*avatar", mj), "member.js: the avatar goes only through set_avatar / me (never localStorage, never the game board)")
     ok(not re.search(r"Silver|Gold|Platinum|ระดับสมาชิก|อัปโหลดรูป|คิวอาร์|QR|ตัวอย่าง|\[ตัวอย่าง", mh), "member: no tier / QR / photo upload / sample text on the live page (phase 1 scope)")
     ok(all(f'href="/game/signal-flow/?phase={n}"' in mh for n in (1, 2, 3)) and 'href="/game/signal-flow/?phase=4"' not in mh and 'href="/game/"' in mh and mh.count('class="stamp">ฟรี!</i>') == 2, "member: the game card links Phase 1–3, Phase 4 is not a link, free stamp on Phase 1–2, link to /game/")
-    ok(re.search(r'id="p-perks"[^>]* hidden', mh) is not None and '<div id="perks-body"></div>' in mh, "member: the perks section must stay hidden and empty until the owner gives the text")
+    _pk = re.search(r'<section class="bd" id="p-perks"[^>]*>(.*?)</section>', mh, re.S)
+    _pkt = re.sub(r"<[^>]+>", "", _pk.group(1)) if _pk else ""
+    _want = ["เล่นเกม Signal Flow ได้ครบ Phase 3 — Phase 1–2 เล่นฟรีทุกคน Phase 3 (14 ด่าน) เปิดให้เฉพาะสมาชิก",
+             "ขึ้นกระดานคะแนน (Leader Board) — ตั้งชื่อเล่นแล้วเข้าร่วมกระดาน คะแนนดีที่สุดของแต่ละด่านจะบันทึกบนบัญชี เล่นต่อได้แม้เปลี่ยนเครื่อง (เฉพาะผู้ที่เข้าร่วมกระดาน)",
+             "เลือกอวาตาร์ประจำบัญชี — เลือกได้ 1 ใน 6 แบบสำเร็จรูปของร้าน",
+             "สอบถามปัญหาด้านเทคนิคกับทางร้านได้ตลอดเวลาทำการทุกช่องทาง"]
+    ok(_pk is not None and " hidden" not in mh[mh.index('id="p-perks"'):mh.index('id="p-perks"') + 80] and [re.sub(r"<[^>]+>", "", x) for x in re.findall(r"<li>(.*?)</li>", _pk.group(1))] == _want, "member: the perks section must show exactly the owner's 4 items, word for word, in this order (confirmed 30 Oct)")
+    ok(_pk is not None and not re.search(r"ตัวอย่าง|Silver|Gold|ระดับ|ส่วนลด|แต้ม|คูปอง|ฟรี! |\[", _pkt), "member: the perks section must not mention sample text / tiers / discounts / points / coupons (only what the owner wrote)")
     ok("/assets/js/" in mh and not re.search(r"fonts\.g|cdn|jsdelivr|unpkg", mh), "member: no outside font / library")
     ok(".mem [hidden]{display:none!important}" in mh, "member: the CSS must keep '.mem [hidden]{display:none!important}' — otherwise '.mem .bd{display:grid}' shows hidden sections")
     _pt, _pe = read(os.path.join(SITE, "privacy.html")), read(os.path.join(SITE, "privacy-en.html"))

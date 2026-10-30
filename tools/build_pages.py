@@ -1497,10 +1497,18 @@ def member_game_html():
             '<a class="lk2" href="/game/">ดูเกมทั้งหมด</a></section>')
 
 
+PERKS = [   # member perks: the owner's own text (confirmed 30 Oct) — word for word, nothing added or left out
+    ("เล่นเกม Signal Flow ได้ครบ Phase 3", " — Phase 1–2 เล่นฟรีทุกคน Phase 3 (14 ด่าน) เปิดให้เฉพาะสมาชิก"),
+    ("ขึ้นกระดานคะแนน (Leader Board)", " — ตั้งชื่อเล่นแล้วเข้าร่วมกระดาน คะแนนดีที่สุดของแต่ละด่านจะบันทึกบนบัญชี เล่นต่อได้แม้เปลี่ยนเครื่อง (เฉพาะผู้ที่เข้าร่วมกระดาน)"),
+    ("เลือกอวาตาร์ประจำบัญชี", " — เลือกได้ 1 ใน 6 แบบสำเร็จรูปของร้าน"),
+    ("สอบถามปัญหาด้านเทคนิคกับทางร้านได้ตลอดเวลาทำการทุกช่องทาง", ""),
+]
+
+
 def member_perks_html():
-    # skeleton only: the owner writes the real text; hidden and empty until then (no sample text on the live page)
-    return ('<section class="bd" id="p-perks" aria-labelledby="h-perks" hidden><h3 id="h-perks">สิทธิ์และประโยชน์สมาชิก</h3>'
-            '<div id="perks-body"></div></section>')
+    items = "".join(f"<li><b>{E(t)}</b>{E(d)}</li>" for t, d in PERKS)
+    return ('<section class="bd" id="p-perks" aria-labelledby="h-perks"><h3 id="h-perks">สิทธิ์และประโยชน์สมาชิก</h3>'
+            f'<div id="perks-body"><ol class="perks">{items}</ol></div></section>')
 
 
 def member_extra_css():
@@ -1515,6 +1523,7 @@ def member_extra_css():
             ".mem .av-opt[data-k=vinyl]{background:#faf9f6}.mem .av-opt[data-k=phones],.mem .av-opt[data-k=cdj]{background:#2a2a2a}.mem .av-opt[data-k=fader]{background:#BD2026}.mem .av-opt[data-k=wave]{background:#111}\n"
             ".mem .av-opt[aria-pressed=true]{border-color:#111;box-shadow:0 0 0 3px #FFD76A}\n"
             ".mem .pgrid{margin-top:4px}\n"
+            ".mem .perks{margin:0;padding-left:22px;display:grid;gap:10px}\n"
             ".mem .resume{display:grid;gap:10px;padding:14px;border:1.5px solid #111;border-radius:14px;background:var(--lab-paper)}.mem .resume b{font:800 18px var(--font-family-display)}\n"
             ".mem .pb .pgr{font:700 12.5px var(--font-family-body);color:#333}.mem .pb .pgr:empty{display:none}.mem .pb.mem .pgr{color:#fff}\n")
 
