@@ -454,7 +454,7 @@ if os.path.exists(mp):
     ok(all(f'id="v-{v}"' in mh for v in ("boot", "login", "first", "verify", "line", "profile")), "member: one of the six screens is missing")
     ok(re.search(r'id="mem"[^>]* data-games="https://[a-z0-9]+\.supabase\.co/functions/v1/game-scores"', mh) is not None and all(f'id="{i}"' in mh for i in ("p-board", "f-nick", "n-nick", "b-hide", "b-del", "bd-cf", "b-delyes", "b-delno", "m-board")) and 'maxlength="16"' in mh and "ไม่ควรใช้ชื่อจริงหรือข้อมูลติดต่อ" in mh and "เปลี่ยนได้วันละ 5 ครั้ง" in mh and "ความคืบหน้าของเกมที่บันทึกในบัญชีจะหายด้วย" in mh, "member: the Leader Board section (nickname form · hide · delete with confirm · warning text) is incomplete")
     ok(re.search(r'id="p-avatar"[^>]* hidden', mh) is None and mh.count('class="av-opt"') == 6 and all(f'data-k="{k}"' in mh for k in ("vinyl", "phones", "cdj", "fader", "wave", "user")) and 'id="m-avatar"' in mh and re.search(r'id="b-avsave"[^>]* disabled', mh) is not None, "member: the avatar picker shows 6 choices; the save button starts disabled; there is a message line")
-    _av = mj[mj.index("/* ---- avatar:"):mj.index("/* ---- forms ---- */")]
+    _av = mj[mj.index("/* ---- avatar:"):mj.index("/* ---- game card:")]
     ok("action: 'set_avatar'" in mj and "localStorage" not in _av and "gcall" not in _av and not re.search(r"gcall\([^)]*avatar", mj), "member.js: the avatar goes only through set_avatar / me (never localStorage, never the game board)")
     ok(not re.search(r"Silver|Gold|Platinum|ระดับสมาชิก|อัปโหลดรูป|คิวอาร์|QR|ตัวอย่าง|\[ตัวอย่าง", mh), "member: no tier / QR / photo upload / sample text on the live page (phase 1 scope)")
     ok(all(f'href="/game/signal-flow/?phase={n}"' in mh for n in (1, 2, 3)) and 'href="/game/signal-flow/?phase=4"' not in mh and 'href="/game/"' in mh and mh.count('class="stamp">ฟรี!</i>') == 2, "member: the game card links Phase 1–3, Phase 4 is not a link, free stamp on Phase 1–2, link to /game/")
@@ -464,6 +464,14 @@ if os.path.exists(mp):
     _pt, _pe = read(os.path.join(SITE, "privacy.html")), read(os.path.join(SITE, "privacy-en.html"))
     ok("และอวาตาร์ที่คุณเลือก (ภาพสำเร็จรูป 1 ใน 6 แบบของร้าน ไม่ใช่รูปถ่ายของคุณ)" in _pt and "<strong>อวาตาร์ที่เลือก</strong> — เก็บที่บัญชีสมาชิกเว็บ เห็นได้เฉพาะเจ้าของบัญชี ไม่แสดงบนกระดานคะแนน" in _pt and "ปรับปรุงล่าสุด 30 ตุลาคม 2569" in _pt, "privacy.html: the avatar sentence, the retention item and the date (30 ต.ค. 2569) must be there (owner confirmed the wording)")
     ok("and the avatar you chose (one of the shop's 6 ready-made pictures, not a photo of you)" in _pe and "<strong>Chosen avatar</strong>" in _pe and "Last updated: 30 October 2026" in _pe, "privacy-en.html: the avatar sentence, the retention item and the date must be there")
+    _gm = read(os.path.join(SITE, "game", "signal-flow", "index.html"))
+    _norm = lambda t: re.sub(r"\s+", "", re.sub(r"//[^\n]*", "", t))
+    _gf = re.search(r"var SF_PN=.*?function sfPhaseOpen[^\n]*\n", _gm, re.S)
+    _mf = re.search(r"sf-resume:start.*?\n(var SF_PN=.*?function sfPhaseOpen[^\n]*\n)", mj, re.S)
+    ok(_gf is not None and _mf is not None and _norm(_gf.group(0)) == _norm(_mf.group(1)), "member.js: the game's progress rules (SF_PN · sfPassed · sfFirstOpen · sfPhaseDone · sfPhaseOpen) must be word for word the same as in game/signal-flow/index.html — copy them again if the game changed them, then run node tools/test_member_resume.mjs")
+    _sf = mj[mj.index("sf-resume:start"):mj.index("function paintGame")]
+    ok(not re.search(r"fetch\(|call\(|setItem|removeItem|sendBeacon", _sf), "member.js: the resume logic only reads (no request, no localStorage write)")
+    ok('id="g-state"' in mh and 'id="g-go"' in mh and mh.count('class="pgr"') == 3 and 'data-p="4"' not in mh and "นับจากเครื่องนี้ และคะแนนที่บันทึกบนบัญชี (เฉพาะผู้เข้าร่วมกระดาน)" in mh, "member: the game card needs the 'where you stopped' row, progress under Phase 1–3 (not 4) and the honest note")
     ok(all(a in mj for a in ("action: 'me', game: 'signal-flow'", "action: 'nickname'", "action: 'hide'", "action: 'delete'")) and "action: 'submit'" not in mj and "$('bd-cf').hidden = false" in mj and "b-delyes" in mj, "member.js: Leader Board needs me · nickname · hide · delete (two-step confirm) and must never call submit")
 
 # ---- /game/: game hub. Public + indexable (in sitemap), no sample data, no calls to the shop's database, only the player's own localStorage is read ----

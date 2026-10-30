@@ -1481,9 +1481,11 @@ def member_avatar_html():
 
 
 def member_game_html():
-    btns = "".join(game_phase_btn(n, f"{nm} · {c} ด่าน", k) for n, nm, c, k in GAME_PHASES)
+    btns = "".join(game_phase_btn(n, f"{nm} · {c} ด่าน", k).replace("</a>", f'<span class="pgr" data-p="{n}"></span></a>') for n, nm, c, k in GAME_PHASES)
     return ('<section class="bd" id="p-game" aria-labelledby="h-game"><h3 id="h-game">เกม Signal Flow</h3>'
-            '<p class="help">เล่นต่อได้ทุก Phase ที่เปิดแล้ว · Phase 1–2 เล่นฟรี · Phase 3 เฉพาะสมาชิก</p>'
+            '<div class="resume"><b id="g-state" role="status"></b><a class="btn pri" id="g-go" href="/game/signal-flow/?phase=1&amp;level=1">เริ่มเล่น Phase 1 ด่าน 1</a></div>'
+            '<p class="help">นับจากเครื่องนี้ และคะแนนที่บันทึกบนบัญชี (เฉพาะผู้เข้าร่วมกระดาน)</p>'
+            '<p class="help">Phase 1–2 เล่นฟรี · Phase 3 เฉพาะสมาชิก</p>'
             f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
             '<a class="lk2" href="/game/">ดูเกมทั้งหมด</a></section>')
 
@@ -1505,7 +1507,9 @@ def member_extra_css():
             ".mem .av-opt{width:64px;height:64px;border-radius:50%;border:2px solid var(--lab-line);background:#d8d4c8;padding:0;cursor:pointer;display:grid;place-items:center;overflow:hidden}\n"
             ".mem .av-opt[data-k=vinyl]{background:#faf9f6}.mem .av-opt[data-k=phones],.mem .av-opt[data-k=cdj]{background:#2a2a2a}.mem .av-opt[data-k=fader]{background:#BD2026}.mem .av-opt[data-k=wave]{background:#111}\n"
             ".mem .av-opt[aria-pressed=true]{border-color:#111;box-shadow:0 0 0 3px #FFD76A}\n"
-            ".mem .pgrid{margin-top:4px}\n")
+            ".mem .pgrid{margin-top:4px}\n"
+            ".mem .resume{display:grid;gap:10px;padding:14px;border:1.5px solid #111;border-radius:14px;background:var(--lab-paper)}.mem .resume b{font:800 18px var(--font-family-display)}\n"
+            ".mem .pb .pgr{font:700 12.5px var(--font-family-body);color:#333}.mem .pb .pgr:empty{display:none}.mem .pb.mem .pgr{color:#fff}\n")
 
 
 
