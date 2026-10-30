@@ -155,6 +155,14 @@
     boardAct($('b-delyes'), { action: 'delete' }, function (j) { return 'ลบคะแนนและชื่อเล่นทั้งหมดแล้ว' + (typeof j.scores === 'number' ? ' (' + j.scores + ' รายการ)' : ''); });
   });
 
+  /* ---- avatar picker: preview only. The section is hidden until the back end can store one value; nothing is saved or sent from here yet ---- */
+  [].forEach.call(document.querySelectorAll('#av-pick .av-opt'), function (b) {
+    b.addEventListener('click', function () {
+      [].forEach.call(document.querySelectorAll('#av-pick .av-opt'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      var av = $('p-av'); av.dataset.k = b.dataset.k; av.replaceChildren(b.firstElementChild.cloneNode(true));
+    });
+  });
+
   /* ---- forms ---- */
   $('f-login').addEventListener('submit', function (e) {
     e.preventDefault();

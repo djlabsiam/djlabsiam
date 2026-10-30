@@ -1433,7 +1433,7 @@ MEMBER_CSS = """
 .mem .btn[disabled]{opacity:.6;cursor:not-allowed}
 .mem .mm{margin:0;padding:12px 14px;border-radius:12px;background:var(--lab-tint);color:var(--brand-press,#8f0f16);font-size:15px}
 .mem .mm.ok{background:#EEF6EF;color:#1F5130}
-.mem [hidden]{display:none}
+.mem [hidden]{display:none!important}
 .mem .lk{background:none;border:0;padding:8px 0;font:600 15px var(--font-family-body);text-decoration:underline;cursor:pointer;color:inherit;min-height:44px}
 .mem .help{font-size:14px;color:var(--text-muted)}
 .mem dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
@@ -1446,6 +1446,66 @@ MEMBER_CSS = """
 
 # LIFF app "DJ LAB Member" (own app: Endpoint https://djlabsiam.com/member/ · scope openid · same LINE Login channel as the booking LIFF). /book/ keeps its own LIFF_ID.
 MEMBER_LIFF_ID = "2010938781-AaiycM1b"
+
+
+# Member page phase 1 (owner approved 30 Oct): card with avatar · game card · perks skeleton.
+# The avatar picker needs one stored value (back end not built yet) → it stays hidden until AVATAR_PICKER_LIVE is switched on; nothing is saved or sent from it.
+AVATAR_PICKER_LIVE = False
+AVATARS = [("vinyl", "แผ่นเสียง"), ("phones", "หูฟัง"), ("cdj", "เครื่องเล่น CDJ"), ("fader", "เฟเดอร์"), ("wave", "คลื่นเสียง"), ("user", "ไม่เลือกรูป")]
+
+
+def avatar_svg(kind, c="#fff"):
+    shapes = {
+        "vinyl": '<circle cx="32" cy="32" r="28" fill="#111"/><circle cx="32" cy="32" r="20" fill="none" stroke="#444" stroke-width="1.5"/><circle cx="32" cy="32" r="11" fill="#BE2329"/><circle cx="32" cy="32" r="2.5" fill="#fff"/>',
+        "phones": f'<path d="M14 38v-6a18 18 0 0136 0v6" fill="none" stroke="{c}" stroke-width="5" stroke-linecap="round"/><rect x="9" y="36" width="10" height="16" rx="4" fill="{c}"/><rect x="45" y="36" width="10" height="16" rx="4" fill="{c}"/>',
+        "cdj": f'<rect x="10" y="12" width="44" height="40" rx="6" fill="none" stroke="{c}" stroke-width="3.5"/><circle cx="32" cy="32" r="12" fill="none" stroke="{c}" stroke-width="3.5"/><circle cx="32" cy="32" r="3" fill="{c}"/>',
+        "fader": f'<rect x="28" y="8" width="8" height="48" rx="4" fill="#555"/><rect x="18" y="26" width="28" height="12" rx="3" fill="{c}"/>',
+        "wave": f'<path d="M6 32h6l4-14 6 28 6-22 6 16 4-8h18" fill="none" stroke="#FFD76A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
+        "user": '<circle cx="32" cy="24" r="10" fill="#777"/><path d="M12 54a20 20 0 0140 0z" fill="#777"/>',
+    }
+    return f'<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true">{shapes[kind]}</svg>'
+
+
+def member_card_html():
+    return ('<div class="idrow"><div class="av" id="p-av" data-k="user">' + avatar_svg("user") + '</div>'
+            '<dl><dt>ชื่อ</dt><dd id="p-name"></dd><dt>รหัสสมาชิก</dt><dd id="p-code"></dd><dt>LINE</dt><dd id="p-line"></dd></dl></div>')
+
+
+def member_avatar_html():
+    opts = "".join(f'<button type="button" class="av-opt" data-k="{k}" aria-pressed="{"true" if k == "user" else "false"}" aria-label="{E(n)}">{avatar_svg(k)}</button>' for k, n in AVATARS)
+    return (f'<section class="bd" id="p-avatar" aria-labelledby="h-avatar"{"" if AVATAR_PICKER_LIVE else " hidden"}>'
+            '<h3 id="h-avatar">เลือกอวาตาร์ของคุณ</h3>'
+            f'<div class="av-pick" id="av-pick" role="group" aria-label="เลือกอวาตาร์">{opts}</div>'
+            '<button class="btn pri" id="b-avsave" data-label="บันทึกอวาตาร์" type="button" disabled>บันทึกอวาตาร์</button></section>')
+
+
+def member_game_html():
+    btns = "".join(game_phase_btn(n, f"{nm} · {c} ด่าน", k) for n, nm, c, k in GAME_PHASES)
+    return ('<section class="bd" id="p-game" aria-labelledby="h-game"><h3 id="h-game">เกม Signal Flow</h3>'
+            '<p class="help">เล่นต่อได้ทุก Phase ที่เปิดแล้ว · Phase 1–2 เล่นฟรี · Phase 3 เฉพาะสมาชิก</p>'
+            f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
+            '<a class="lk2" href="/game/">ดูเกมทั้งหมด</a></section>')
+
+
+def member_perks_html():
+    # skeleton only: the owner writes the real text; hidden and empty until then (no sample text on the live page)
+    return ('<section class="bd" id="p-perks" aria-labelledby="h-perks" hidden><h3 id="h-perks">สิทธิ์และประโยชน์สมาชิก</h3>'
+            '<div id="perks-body"></div></section>')
+
+
+def member_extra_css():
+    # the game card reuses the hub's phase buttons: same rules, scoped to the member page
+    lines = [l.replace(".gh ", ".mem ") for l in GAME_CSS.splitlines() if (".pb" in l or ".pgrid" in l or ".stamp" in l)]
+    return ("\n".join(lines) + "\n"
+            ".mem .idrow{display:flex;gap:16px;align-items:center}.mem .idrow dl{flex:1;min-width:0}\n"
+            ".mem .av{width:76px;height:76px;border-radius:50%;background:#d8d4c8;overflow:hidden;flex:none;border:3px solid #111}\n"
+            ".mem .av[data-k=vinyl]{background:#faf9f6}.mem .av[data-k=phones],.mem .av[data-k=cdj]{background:#2a2a2a}.mem .av[data-k=fader]{background:#BD2026}.mem .av[data-k=wave]{background:#111}\n"
+            ".mem .av-pick{display:flex;flex-wrap:wrap;gap:10px}\n"
+            ".mem .av-opt{width:64px;height:64px;border-radius:50%;border:2px solid var(--lab-line);background:#d8d4c8;padding:0;cursor:pointer;display:grid;place-items:center;overflow:hidden}\n"
+            ".mem .av-opt[data-k=vinyl]{background:#faf9f6}.mem .av-opt[data-k=phones],.mem .av-opt[data-k=cdj]{background:#2a2a2a}.mem .av-opt[data-k=fader]{background:#BD2026}.mem .av-opt[data-k=wave]{background:#111}\n"
+            ".mem .av-opt[aria-pressed=true]{border-color:#111;box-shadow:0 0 0 3px #FFD76A}\n"
+            ".mem .pgrid{margin-top:4px}\n")
+
 
 
 def member_page():
@@ -1491,9 +1551,10 @@ def member_page():
                '<button class="btn sec" id="b-skip" data-label="ข้ามไปก่อน" type="button">ข้ามไปก่อน</button>'
                '<p class="mm" id="m-line" role="alert" hidden></p>')
         + view("profile", "สมาชิก DJ LAB SIAM",
-               '<dl><dt>ชื่อ</dt><dd id="p-name"></dd><dt>รหัสสมาชิก</dt><dd id="p-code"></dd><dt>LINE</dt><dd id="p-line"></dd></dl>'
+               member_card_html() +
                '<button class="btn pri" id="b-linkline" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
                '<p class="mm" id="m-profile" role="alert" hidden></p>'
+               + member_avatar_html() + member_game_html() +
                '<section class="bd" id="p-board" aria-labelledby="h-board" hidden>'
                '<h3 id="h-board">กระดานคะแนนเกม Leader Board</h3>'
                '<p class="help" id="bd-state" role="status"></p>'
@@ -1510,11 +1571,12 @@ def member_page():
                '<button class="btn pri" id="b-delyes" data-label="ยืนยันลบทั้งหมด" type="button">ยืนยันลบทั้งหมด</button>'
                '<button class="btn sec" id="b-delno" type="button">ยกเลิก</button></div>'
                '<a class="lk2" href="/game/#leaderboard">ดู Leader Board</a></section>'
+               + member_perks_html() +
                '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>'))
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
             f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
-    return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS, bare=True, active="member",
+    return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS + member_extra_css(), bare=True, active="member",
                  script=f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
