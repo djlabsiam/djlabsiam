@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Builds the static pages  /courses/  ·  /teachers/<name>/ (x6)  ·  /content/  from the shop's single source of truth.
 
   courses.json   bots/bot/shared/courses.json   (courses, prices, hours, audience, prerequisite, tracks, teachers)   <- NEVER retyped here
@@ -979,6 +979,16 @@ HOME_CSS = r"""
 .h3d-t ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-weight:600}
 .h3d-t li::before{content:"✓ ";color:var(--brand-base)}
 .h3d-t .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hgm{display:grid;gap:18px}
+.hgm-c{display:grid;align-content:start;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);overflow:hidden}
+.hgm-c .hgm-v{aspect-ratio:16/9;background:#0F0F0F}
+.hgm-c .hgm-v svg{display:block;width:100%;height:100%}
+.hgm-c .in{display:grid;gap:12px;padding:24px;align-content:start}
+.hgm-c h2{font-size:26px}
+.hgm-c p{color:var(--text-secondary)}
+.hgm-c ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-weight:600}
+.hgm-c li::before{content:"✓ ";color:var(--brand-base)}
+.hgm-c .acts{display:flex;flex-wrap:wrap;gap:12px}
 .h3d-s{position:relative;aspect-ratio:5/3;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--lab-line);background-color:#FAF9F6;
   background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
 .h3d-s img{width:100%;height:100%;object-fit:contain;padding:3%;mix-blend-mode:multiply}
@@ -1025,6 +1035,8 @@ HOME_CSS = r"""
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
+  .hgm{grid-template-columns:1.2fr 1fr;gap:24px}
+  .hgm-c h2{font-size:30px}
   .hpod{grid-template-columns:1fr 1.2fr;align-items:center;gap:40px;padding:36px}
   .hvisit{grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
   .hbot{grid-template-columns:repeat(3,auto);justify-content:space-between}
@@ -1153,6 +1165,14 @@ def home_page():
         f'<div class="acts"><a class="btn pri" href="/shop/">ไปที่ SHOP</a></div></div>'
         f'<div class="h3d-s" id="h3d-s"><img src="/assets/img/pc-ddj-flx4.webp" width="640" height="384" alt="Pioneer DJ DDJ-FLX4" loading="lazy" decoding="async">'
         f'<button type="button" class="btn sec" id="h3d-go">ลองหมุน 3D</button></div></div></section>'
+        f'<section class="hsec" id="gamemember"><div class="hgm">'
+        f'<article class="hgm-c" aria-labelledby="hgm-g"><div class="hgm-v">{game_cover_signal()}</div><div class="in"><span class="tag">เกม</span><h2 id="hgm-g">เล่นเกม Signal Flow</h2>'
+        f'<p>ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง เปิดให้เล่นแล้ว</p>'
+        f'<ul><li>Phase 1–2 เล่นฟรีทุกคน</li><li>Phase 3 (14 ด่าน) เฉพาะสมาชิก</li><li>Phase 4 และเกมอื่น ยังไม่เปิดให้เล่น</li></ul>'
+        f'<div class="acts"><a class="btn pri" href="/game/">ไปที่หน้าเกม</a></div></div></article>'
+        f'<article class="hgm-c" aria-labelledby="hgm-m"><div class="in"><span class="tag">สมาชิก</span><h2 id="hgm-m">สิทธิ์และประโยชน์สมาชิก</h2>'
+        f'<ul>{"".join(f"<li>{E(t)}</li>" for t, _ in PERKS)}</ul>'
+        f'<div class="acts"><a class="btn pri" href="/member/">ไปที่หน้าสมาชิก</a></div></div></article></div></section>'
         f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
         f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p>{contest_media()}</div></section>'
         f'<section class="hsec"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'

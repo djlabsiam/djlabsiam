@@ -213,6 +213,14 @@ if "home" in SRC:
     ok("Organization" in types and ["MusicSchool", "Store"] in types and "WebSite" in types, "home: JSON-LD Organization / MusicSchool+Store / WebSite missing")
     ok("02-252-5868" in hs and "https://maps.google.com/?cid=14947686714332238791" in hs, "home: phone / map link missing")
     ok(hs.count("<h1") == 1 and "ซื้อ เรียน ซ้อม พร้อม DJ" in hs, "home: h1 missing")
+    _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
+    ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
+    if _gm:
+        _t = re.sub(r"<[^>]+>", " ", _gm.group(0))
+        for _p in ("เล่นเกม Signal Flow ได้ครบ Phase 3", "ขึ้นกระดานคะแนน (Leader Board)", "เลือกอวาตาร์ประจำบัญชี", "สอบถามปัญหาด้านเทคนิคกับทางร้านได้ตลอดเวลาทำการทุกช่องทาง"):
+            ok(_p in _t, f"home: member perk missing in game/member section: {_p}")
+        ok(not re.search(r"ส่วนลด|แต้ม|คูปอง|ระดับ|Silver|Gold|ตัวอย่าง|แบบร่าง", _t), "home: game/member section carries a forbidden word")
+        ok(hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index("Open Format Contest"), "home: game/member section must sit between shop3d and the contest block")
 
 # ---- shop: prices come live from the web view only; DB text is never HTML; no 3D files; VAT wording ----
 sh = SRC.get("shop", "")
