@@ -1007,6 +1007,8 @@ HOME_CSS = r"""
 .hlive .acts{display:flex;flex-wrap:wrap;gap:12px}
 .hlive .btn.sec{background:transparent;border-color:#fff;color:#fff}
 .hlive .btn.sec:hover{background:#fff;color:#0F0F0F}
+.hlp{display:grid;gap:18px}
+.hlp .hlive,.hlp .hpod{grid-template-columns:1fr;align-content:start;align-items:start;padding:28px}
 .hl-t{display:grid;gap:18px;align-content:center}
 .cov{position:relative;aspect-ratio:16/9;border-radius:var(--radius-md);overflow:hidden;background:#000;box-shadow:0 18px 36px rgba(0,0,0,.45)}
 .cov ul{margin:0;padding:0;list-style:none}
@@ -1034,6 +1036,7 @@ HOME_CSS = r"""
   .hsec h2{font-size:38px}
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
+  .hlp{grid-template-columns:1fr 1fr;gap:24px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
   .hgm{grid-template-columns:1.2fr 1fr;gap:24px}
   .hgm-c h2{font-size:30px}
@@ -1175,12 +1178,12 @@ def home_page():
         f'<div class="acts"><a class="btn pri" href="/member/">ไปที่หน้าสมาชิก</a></div></div></article></div></section>'
         f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
         f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p>{contest_media()}</div></section>'
-        f'<section class="hsec"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
+        f'<section class="hsec" id="podcast"><div class="hlp"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
-        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div></section>'
-        f'<section class="hsec" id="podcast"><div class="hpod"><div class="hp-t"><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2>'
-        f'<p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div>{cover_slider(PODCAST_EPS, "podcast", "ปกตอนของ DJ LAB Podcast เรียงจากตอนล่าสุด")}</div></section>'
+        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div>'
+        f'<div class="hpod"><div class="hp-t"><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2>'
+        f'<p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div>{cover_slider(PODCAST_EPS, "podcast", "ปกตอนของ DJ LAB Podcast เรียงจากตอนล่าสุด")}</div></div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
         f'<div><h2>แวะมาที่ร้านได้เลย</h2><dl><dt>ที่อยู่</dt><dd>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330</dd>'
         f'<dt>เปิด</dt><dd>ทุกวัน 12:00–20:00 น.</dd><dt>โทร</dt><dd><a href="tel:022525868">02-252-5868</a> · <a href="tel:0886560464">088-656-0464</a></dd></dl>'

@@ -213,6 +213,13 @@ if "home" in SRC:
     ok("Organization" in types and ["MusicSchool", "Store"] in types and "WebSite" in types, "home: JSON-LD Organization / MusicSchool+Store / WebSite missing")
     ok("02-252-5868" in hs and "https://maps.google.com/?cid=14947686714332238791" in hs, "home: phone / map link missing")
     ok(hs.count("<h1") == 1 and "ซื้อ เรียน ซ้อม พร้อม DJ" in hs, "home: h1 missing")
+    _lp = re.search(r'<section class="hsec" id="podcast">.*?</section>', hs, re.S)   # Sunday Live + Podcast live in ONE section
+    ok(_lp is not None and _lp.group(0).count('class="hlive"') == 1 and _lp.group(0).count('class="hpod"') == 1, "home: Sunday Live and Podcast must be two panels of the single #podcast section")
+    ok(hs.count('class="hlive"') == 1 and hs.count('class="hpod"') == 1, "home: Sunday Live / Podcast blocks must not be duplicated or split into separate sections")
+    if _lp:
+        ok("Sunday Live ทุกวันอาทิตย์ 18:30 น." in _lp.group(0) and "DJ LAB Podcast" in _lp.group(0), "home: Sunday Live / Podcast headings missing")
+        ok("https://www.facebook.com/PioneerDjLabSiam/" in _lp.group(0) and 'href="/content/"' in _lp.group(0), "home: Sunday Live Facebook / content links missing")
+        ok(_lp.group(0).count('class="cov"') == 2 and 'class="btn pri"' in _lp.group(0).split('class="hpod"')[1], "home: Podcast listen button / two cover sliders missing")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
     if _gm:
