@@ -1037,6 +1037,9 @@ HOME_CSS = r"""
   .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
   .hlp{grid-template-columns:1fr 1fr;gap:24px}
+  .hlp .hlive{align-content:space-between}
+  .hlp .hlive h2{font-size:24px}
+  .hlp .hl-t{gap:14px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
   .hgm{grid-template-columns:1.2fr 1fr;gap:24px}
   .hgm-c h2{font-size:30px}
