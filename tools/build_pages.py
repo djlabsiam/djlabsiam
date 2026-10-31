@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Builds the static pages  /courses/  ·  /teachers/<name>/ (x6)  ·  /content/  from the shop's single source of truth.
 
   courses.json   bots/bot/shared/courses.json   (courses, prices, hours, audience, prerequisite, tracks, teachers)   <- NEVER retyped here
