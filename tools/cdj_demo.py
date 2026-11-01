@@ -131,7 +131,8 @@ def section_html(line_btn_html):
         '<span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
         '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
-        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1></div>'
+        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1>'
+        f'<div class="cta dm-cta-top">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
         '<div class="dm-stage" id="dm-stage">'
         + deck_html() +
         '<button type="button" class="dm-pin" id="dm-pin" hidden>ปล่อยเครื่อง · เลื่อนอ่านข้อความ</button>'
@@ -158,7 +159,8 @@ def invite_html(line_btn_html, n_teachers):
 CSS = r"""
 .dm{padding-top:36px!important}
 .dm-in{display:block}
-.dm-head h1{font-size:38px;line-height:1.3;max-width:15ch;margin-bottom:34px}
+.dm-head h1{font-size:38px;line-height:1.3;max-width:15ch;margin-bottom:18px}
+.dm-cta-top{margin-bottom:20px}   /* phone/tablet: the same two buttons as under the demo, so the LINE button is on the first screen */
 .dm-body .lede{max-width:34em}
 .dm-lead{margin-top:36px}
 .dm-lead h2{font-size:28px}
@@ -269,6 +271,7 @@ CSS = r"""
 .dm-inv .btn.sec{background:transparent;border-color:#fff;color:#fff}
 @media (min-width:960px){
   .dm{padding-top:44px!important}
+  .dm-cta-top{display:none}
   .dm-head h1{font-size:clamp(38px,4.1vw,54px);line-height:1.28;max-width:15ch;margin-bottom:0}
   .dm-in{display:grid;grid-template-columns:minmax(0,620px) auto;grid-template-areas:"head stage" "body stage";grid-template-rows:auto 1fr;column-gap:clamp(40px,5vw,88px);justify-content:center;align-items:start}
   .dm-head{grid-area:head}

@@ -220,6 +220,11 @@ if "home" in SRC:
         ok("Sunday Live ทุกวันอาทิตย์ 18:30 น." in _lp.group(0) and "DJ LAB Podcast" in _lp.group(0), "home: Sunday Live / Podcast headings missing")
         ok("https://www.facebook.com/PioneerDjLabSiam/" in _lp.group(0) and 'href="/content/"' in _lp.group(0), "home: Sunday Live Facebook / content links missing")
         ok(_lp.group(0).count('class="cov"') == 2 and 'class="btn pri"' in _lp.group(0).split('class="hpod"')[1], "home: Podcast listen button / two cover sliders missing")
+    _ct = re.search(r'<div class="cta dm-cta-top">(.*?)</div>', hs, re.S)   # phone: LINE button above the demo, same link as the one under it
+    _cb = re.search(r'<div class="dm-body">.*?<div class="cta">(.*?)</div>', hs, re.S)
+    _lh = lambda m: re.findall(r'href="(https://line\.me/[^"]+)"', m.group(1)) if m else []
+    ok(len(_lh(_ct)) == 1 and _lh(_ct) == _lh(_cb), "home: the LINE button above the demo (phone) must exist and use the same link as the one under the demo")
+    ok(hs.index('dm-cta-top"') < hs.index('id="dm-stage"'), "home: the phone LINE button must come before the demo stage")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
     if _gm:
