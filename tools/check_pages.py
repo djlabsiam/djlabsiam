@@ -242,41 +242,19 @@ if "home" in SRC:
     _iv = re.search(r'<section class="dm-inv".*?</section>', hs, re.S)
     _ivl = _ln(_iv.group(0)) if _iv else []
     ok(len(_ivl) == 1 and "อุปกรณ์" not in _ivl[0][0] and "อุปกรณ์" not in _ivl[0][1] and "คอร์ส" in _ivl[0][1], "home: the course LINE button under the demo must not mention equipment")
-    ok(all("อุปกรณ์" not in m for m, _ in _ln(_cb2.group(0))) if (_cb2 := re.search(r'<section class="hsec" id="coursebar".*?</section>', hs, re.S)) else False, "home: course strip LINE buttons must not mention equipment")
     _vis = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", "", hs, flags=re.S)))   # UDG is a small sub-dealer line: never next to official/partner wording, never in the course strip; 10K+ not cleared
     _ud = [c for c in re.split(r"[·|.\n]", _vis) if "UDG" in c]
     ok(len(_ud) >= 1 and not any(re.search(r"เป็นทางการ|official|พาร์ทเนอร์|partner", c, re.I) for c in _ud), f"home: UDG must appear (as a sub-dealer line) and never in a clause with official/partner wording — {_ud}")
-    ok("UDG" not in (re.search(r'<section class="hsec" id="coursebar".*?</section>', hs, re.S) or [""])[0], "home: UDG must not appear in the course strip")
     ok("10K+" not in _vis, "home: 10K+ is not cleared for the site")
-    _cb2 = re.search(r'<section class="hsec" id="coursebar"[^>]*>.*?</section>', hs, re.S)   # course strip under the demo: every fact from courses.json
-    ok(_cb2 is not None, "home: course strip (#coursebar) missing")
-    if _cb2:
-        _cs = _cb2.group(0); _ct2 = html.unescape(re.sub(r"<[^>]+>", " ", _cs))
-        _rows = re.findall(r'<li class="cb-c">.*?</li>', _cs, re.S)
-        ok(len(_rows) == len(COURSES), f"home: course strip has {len(_rows)} rows, courses.json has {len(COURSES)} courses")
-        for c, row in zip(COURSES, _rows):
-            _h = re.search(r"(\d+)\s*ครั้ง\s*\((\d+)\s*ชม", c["hours"]); _rt = html.unescape(re.sub(r"<[^>]+>", " ", row))
-            ok(c["title"] in _rt and c["price"] in _rt and bool(_h) and f"{_h.group(1)} ครั้ง × {_h.group(2)} ชม." in _rt and "ตัวต่อตัว" in _rt, f"home: course strip row of {c['title']} must show title, price, sessions × hours and ตัวต่อตัว from courses.json")
-            _lm = re.search(r'href="https://line\.me/R/oaMessage/%40djlabsiam/\?([^"]+)"', row)
-            ok(bool(_lm) and urllib.parse.unquote(_lm.group(1)) == "สนใจคอร์ส " + c["title"], f"home: LINE link of {c['title']} must carry exactly 'สนใจคอร์ส {c['title']}'")
-        ok('href="/courses/#teachers"' in _cs and all(t["name"] in _ct2 for t in TEACHERS) and f"ทีมครู {len(TEACHERS)} คน" in _ct2, "home: course strip must list all teachers from courses.json and link to /courses/#teachers")
-        ok("44K+" in _ct2 and "10K+" not in _ct2 and "ผู้ติดตาม Facebook" in _ct2 and "AlphaTheta และ Mahajak" in _ct2, "home: course strip owner-confirmed facts (44K+ followers, 10K+ members, contest organiser) missing")
-        _pm = os.path.join(SITE, "PRODUCT.md")
-        if os.path.exists(_pm):
-            _pt = read(_pm)
-            ok("44K+" in _pt, "home: 44K+ is no longer in PRODUCT.md 'Confirmed by owner' — re-confirm with the owner before showing them")
-        ok(len(re.findall(r"\d+K\+", _ct2)) == 1, "home: course strip must carry only the one cleared figure (44K+; 10K+ members is held back until the owner words it) — do not add or break down numbers")
-        ok(not re.search(r"Group|พร้อมกัน|ส่วนลด|รีวิว|★|DJplus|คะแนน|ดาว", _ct2), "home: course strip contains a banned phrase")
-        ok("tracking" not in _cs and "utm_" not in _cs and "data-" not in _cs, "home: course strip must not add tracking attributes or parameters")
-        ok(hs.index('id="invite"') < hs.index('id="coursebar"') < hs.index('id="shop3d"'), "home: course strip must sit between the demo invite and the 3D section")
-    _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
-    ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
+    ok('id="coursebar"' not in hs and not re.search(r"cb-[a-z]+", hs) and "cb-" not in read(os.path.join(SITE, "assets", "css", "home.css")), "home: the course price strip (#coursebar / cb-*) was cut by the owner on 2 Nov — it must not come back")   # prices stay in FAQ and /courses/
+    _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)   # member card was cut by the owner on 2 Nov: only the Signal Flow card remains
+    ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' not in _gm.group(0), "home: #gamemember must link /game/ and must not carry the member card (cut on 2 Nov)")
     if _gm:
         _t = re.sub(r"<[^>]+>", " ", _gm.group(0))
-        for _p in ("เล่นเกม Signal Flow ได้ครบ Phase 3", "ขึ้นกระดานคะแนน (Leader Board)", "เลือกอวาตาร์ประจำบัญชี", "สอบถามปัญหาด้านเทคนิคกับทางร้านได้ตลอดเวลาทำการทุกช่องทาง"):
-            ok(_p in _t, f"home: member perk missing in game/member section: {_p}")
-        ok(not re.search(r"ส่วนลด|แต้ม|คูปอง|ระดับ|Silver|Gold|ตัวอย่าง|แบบร่าง", _t), "home: game/member section carries a forbidden word")
-        ok(hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index("Open Format Contest"), "home: game/member section must sit between shop3d and the contest block")
+        ok(_gm.group(0).count('class="hgm-c"') == 1 and "เล่นเกม Signal Flow" in _t and "hgm-m" not in _gm.group(0), "home: #gamemember must hold exactly the one Signal Flow card")
+        ok(not any(p in _t for p in ("ได้ครบ Phase 3", "ขึ้นกระดานคะแนน", "เลือกอวาตาร์ประจำบัญชี")) and "สิทธิ์และประโยชน์สมาชิก" not in _t, "home: member perks must not be listed in #gamemember")
+        ok(not re.search(r"ส่วนลด|แต้ม|คูปอง|ระดับ|Silver|Gold|ตัวอย่าง|แบบร่าง", _t), "home: game section carries a forbidden word")
+        ok(hs.index('id="invite"') < hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index("Open Format Contest"), "home: order must be demo invite -> shop3d -> game -> contest")
 
 # ---- shop: prices come live from the web view only; DB text is never HTML; no 3D files; VAT wording ----
 sh = SRC.get("shop", "")
