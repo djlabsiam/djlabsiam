@@ -76,7 +76,9 @@ function guide(){
   var g=GS[GI];shown=GI;
   itl.textContent=g.t;ipg.textContent=g.d;inum.textContent='ขั้นที่ '+(GI+1)+' / '+GS.length;
   point(g.k,g.tip,!!g.sq);info.hidden=false;placeCard(g.k,g.side)}
+var ask=document.getElementById('dm-ask');
 function stage(){
+  if(S.played&&ask)ask.hidden=false;
   stick.classList.toggle('hintp',!S.usb);knob.classList.toggle('act',S.usb&&S.mode==='browse');
   guide()}
 $('#dm-isk').addEventListener('click',function(){F.skip=true;hideGuide()});

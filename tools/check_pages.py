@@ -225,6 +225,10 @@ if "home" in SRC:
     _lh = lambda m: re.findall(r'href="(https://line\.me/[^"]+)"', m.group(1)) if m else []
     ok(len(_lh(_ct)) == 1 and _lh(_ct) == _lh(_cb), "home: the LINE button above the demo (phone) must exist and use the same link as the one under the demo")
     ok(hs.index('dm-cta-top"') < hs.index('id="dm-stage"'), "home: the phone LINE button must come before the demo stage")
+    _ak = re.search(r'<div class="dm-ask" id="dm-ask" hidden><p>(.*?)</p>(.*?)</div>', hs, re.S)   # invite after the first stage of the demo
+    ok(_ak is not None and _ak.group(1) == "อยากเล่นแบบนี้? ทัก LINE" and 'href="https://line.me/' in _ak.group(2), "home: demo invite (#dm-ask) must read exactly 'อยากเล่นแบบนี้? ทัก LINE' and carry the LINE button")
+    _h1 = re.search(r'<h1>.*?</h1>', hs, re.S)   # the headline's own name must not include the "tap to plug in" hint
+    ok(_h1 is not None and "แตะเพื่อเสียบ" not in re.sub(r"<[^>]+>", "", _h1.group(0)) and 'aria-label="DJ LAB"' in _h1.group(0), "home: the hint 'แตะเพื่อเสียบ' must stay out of the H1 text and the stick's name")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
     if _gm:

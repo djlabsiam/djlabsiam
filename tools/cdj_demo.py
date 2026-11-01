@@ -130,8 +130,9 @@ def section_html(line_btn_html):
         '<div class="dm-in"><div class="dm-head">'
         '<span class="hbadge"><i></i>ตัวแทนจำหน่ายอย่างเป็นทางการ · Lido Connect สยามสแควร์</span>'
         '<h1>ซื้อ เรียน ซ้อม พร้อม DJ ในที่เดียวกับ '
-        '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB — แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
-        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>แตะเพื่อเสียบ</span></em></button></h1>'
+        '<button type="button" class="lab dm-stick usb hintp" id="dm-stick" aria-label="DJ LAB" aria-describedby="dm-stick-hint"><span>DJ LAB</span><i class="dm-plug" aria-hidden="true"></i>'
+        '<em class="dm-tip" aria-hidden="true"><svg class="dm-arr" viewBox="0 0 36 16" width="36" height="16"><path d="M34 8H6M12 2L5 8l7 6" fill="none" stroke="#DD464C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-t="แตะเพื่อเสียบ"></span></em></button></h1>'
+        '<span class="vh" id="dm-stick-hint">แฟลชไดรฟ์ USB แตะเพื่อเสียบเข้า CDJ</span>'
         f'<div class="cta dm-cta-top">{line_btn_html}<a class="btn sec" href="/courses/">ดูคอร์สเรียน</a></div></div>'
         '<div class="dm-stage" id="dm-stage">'
         + deck_html() +
@@ -142,6 +143,7 @@ def section_html(line_btn_html):
         '<div class="dm-lead"><h2>เรียน DJ สำคัญยังไง? ลองเล่นดูก่อน</h2>'
         '<p>CDJ-3000X ตัวนี้ร้านมีให้เล่นจริง ลองเสียบ USB เลือกแนวเพลงที่ชอบ แล้วทำตามคำแนะนำที่ขึ้นบนเครื่องไปทีละขั้น ไม่ต้องติดตั้งอะไร</p></div>'
         f'<ol class="dm-steps" id="dm-steps">{steps}</ol>'
+        f'<div class="dm-ask" id="dm-ask" hidden><p>อยากเล่นแบบนี้? ทัก LINE</p>{line_btn_html}</div>'
         '<a class="btn sec dm-skip" href="#invite">ข้ามไปส่วนถัดไป ↓</a>'
         '</div></div></section>')
 
@@ -170,6 +172,9 @@ CSS = r"""
 .dm-st small{display:block;font:700 13px/1.4 var(--font-family-body);letter-spacing:.04em;color:var(--brand-base)}
 .dm-st b{display:block;margin-top:2px;font:700 20px/1.4 var(--font-family-display)}
 .dm-st p{margin:6px 0 0;color:var(--text-secondary);font-size:15px}
+.dm-ask{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;padding:14px 16px;background:#0F0F0F;color:#fff;border-radius:var(--radius-md);position:sticky;bottom:78px;z-index:5}
+.dm-ask[hidden]{display:none}
+.dm-ask p{margin:0;font:700 17px/1.4 var(--font-family-display)}
 .dm-skip{margin-top:22px;position:sticky;bottom:16px;z-index:5;background:#fff}
 .dm-stage{position:relative;display:flex;justify-content:center;flex-direction:column;align-items:center;padding:6px 0 10px;margin:0 0 18px}
 .dm-stage.pin{position:sticky;top:68px;z-index:12;background:#fff;box-shadow:0 14px 14px -14px rgba(15,15,15,.3)}
@@ -188,6 +193,7 @@ CSS = r"""
 .dm-tip{display:none;position:absolute;left:calc(100% + .78em);top:50%;transform:translateY(-50%);white-space:nowrap;font-style:normal;align-items:center;gap:4px}
 .dm-arr{flex:none;animation:dmn 1.1s ease-in-out infinite}
 @keyframes dmn{50%{transform:translateX(-6px)}}
+.dm-tip span::before{content:attr(data-t)}   /* the hint is drawn by CSS so the headline's text is only the title */
 .dm-tip span{display:block;font:700 14px/1.4 var(--font-family-display);background:#0F0F0F;color:#fff;padding:3px 12px;border-radius:999px}
 .dm-stick.hintp .dm-tip{display:flex}
 .dm-fly{position:fixed;margin:0;z-index:70;pointer-events:none;animation:none!important}
@@ -234,6 +240,7 @@ CSS = r"""
 .dkb{position:absolute;transform:translate(-50%,-50%);padding:0;margin:0;border:0;background:transparent;cursor:pointer;border-radius:5px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dkb.r,.dkb.jog{border-radius:50%}
 .dkb.r{aspect-ratio:1;height:auto!important}
+.dkb::before{content:"";position:absolute;left:50%;top:50%;width:100%;height:100%;min-width:24px;min-height:24px;transform:translate(-50%,-50%)}   /* invisible: tap area never smaller than 24px (WCAG 2.2 · 2.5.8), picture unchanged */
 .dkb:hover{outline:1px solid rgba(255,255,255,.28);outline-offset:1px}
 .dkb:active,.dkb.press{background:rgba(255,255,255,.10)}
 .dkb:focus-visible{outline:3px solid #fff;box-shadow:0 0 0 5px var(--brand-base)}
@@ -258,8 +265,8 @@ CSS = r"""
 .dm-info[hidden]{display:none}
 .dm-info b{display:block;font:700 15px/1.35 var(--font-family-display);color:#FFB443}
 .dm-info p{margin:4px 0 0;font:400 13px/1.55 var(--font-family-body);color:#E8ECF2}
-.dm-if{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font:600 11.5px/1.4 var(--font-family-body);color:#8FA0B5}
-.dm-if button{pointer-events:auto;background:none;border:0;padding:2px 0;color:#C6DBF7;font:inherit;text-decoration:underline;cursor:pointer}
+.dm-if{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font:600 12px/1.4 var(--font-family-body);color:#8FA0B5}
+.dm-if button{pointer-events:auto;background:none;border:0;padding:2px 0;min-height:24px;color:#C6DBF7;font:inherit;text-decoration:underline;cursor:pointer}
 @keyframes dmi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes dmp{0%{box-shadow:0 0 0 0 rgba(221,70,76,.55)}100%{box-shadow:0 0 0 16px rgba(221,70,76,0)}}
 .dm-toast{position:absolute;left:50%;bottom:2%;transform:translateX(-50%) translateY(8px);opacity:0;background:#0F0F0F;color:#fff;font:600 13px/1.4 var(--font-family-body);padding:8px 14px;border-radius:999px;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;z-index:7}
@@ -269,6 +276,10 @@ CSS = r"""
 .dm-inv h2{font-size:34px;line-height:1.25}
 .dm-inv p{color:#D8D6CF;font-size:17px;max-width:52ch}
 .dm-inv .btn.sec{background:transparent;border-color:#fff;color:#fff}
+@container (max-width:430px){   /* phone-size deck: the words a visitor must read to follow the steps stay at 12px or more */
+  .dm-nm span,.dm-bf{font-size:max(2.5cqw,12px)}
+  .dm-l li b{font-size:max(3cqw,12px);line-height:1.1}   /* track name = what the visitor picks; the BPM / key line stays small (the list shows 4 rows in ~87px) */
+}
 @media (min-width:960px){
   .dm{padding-top:44px!important}
   .dm-cta-top{display:none}
@@ -367,7 +378,9 @@ function guide(){
   var g=GS[GI];shown=GI;
   itl.textContent=g.t;ipg.textContent=g.d;inum.textContent='ขั้นที่ '+(GI+1)+' / '+GS.length;
   point(g.k,g.tip,!!g.sq);info.hidden=false;placeCard(g.k,g.side)}
+var ask=document.getElementById('dm-ask');
 function stage(){
+  if(S.played&&ask)ask.hidden=false;
   stick.classList.toggle('hintp',!S.usb);knob.classList.toggle('act',S.usb&&S.mode==='browse');
   guide()}
 $('#dm-isk').addEventListener('click',function(){F.skip=true;hideGuide()});
