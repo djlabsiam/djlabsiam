@@ -67,5 +67,23 @@
   .dpop-go{min-height:48px;padding:0 20px;font-size:16px}
   .dpop-x{top:max(10px,env(safe-area-inset-top));right:10px;padding:0 16px}
 }
+/* phone sheet (popup.js adds .sheet at ≤700px): a compact card at the bottom; the page behind stays visible, scrollable and tappable (the layer itself ignores touches, only the card takes them) */
+@media (max-width:700px){
+  .dpop.sheet{inset:auto 0 0 0;display:block;padding:0 8px max(8px,env(safe-area-inset-bottom));background:none;-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:none}
+  .dpop.sheet .dpop-c{pointer-events:auto;width:100%;height:auto;max-height:45dvh;overflow:auto;aspect-ratio:auto;border-radius:20px;box-shadow:0 -8px 32px rgba(0,0,0,.4)}
+  .dpop.sheet .dpop-t{position:static}
+  .dpop.sheet .dpop-s{display:grid;grid-template-columns:76px minmax(0,1fr);gap:0 14px;align-items:start;padding:14px 62px 6px 14px}
+  .dpop.sheet .dpop-m{position:static;width:76px;height:76px;border-radius:12px;overflow:hidden}
+  .dpop.sheet .dpop-m::after,.dpop.sheet .dpop-pl,.dpop.sheet .dpop-pb,.dpop.sheet .dpop-note{display:none}
+  .dpop.sheet .dpop-b,.dpop.sheet .dpop-s.bare .dpop-b{position:static;transform:none;width:auto;max-height:none;overflow:visible;display:grid;gap:6px;text-shadow:none}
+  .dpop.sheet .dpop-s.bare .dpop-tag,.dpop.sheet .dpop-s.bare .dpop-b h2,.dpop.sheet .dpop-s.bare .dpop-b p:not(.dpop-note){position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;white-space:normal}
+  .dpop.sheet .dpop-tag{padding:2px 10px;font-size:12px}
+  .dpop.sheet .dpop-b h2{font-size:15px;line-height:1.35}
+  .dpop.sheet .dpop-s.bare .dpop-b p:not(.dpop-note),.dpop.sheet .dpop-b p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:13px;line-height:1.45}
+  .dpop.sheet .dpop-a{min-height:44px;padding:0 20px;font-size:15px}
+  .dpop.sheet .dpop-x{top:8px;right:8px;width:44px;min-height:44px;padding:0;justify-content:center;font-size:0}
+  .dpop.sheet .dpop-n{position:static;height:auto;background:none;padding:2px 10px 10px}
+  .dpop.sheet .dpop-ck{font-size:13px}
+}
 @media (prefers-reduced-motion:reduce){.dpop,.dpop-c{transition:none;transform:none}}
 @media print{.dpop{display:none}}

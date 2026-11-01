@@ -372,6 +372,9 @@ ok("textContent" in pj and "a.protocol === 'https:'" in pj and "!a.username && !
 ok("/^[A-Za-z0-9_-]{1,60}\\.(webp|jpg|png)$/" in pj and "'/assets/img/popup/'" in pj, "popup.js: slide images must come only from /assets/img/popup/ with a plain file name")
 ok("sessionStorage" in pj and "prefers-reduced-motion" in pj and "e.key === 'Escape'" in pj and "e.key !== 'Tab'" in pj, "popup.js: once-per-session, reduced-motion, Esc and focus-trap handling must stay")
 ok("aria-modal" in pj and ".inert = true" in pj and "de.style.overflow = 'hidden'" in pj and "n.inert = false" in pj, "popup.js: the pop-up is a full-page gate — aria-modal, inert page behind it, scroll lock, and everything given back on close")
+ok("sheet = matchMedia('(max-width: 700px)').matches" in pj and "if (!sheet) [].slice.call(document.body.children)" in pj and "if (!sheet) de.style.overflow = 'hidden'" in pj and "aria-modal', sheet ? 'false' : 'true'" in pj, "popup.js: on phones the pop-up is a sheet that must not make the page inert or lock its scroll (the desktop gate stays)")
+_sh = pcss[pcss.find("/* phone sheet"):]
+ok(".dpop.sheet{" in _sh and "pointer-events:none" in _sh and "max-height:45dvh" in _sh and "@media (max-width:700px)" in _sh and "100dvh" not in _sh, "popup.css: the phone sheet must leave the page behind it touchable and stay within 45% of the screen (never full-screen)")
 ok(r"/^\/book\//.test(location.pathname)" in pj, "popup.js must stay off /book/")
 ok(not re.search(r"฿|baht|promoPrice|regularPrice|\.products|\.conditions|\.gift|gifts|\.price", pj), "popup.js must not read or show prices, products, gifts or conditions of a promotion (owner: name + end date only)")
 ok("pic(images[typeof p.id === 'string' ? p.id : '']) || pic(images['default'])" in pj, "popup.js: every promotion slide must get its own picture (by promotion id) or the default picture")

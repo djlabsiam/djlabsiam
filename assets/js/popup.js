@@ -1,4 +1,5 @@
 /* Full-page slide pop-up shown once per session, on the first page opened: the visitor must close it before the site behind it can be used.
+   On phones (≤700px) it is a compact sheet at the bottom of the screen instead: the page behind stays visible and usable.
    Each slide is a full picture with its words and buttons floating on top of it. A tick box ("don't show again") hides it on later visits until something new is announced.
    Slides = promotions running today (database function bot_promotions: name + end date only, nothing else is read) + the items an admin lists in /data/popup.json.
    Every promotion gets a picture from "promoImages" (by promotion id, else "default"). Everything is written with textContent / setAttribute;
@@ -67,10 +68,10 @@
   }
 
   function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
-  function build(slides, onClose) {
+  function build(slides, onClose, sheet) {
     var root = el('div', 'dpop'), card = el('div', 'dpop-c'), ul = el('ul', 'dpop-t'), x = el('button', 'dpop-x'), go = el('button', 'dpop-go', 'เข้าสู่เว็บไซต์'),
       lab = el('label', 'dpop-ck'), box = document.createElement('input'), dots = [], lis = [], idx = 0, stopped = false, timer = null;
-    root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'ข่าวสารและโปรโมชั่นจาก DJ LAB SIAM');
+    root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', sheet ? 'false' : 'true'); if (sheet) root.className += ' sheet'; root.setAttribute('aria-label', 'ข่าวสารและโปรโมชั่นจาก DJ LAB SIAM');
     x.type = 'button'; x.setAttribute('aria-label', 'ปิดและเข้าสู่เว็บไซต์'); x.appendChild(document.createTextNode('ปิด ')); x.appendChild(el('b', '', '×'));
     go.type = 'button'; box.type = 'checkbox'; lab.appendChild(box); lab.appendChild(el('span', '', 'ไม่ต้องแสดงอีกในครั้งต่อไป (ยกเว้นมีข่าวสารใหม่)'));
     ul.tabIndex = 0; ul.setAttribute('aria-label', 'สไลด์ข่าวสาร ใช้ปุ่มลูกศรซ้ายขวาเพื่อเลื่อน');
@@ -127,7 +128,7 @@
     right.appendChild(lab); right.appendChild(go); nav.appendChild(left); nav.appendChild(right); card.appendChild(nav); root.appendChild(card);
     function keys(e) {   // Esc closes; Tab stays inside the pop-up
       if (e.key === 'Escape') { e.preventDefault(); close(); return; }
-      if (e.key !== 'Tab') return;
+      if (e.key !== 'Tab' || sheet) return;   // phone sheet is not a gate: Tab may leave it
       var f = [].slice.call(root.querySelectorAll('button,a[href],input,ul[tabindex]')).filter(function (n) { return !n.disabled && n.offsetParent !== null; });
       if (!f.length) return;
       var first = f[0], last = f[f.length - 1];
@@ -141,7 +142,7 @@
       onClose(); setTimeout(function () { root.remove(); }, 350);
     }
     x.addEventListener('click', close); go.addEventListener('click', close); document.addEventListener('keydown', keys);
-    return { root: root, focus: function () { go.focus(); } };
+    return { root: root, focus: function () { if (sheet) go.focus({ preventScroll: true }); else go.focus(); } };
   }
 
   if (seen() || /^\/book\//.test(location.pathname)) return;
@@ -160,13 +161,14 @@
     css.addEventListener('load', function () {
       if (document.querySelector('.dpop')) return;
       markSeen();
-      var before = document.activeElement, held = [], de = document.documentElement, prev = de.style.overflow;
+      var before = document.activeElement, held = [], de = document.documentElement, prev = de.style.overflow,
+        sheet = matchMedia('(max-width: 700px)').matches;   // phone: a compact sheet at the bottom that leaves the page usable (no inert, no scroll lock)
       var ui = build(slides, function () {   // give the page back
         held.forEach(function (n) { n.inert = false; }); de.style.overflow = prev;
         if (before && before.focus && document.contains(before)) try { before.focus(); } catch (e) { }
-      });
-      [].slice.call(document.body.children).forEach(function (n) { if (n.tagName !== 'SCRIPT' && n.tagName !== 'STYLE' && n.tagName !== 'LINK' && !n.inert) { n.inert = true; held.push(n); } });
-      de.style.overflow = 'hidden';
+      }, sheet);
+      if (!sheet) [].slice.call(document.body.children).forEach(function (n) { if (n.tagName !== 'SCRIPT' && n.tagName !== 'STYLE' && n.tagName !== 'LINK' && !n.inert) { n.inert = true; held.push(n); } });
+      if (!sheet) de.style.overflow = 'hidden';
       document.body.appendChild(ui.root);
       requestAnimationFrame(function () { requestAnimationFrame(function () { ui.root.classList.add('on'); ui.focus(); }); });
     });
