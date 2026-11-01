@@ -220,6 +220,11 @@ if "home" in SRC:
         ok("Sunday Live ทุกวันอาทิตย์ 18:30 น." in _lp.group(0) and "DJ LAB Podcast" in _lp.group(0), "home: Sunday Live / Podcast headings missing")
         ok("https://www.facebook.com/PioneerDjLabSiam/" in _lp.group(0) and 'href="/content/"' in _lp.group(0), "home: Sunday Live Facebook / content links missing")
         ok(_lp.group(0).count('class="cov"') == 2 and 'class="btn pri"' in _lp.group(0).split('class="hpod"')[1], "home: Podcast listen button / two cover sliders missing")
+        _sv = json.load(open(os.path.join(SITE, "data", "sunday-covers.json"), encoding="utf-8"))["items"]   # Sunday Live slider holds Sunday covers only: no Podcast episode (same YouTube id, image or title) and the counter matches the data
+        _pe = json.load(open(os.path.join(SITE, "data", "podcast-episodes.json"), encoding="utf-8"))["items"]
+        _hl = _lp.group(0).split('class="hpod"')[0]
+        ok(not ({x.get("yt") for x in _sv} & {x.get("yt") for x in _pe if x.get("yt")}) and not any("podcast" in x["img"].lower() or "podcast" in x["alt"].lower() for x in _sv), "data/sunday-covers.json: a Podcast episode is mixed into the Sunday Live slider")
+        ok(_hl.count('class="cv') - _hl.count('class="cv-') == len(_sv) and f'<span class="cv-i">1</span> / {len(_sv)}<' in _hl and all(x["img"] in _hl for x in _sv) and not any(x["img"] in _hl for x in _pe), "home: Sunday Live slides / counter must match data/sunday-covers.json (and carry no Podcast cover)")
     _ct = re.search(r'<div class="cta dm-cta-top">(.*?)</div>', hs, re.S)   # phone: LINE button above the demo, same link as the one under it
     _cb = re.search(r'<div class="dm-body">.*?<div class="cta">(.*?)</div>', hs, re.S)
     _lh = lambda m: re.findall(r'href="(https://line\.me/[^"]+)"', m.group(1)) if m else []
