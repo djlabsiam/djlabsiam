@@ -42,26 +42,6 @@
       "link": "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691",
       "cta": "ดูรายละเอียดบน Facebook",
       "until": "2026-11-08"
-    },
-    {
-      "type": "podcast",
-      "title": "DJ LAB SIAM Podcast EP#4 | DJ KAMIKO",
-      "text": "ตอนล่าสุดของ DJ LAB SIAM Podcast",
-      "img": "podcast-ep4.webp",
-      "imgM": "podcast-ep4-m.webp",
-      "alt": "ปก DJ LAB SIAM Podcast EP#4 แขกรับเชิญ DJ KAMIKO: จากคำแนะนำสู่การค้นพบตัวตน",
-      "bare": true,
-      "link": "https://www.youtube.com/watch?v=bC4nGX2qyfc",
-      "cta": "ดูบน YouTube",
-      "embed": "https://open.spotify.com/embed/episode/2u3IEhoxLDrIMKhcIRPOWr"
-    },
-    {
-      "type": "facebook",
-      "title": "สรุปมาให้แล้ว 5ข้อ Serato DJ Mobile น่าใช้มั้ย?",
-      "text": "วิดีโอล่าสุดจากเพจ DJ Lab Siam บน Facebook",
-      "link": "https://www.facebook.com/share/v/1BzxbkbiUG/",
-      "cta": "ดูวิดีโอบน Facebook",
-      "embed": "https://www.facebook.com/reel/2549147278919136"
     }
   ]
 }

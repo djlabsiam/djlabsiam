@@ -392,8 +392,12 @@ for k, s in SRC.items():
         continue
     ok(s.count('<script src="/assets/js/popup.js?v=' + pv + '" defer></script>') == 1, f"{k}: popup script must be on the page exactly once with the current version {pv}")
 pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
-ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 8 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 8 entries")
+ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 4 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
+ok("slice(0, 1)).slice(0, 4)" in pj, "popup.js: the pop-up must show at most 4 slides (promotions first, then one news/event)")
+ok(all(i.get("type") not in ("podcast", "facebook") for i in pop["items"]), "data/popup.json: podcast / facebook items belong to the home page sections, not the pop-up")
+_sync = [i for i in pop["items"] if i.get("link") == "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691" and i.get("until") == "2026-11-08"]
+ok(len(_sync) == 1 and _sync[0].get("img") == "event-sync-nov.webp" and _sync[0].get("bare") is True, "data/popup.json: the SYNC! event slide (owner's event, until 2026-11-08) must stay as it is")
 pim = pop.get("promoImages", {})
 ok(isinstance(pim, dict) and "default" in pim, "data/popup.json: promoImages must exist and have a \"default\" picture (every promotion needs one)")
 for pk, pv in (pim.items() if isinstance(pim, dict) else []):

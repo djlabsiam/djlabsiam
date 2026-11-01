@@ -152,7 +152,7 @@
       .then(function (l) { return fromPromos(l, cfg && cfg.promoImages); }).catch(function () { return []; });
   });
   Promise.all([cfgP, promoP]).then(function (r) {
-    var slides = r[1].concat(fromFile(r[0])).slice(0, 8);
+    var slides = r[1].concat(fromFile(r[0]).slice(0, 1)).slice(0, 4);   // at most 4: running promotions first (3 at most), then one still-valid news / event
     if (!slides.length) return;
     var hidden = skipped();
     if (slides.every(function (s) { return hidden.indexOf(keyOf(s)) >= 0; })) return;   // ticked "don't show again" and nothing new since
