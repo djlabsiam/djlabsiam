@@ -1026,6 +1026,7 @@ HOME_CSS = r"""
 .hvisit dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:16px 0 22px}
 .hvisit dt{font-weight:700}
 .hvisit dd{margin:0}
+.hvisit dd a[href^=tel]{display:inline-block;padding:10px 0;margin:-10px 0}   /* phone numbers: tap area ≥44px tall, layout unchanged */
 .hbot{display:grid;gap:12px;padding:18px 20px;background:var(--lab-paper);border-radius:var(--radius-md);color:var(--text-secondary);font-size:15px}
 .hbot a{font-weight:700;color:var(--text-primary)}
 @media (min-width:960px){

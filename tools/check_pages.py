@@ -229,6 +229,8 @@ if "home" in SRC:
     ok(_ak is not None and _ak.group(1) == "อยากเล่นแบบนี้? ทัก LINE" and 'href="https://line.me/' in _ak.group(2), "home: demo invite (#dm-ask) must read exactly 'อยากเล่นแบบนี้? ทัก LINE' and carry the LINE button")
     _h1 = re.search(r'<h1>.*?</h1>', hs, re.S)   # the headline's own name must not include the "tap to plug in" hint
     ok(_h1 is not None and "แตะเพื่อเสียบ" not in re.sub(r"<[^>]+>", "", _h1.group(0)) and 'aria-label="DJ LAB"' in _h1.group(0), "home: the hint 'แตะเพื่อเสียบ' must stay out of the H1 text and the stick's name")
+    _hc = read(os.path.join(SITE, "assets", "css", "home.css"))   # phone numbers in the visit block: tap area ≥44px tall (10px padding top+bottom on the line)
+    ok("a[href^=tel]{display:inline-block;padding:10px 0;margin:-10px 0}" in _hc, "home: the phone links in the visit block lost their ≥44px tap area")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
     if _gm:
