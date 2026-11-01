@@ -1180,6 +1180,9 @@ b.hidden=true;s.appendChild(v)})})();
 </script>"""
 
 
+EQUIP_MSG = "สนใจอุปกรณ์ DJ ของ DJ LAB SIAM"   # equipment-only pre-filled LINE message (courses use their own per-course message)
+
+
 def coursebar_html():
     """Compact course strip under the demo. Every course name/price/hours/teacher comes from courses.json (facts()); the three owner-confirmed
     figures are the only typed numbers (PRODUCT.md "Confirmed by owner 2026-09-30" - do not break down or reword)."""
@@ -1204,13 +1207,13 @@ def home_page():
     pod = next(x for x in PROGRAMS if x["name"] == "DJ LAB Podcast")
     pod_btns = "".join(f'<a class="btn {"pri" if i == 0 else "sec"}" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for i, x in enumerate(LISTEN))
     body = (
-        cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
+        cdj_demo.section_html(line_btn(EQUIP_MSG, "ทัก LINE ถามราคาอุปกรณ์")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
         coursebar_html() +
         f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
         f'<p>ตัวแทนจำหน่ายอย่างเป็นทางการของ Pioneer DJ, AlphaTheta และ NEO by OYAIDE · เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
         f'<ul><li>หมุนและซูมดูรายละเอียดเครื่อง</li><li>วางด้วย AR ในห้องหรือสตูดิโอของคุณ</li><li>ดูราคาและสถานะสินค้าในหน้าเดียว</li></ul>'
-        f'<div class="acts"><a class="btn pri" href="/shop/">ไปที่ SHOP</a></div></div>'
+        f'<div class="acts"><a class="btn pri" href="/shop/">ไปที่ SHOP</a>{line_btn(EQUIP_MSG, "ทัก LINE ถามเรื่องอุปกรณ์", "sec")}</div></div>'
         f'<div class="h3d-s" id="h3d-s"><img src="/assets/img/pc-ddj-flx4.webp" width="640" height="384" alt="Pioneer DJ DDJ-FLX4" loading="lazy" decoding="async">'
         f'<button type="button" class="btn sec" id="h3d-go">ลองหมุน 3D</button></div></div></section>'
         f'<section class="hsec" id="gamemember"><div class="hgm">'

@@ -231,6 +231,18 @@ if "home" in SRC:
     ok(_h1 is not None and "แตะเพื่อเสียบ" not in re.sub(r"<[^>]+>", "", _h1.group(0)) and 'aria-label="DJ LAB"' in _h1.group(0), "home: the hint 'แตะเพื่อเสียบ' must stay out of the H1 text and the stick's name")
     _hc = read(os.path.join(SITE, "assets", "css", "home.css"))   # phone numbers in the visit block: tap area ≥44px tall (10px padding top+bottom on the line)
     ok("a[href^=tel]{display:inline-block;padding:10px 0;margin:-10px 0}" in _hc, "home: the phone links in the visit block lost their ≥44px tap area")
+    _eq = "สนใจอุปกรณ์ DJ ของ DJ LAB SIAM"   # equipment vs course LINE buttons are separate: pre-filled message lives in the link only
+    _ln = lambda frag: [(urllib.parse.unquote(m.group(1)), html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip()) for m in re.finditer(r'<a [^>]*href="https://line\.me/R/oaMessage/%40djlabsiam/\?([^"]+)"[^>]*>(.*?)</a>', frag, re.S)]
+    _dm = re.search(r'<section class="hero dm".*?</section>', hs, re.S)
+    _dml = _ln(_dm.group(0)) if _dm else []
+    ok(len(_dml) >= 3 and all(m == _eq and "คอร์ส" not in m and "คอร์ส" not in l and "อุปกรณ์" in l for m, l in _dml), f"home: every LINE button in the demo must carry the equipment-only message {_eq!r} and an equipment label (no 'คอร์ส') — found {_dml}")
+    _sh = re.search(r'<section class="hsec" id="shop3d">.*?</section>', hs, re.S)
+    _shl = _ln(_sh.group(0)) if _sh else []
+    ok(len(_shl) == 1 and _shl[0][0] == _eq and "อุปกรณ์" in _shl[0][1] and "คอร์ส" not in _shl[0][1], "home: #shop3d must have one LINE button with the equipment-only message and label")
+    _iv = re.search(r'<section class="dm-inv".*?</section>', hs, re.S)
+    _ivl = _ln(_iv.group(0)) if _iv else []
+    ok(len(_ivl) == 1 and "อุปกรณ์" not in _ivl[0][0] and "อุปกรณ์" not in _ivl[0][1] and "คอร์ส" in _ivl[0][1], "home: the course LINE button under the demo must not mention equipment")
+    ok(all("อุปกรณ์" not in m for m, _ in _ln(_cb2.group(0))) if (_cb2 := re.search(r'<section class="hsec" id="coursebar".*?</section>', hs, re.S)) else False, "home: course strip LINE buttons must not mention equipment")
     _cb2 = re.search(r'<section class="hsec" id="coursebar"[^>]*>.*?</section>', hs, re.S)   # course strip under the demo: every fact from courses.json
     ok(_cb2 is not None, "home: course strip (#coursebar) missing")
     if _cb2:
