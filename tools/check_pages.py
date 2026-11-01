@@ -243,6 +243,11 @@ if "home" in SRC:
     _ivl = _ln(_iv.group(0)) if _iv else []
     ok(len(_ivl) == 1 and "อุปกรณ์" not in _ivl[0][0] and "อุปกรณ์" not in _ivl[0][1] and "คอร์ส" in _ivl[0][1], "home: the course LINE button under the demo must not mention equipment")
     ok(all("อุปกรณ์" not in m for m, _ in _ln(_cb2.group(0))) if (_cb2 := re.search(r'<section class="hsec" id="coursebar".*?</section>', hs, re.S)) else False, "home: course strip LINE buttons must not mention equipment")
+    _vis = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", "", hs, flags=re.S)))   # UDG is a small sub-dealer line: never next to official/partner wording, never in the course strip; 10K+ not cleared
+    _ud = [c for c in re.split(r"[·|.\n]", _vis) if "UDG" in c]
+    ok(len(_ud) >= 1 and not any(re.search(r"เป็นทางการ|official|พาร์ทเนอร์|partner", c, re.I) for c in _ud), f"home: UDG must appear (as a sub-dealer line) and never in a clause with official/partner wording — {_ud}")
+    ok("UDG" not in (re.search(r'<section class="hsec" id="coursebar".*?</section>', hs, re.S) or [""])[0], "home: UDG must not appear in the course strip")
+    ok("10K+" not in _vis, "home: 10K+ is not cleared for the site")
     _cb2 = re.search(r'<section class="hsec" id="coursebar"[^>]*>.*?</section>', hs, re.S)   # course strip under the demo: every fact from courses.json
     ok(_cb2 is not None, "home: course strip (#coursebar) missing")
     if _cb2:
