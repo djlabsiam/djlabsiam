@@ -231,6 +231,27 @@ if "home" in SRC:
     ok(_h1 is not None and "แตะเพื่อเสียบ" not in re.sub(r"<[^>]+>", "", _h1.group(0)) and 'aria-label="DJ LAB"' in _h1.group(0), "home: the hint 'แตะเพื่อเสียบ' must stay out of the H1 text and the stick's name")
     _hc = read(os.path.join(SITE, "assets", "css", "home.css"))   # phone numbers in the visit block: tap area ≥44px tall (10px padding top+bottom on the line)
     ok("a[href^=tel]{display:inline-block;padding:10px 0;margin:-10px 0}" in _hc, "home: the phone links in the visit block lost their ≥44px tap area")
+    _cb2 = re.search(r'<section class="hsec" id="coursebar"[^>]*>.*?</section>', hs, re.S)   # course strip under the demo: every fact from courses.json
+    ok(_cb2 is not None, "home: course strip (#coursebar) missing")
+    if _cb2:
+        _cs = _cb2.group(0); _ct2 = html.unescape(re.sub(r"<[^>]+>", " ", _cs))
+        _rows = re.findall(r'<li class="cb-c">.*?</li>', _cs, re.S)
+        ok(len(_rows) == len(COURSES), f"home: course strip has {len(_rows)} rows, courses.json has {len(COURSES)} courses")
+        for c, row in zip(COURSES, _rows):
+            _h = re.search(r"(\d+)\s*ครั้ง\s*\((\d+)\s*ชม", c["hours"]); _rt = html.unescape(re.sub(r"<[^>]+>", " ", row))
+            ok(c["title"] in _rt and c["price"] in _rt and bool(_h) and f"{_h.group(1)} ครั้ง × {_h.group(2)} ชม." in _rt and "ตัวต่อตัว" in _rt, f"home: course strip row of {c['title']} must show title, price, sessions × hours and ตัวต่อตัว from courses.json")
+            _lm = re.search(r'href="https://line\.me/R/oaMessage/%40djlabsiam/\?([^"]+)"', row)
+            ok(bool(_lm) and urllib.parse.unquote(_lm.group(1)) == "สนใจคอร์ส " + c["title"], f"home: LINE link of {c['title']} must carry exactly 'สนใจคอร์ส {c['title']}'")
+        ok('href="/courses/#teachers"' in _cs and all(t["name"] in _ct2 for t in TEACHERS) and f"ทีมครู {len(TEACHERS)} คน" in _ct2, "home: course strip must list all teachers from courses.json and link to /courses/#teachers")
+        ok("44K+" in _ct2 and "10K+" not in _ct2 and "ผู้ติดตาม Facebook" in _ct2 and "AlphaTheta และ Mahajak" in _ct2, "home: course strip owner-confirmed facts (44K+ followers, 10K+ members, contest organiser) missing")
+        _pm = os.path.join(SITE, "PRODUCT.md")
+        if os.path.exists(_pm):
+            _pt = read(_pm)
+            ok("44K+" in _pt, "home: 44K+ is no longer in PRODUCT.md 'Confirmed by owner' — re-confirm with the owner before showing them")
+        ok(len(re.findall(r"\d+K\+", _ct2)) == 1, "home: course strip must carry only the one cleared figure (44K+; 10K+ members is held back until the owner words it) — do not add or break down numbers")
+        ok(not re.search(r"Group|พร้อมกัน|ส่วนลด|รีวิว|★|DJplus|คะแนน|ดาว", _ct2), "home: course strip contains a banned phrase")
+        ok("tracking" not in _cs and "utm_" not in _cs and "data-" not in _cs, "home: course strip must not add tracking attributes or parameters")
+        ok(hs.index('id="invite"') < hs.index('id="coursebar"') < hs.index('id="shop3d"'), "home: course strip must sit between the demo invite and the 3D section")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' in _gm.group(0), "home: game/member section must link /game/ and /member/")
     if _gm:

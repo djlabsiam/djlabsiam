@@ -979,6 +979,24 @@ HOME_CSS = r"""
 .h3d-t ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-weight:600}
 .h3d-t li::before{content:"✓ ";color:var(--brand-base)}
 .h3d-t .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hsec#coursebar h2{font-size:24px}
+.cb-l{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+.cb-c{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:10px 12px 10px 14px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md)}
+.cb-i{display:grid;gap:0}
+.cb-i b{font:700 17px/1.3 var(--font-family-display)}
+.cb-p{font-weight:700;color:var(--brand-base)}
+.cb-m{font-size:14px;line-height:1.4;color:var(--text-secondary)}
+.cb-c .btn{min-height:44px;padding:6px 16px}
+.cb-t{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px;padding:8px 14px;min-height:48px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit}
+.cb-tl{font-weight:700}
+.cb-fs{display:flex;flex-wrap:wrap;gap:6px 14px;flex:1 1 auto}
+.cb-f{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+.cb-f .av{display:block;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--lab-tint)}
+.cb-f .av img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.cb-go{font-weight:700;color:var(--brand-base);white-space:nowrap}
+.cb-t:hover .cb-go{text-decoration:underline}
+.cb-x{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;color:var(--text-secondary)}
+.cb-x b{font:700 20px/1.2 var(--font-family-display);color:var(--text-primary)}
 .hgm{display:grid;gap:18px}
 .hgm-c{display:grid;align-content:start;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);overflow:hidden}
 .hgm-c .hgm-v{aspect-ratio:16/9;background:#0F0F0F}
@@ -1042,6 +1060,11 @@ HOME_CSS = r"""
   .hlp .hlive h2,.hlp .hpod h2{font-size:clamp(19px,2vw,30px)}
   .hlp .hl-t{gap:14px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
+  .hsec#coursebar h2{font-size:30px}
+  .cb-l{grid-template-columns:repeat(4,1fr);gap:16px}
+  .cb-c{grid-template-columns:1fr;align-content:space-between;gap:14px;padding:18px}
+  .cb-c .btn{width:100%}
+  .cb-t{flex-wrap:nowrap;padding:12px 20px}
   .hgm{grid-template-columns:1.2fr 1fr;gap:24px}
   .hgm-c h2{font-size:30px}
   .hpod{grid-template-columns:1fr 1.2fr;align-items:center;gap:40px;padding:36px}
@@ -1157,6 +1180,23 @@ b.hidden=true;s.appendChild(v)})})();
 </script>"""
 
 
+def coursebar_html():
+    """Compact course strip under the demo. Every course name/price/hours/teacher comes from courses.json (facts()); the three owner-confirmed
+    figures are the only typed numbers (PRODUCT.md "Confirmed by owner 2026-09-30" - do not break down or reword)."""
+    rows = ""
+    for c in COURSES:
+        f = F[c["title"]]
+        rows += (f'<li class="cb-c"><div class="cb-i"><b>{E(c["title"])}</b><span class="cb-p">{E(f["price"])}</span>'
+                 f'<span class="cb-m">{f["sessions"]} ครั้ง × {f["per"]} ชม. · ตัวต่อตัว</span></div>'
+                 f'<a class="btn sec" href="{line_url("สนใจคอร์ส " + c["title"])}" rel="noopener" aria-label="ทัก LINE สนใจคอร์ส {E(c["title"])}">ทัก LINE</a></li>')
+    faces = "".join(f'<span class="cb-f"><span class="av">{photo(t["name"], 320, "40px")}</span>{E(t["name"])}</span>' for t in TEACHERS)
+    return (f'<section class="hsec" id="coursebar" aria-labelledby="cb-h"><h2 id="cb-h">คอร์สเรียน DJ ตัวต่อตัว</h2>'
+            f'<ul class="cb-l">{rows}</ul>'
+            f'<a class="cb-t" href="/courses/#teachers"><span class="cb-tl">ทีมครู {len(TEACHERS)} คน</span><span class="cb-fs">{faces}</span><span class="cb-go">ดูทั้งหมด</span></a>'
+            f'<ul class="cb-x"><li><b>44K+</b> ผู้ติดตาม Facebook</li>'
+            f'<li>ผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak</li></ul></section>')
+
+
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
@@ -1166,6 +1206,7 @@ def home_page():
     body = (
         cdj_demo.section_html(line_btn("สนใจอุปกรณ์/คอร์สของ DJ LAB SIAM", "ทัก LINE ถามราคา")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
+        coursebar_html() +
         f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
         f'<p>ตัวแทนจำหน่ายอย่างเป็นทางการของ Pioneer DJ, AlphaTheta และ NEO by OYAIDE · เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
         f'<ul><li>หมุนและซูมดูรายละเอียดเครื่อง</li><li>วางด้วย AR ในห้องหรือสตูดิโอของคุณ</li><li>ดูราคาและสถานะสินค้าในหน้าเดียว</li></ul>'
