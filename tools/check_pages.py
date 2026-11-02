@@ -252,6 +252,17 @@ if "home" in SRC:
     ok(len(_ud) >= 1 and not any(re.search(r"เป็นทางการ|official|พาร์ทเนอร์|partner", c, re.I) for c in _ud), f"home: UDG must appear (as a sub-dealer line) and never in a clause with official/partner wording — {_ud}")
     ok("10K+" not in _vis, "home: 10K+ is not cleared for the site")
     ok('id="coursebar"' not in hs and not re.search(r"cb-[a-z]+", hs) and "cb-" not in read(os.path.join(SITE, "assets", "css", "home.css")), "home: the course price strip (#coursebar / cb-*) was cut by the owner on 2 Nov — it must not come back")   # prices stay in FAQ and /courses/
+    _pr = re.search(r'<section class="hsec" id="practice".*?</section>', hs, re.S)   # practice-room section: text + landscape video, no money/hours claims, light video file
+    ok(_pr is not None and hs.index('id="invite"') < hs.index('id="practice"') < hs.index('id="shop3d"'), "home: #practice missing or out of order (demo invite -> practice -> shop3d)")
+    if _pr:
+        _pv = re.search(r"<video[^>]*>", _pr.group(0)); _pvt = _pv.group(0) if _pv else ""
+        ok(all(x in _pvt for x in (" muted", " playsinline", ' preload="none"', " loop", "poster=", "aria-label=")) and _pr.group(0).count("<video") == 1, "home: #practice video needs muted playsinline loop preload=none poster and a Thai aria-label")
+        _vs = re.search(r'<source src="(/assets/video/[^"]+\.mp4)"', _pr.group(0)); _pp = re.search(r'poster="(/assets/video/[^"]+)"', _pvt)
+        ok(bool(_vs) and os.path.exists(os.path.join(SITE, _vs.group(1).lstrip("/"))) and os.path.getsize(os.path.join(SITE, _vs.group(1).lstrip("/"))) <= 8 * 1024 * 1024, "home: #practice video file missing or over 8 MB")
+        ok(bool(_pp) and os.path.exists(os.path.join(SITE, _pp.group(1).lstrip("/"))), "home: #practice poster file missing")
+        _prt = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<video.*?</video>|<button.*?</button>", "", _pr.group(0), flags=re.S)))
+        ok('href="/book/"' in _pr.group(0) and "ห้องซ้อม" in _prt and not re.search(r"฿|บาท|\d|ชม|ชั่วโมง|โปร|ส่วนลด|ฟรี|น\.", _prt), f"home: #practice must link /book/ and carry no price/hours/promotion/opening-time text — {_prt.strip()[:120]}")
+        ok("pr-v" in read(os.path.join(SITE, "assets", "js", "home.js")) and "prefers-reduced-motion" in read(os.path.join(SITE, "assets", "js", "home.js")), "home: practice video script (play on view, reduced-motion) missing from home.js")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)   # member card was cut by the owner on 2 Nov: only the Signal Flow card remains
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' not in _gm.group(0), "home: #gamemember must link /game/ and must not carry the member card (cut on 2 Nov)")
     if _gm:

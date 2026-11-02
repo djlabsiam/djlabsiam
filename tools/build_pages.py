@@ -973,6 +973,14 @@ HOME_CSS = r"""
 .hevent p{color:var(--text-secondary);max-width:60ch}
 .hev-m{margin:0;grid-column:1/-1}
 .hev-m img{display:block;width:100%;height:auto;border-radius:var(--radius-md)}
+.hpr{display:grid;gap:22px;align-items:center}
+.hpr-t{display:grid;gap:14px;align-content:center}
+.hpr-t p{color:var(--text-secondary);max-width:56ch}
+.hpr-t .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hpr-v{position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 24px 48px rgba(15,15,15,.22)}
+.hpr-v video{display:block;width:100%;height:100%;object-fit:cover}
+.hpr-go{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--brand-base);color:#fff;cursor:pointer;box-shadow:0 10px 24px rgba(15,15,15,.3)}
+.hpr-go[hidden]{display:none}
 .h3d{display:grid;gap:22px;align-items:center}
 .h3d-t{display:grid;gap:14px;align-content:center}
 .h3d-t p{color:var(--text-secondary);max-width:56ch}
@@ -1041,6 +1049,7 @@ HOME_CSS = r"""
   .hlp .hlive{align-content:space-between}
   .hlp .hlive h2,.hlp .hpod h2{font-size:clamp(19px,2vw,30px)}
   .hlp .hl-t{gap:14px}
+  .hpr{grid-template-columns:1fr 1.25fr;gap:48px}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
   .hgm-c{grid-template-columns:1.2fr 1fr}
   .hgm-c .hgm-v{aspect-ratio:auto;min-height:100%}
@@ -1162,6 +1171,30 @@ b.hidden=true;s.appendChild(v)})})();
 EQUIP_MSG = "สนใจอุปกรณ์ DJ ของ DJ LAB SIAM"   # equipment-only pre-filled LINE message (courses use their own per-course message)
 
 
+PRACTICE_VIDEO = "/assets/video/practice-room.mp4"
+PRACTICE_POSTER = "/assets/video/practice-room.webp"
+PRACTICE_JS = """<script>
+(function(){var v=document.getElementById('pr-v'),b=document.getElementById('pr-go');if(!v||!b)return;
+var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function play(){var p=v.play();if(p&&p.catch)p.catch(function(){b.hidden=false})}
+v.muted=true;b.addEventListener('click',play);
+v.addEventListener('play',function(){b.hidden=true});v.addEventListener('pause',function(){if(!v.ended)b.hidden=false});
+if(rm){v.loop=false;b.hidden=false}
+else if('IntersectionObserver' in window)new IntersectionObserver(function(e){if(e[0].isIntersecting)play();else v.pause()}).observe(v);
+else b.hidden=false})();
+</script>"""
+
+
+def practice_html():
+    """Practice-room section: text + landscape video on one row. No prices/hours/opening times here - those live in the booking system and FAQ."""
+    return (f'<section class="hsec" id="practice" aria-labelledby="pr-h"><div class="hpr"><div class="hpr-t"><h2 id="pr-h">ห้องซ้อม DJ</h2>'
+            f'<p>ห้องซ้อมของ DJ LAB SIAM ที่ Lido Connect สยามสแควร์ จองห้องซ้อมได้ที่หน้าจองห้องของเรา</p>'
+            f'<div class="acts"><a class="btn pri" href="/book/">จองห้องซ้อม</a></div></div>'
+            f'<div class="hpr-v"><video id="pr-v" muted loop playsinline preload="none" poster="{PRACTICE_POSTER}" width="1280" height="720" aria-label="วิดีโอแนะนำห้องซ้อม DJ ของ DJ LAB SIAM">'
+            f'<source src="{PRACTICE_VIDEO}" type="video/mp4"></video>'
+            f'<button type="button" class="hpr-go" id="pr-go" hidden aria-label="เล่นวิดีโอห้องซ้อม">{ic("play", 30)}</button></div></div></section>')
+
+
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
@@ -1171,6 +1204,7 @@ def home_page():
     body = (
         cdj_demo.section_html(line_btn(EQUIP_MSG, "ทัก LINE ถามราคาอุปกรณ์")) +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
+        practice_html() +
         f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
         f'<p>ตัวแทนจำหน่ายอย่างเป็นทางการของ Pioneer DJ, AlphaTheta และ NEO by OYAIDE · จำหน่ายอุปกรณ์ UDG ด้วย · เลือกอุปกรณ์ที่ SHOP แล้วกด "ดู 3D" เพื่อหมุนดูทุกมุม บนมือถือหรือแท็บเล็ตกด AR เพื่อวางเครื่องบนโต๊ะหรือพื้นที่จริงของคุณ เห็นขนาดจริงก่อนตัดสินใจ</p>'
         f'<ul><li>หมุนและซูมดูรายละเอียดเครื่อง</li><li>วางด้วย AR ในห้องหรือสตูดิโอของคุณ</li><li>ดูราคาและสถานะสินค้าในหน้าเดียว</li></ul>'
@@ -1206,7 +1240,7 @@ def home_page():
     title = "DJ LAB SIAM — โรงเรียนสอน DJ & Authorized Pioneer DJ Dealer"
     desc = "เรียน DJ จากมืออาชีพตัวจริง ตัวแทนจำหน่ายอุปกรณ์ Pioneer DJ และ AlphaTheta อย่างเป็นทางการ Lido Connect Siam Square"
     # the interactive demo's CSS/JS are large: serve them as cached static files (page HTML stays small), cache-busted by content hash
-    js_src = re.sub(r"</?script>", "", cdj_demo.js_html() + COV_JS + H3D_JS.replace("@@M3@@", re.match(r"https://[a-z0-9.-]+\.supabase\.co", book_backend()[0]).group(0) + "/storage/v1/object/public/product-3d/"))
+    js_src = re.sub(r"</?script>", "", cdj_demo.js_html() + COV_JS + PRACTICE_JS + H3D_JS.replace("@@M3@@", re.match(r"https://[a-z0-9.-]+\.supabase\.co", book_backend()[0]).group(0) + "/storage/v1/object/public/product-3d/"))
     css_src = minify_css(HOME_CSS)
     ver = {}
     for rel, txt in (("assets/js/home.js", js_src), ("assets/css/home.css", css_src)):
