@@ -1197,7 +1197,7 @@ else b.hidden=false})();
 def practice_html():
     """Practice-room section: text + landscape video on one row. No prices/hours/opening times here - those live in the booking system and FAQ."""
     return (f'<section class="hsec" id="practice" aria-labelledby="pr-h"><div class="hpr"><div class="hpr-t"><h2 id="pr-h">ห้องซ้อม DJ</h2>'
-            f'<p>ห้องซ้อมของ DJ LAB SIAM ที่ Lido Connect สยามสแควร์ จองห้องซ้อมได้ที่หน้าจองห้องของเรา</p>'
+            f'<p>ห้องซ้อมของ DJ LAB SIAM ที่ Lido Connect สยามสแควร์ จองผ่านเว็บได้เลย เลือกวัน เวลา และ Set up ที่ต้องการได้ที่หน้าจองห้อง</p>'
             f'<div class="acts"><a class="btn pri" href="/book/">จองห้องซ้อม</a></div></div>'
             f'<div class="hpr-v"><video id="pr-v" muted loop playsinline preload="none" poster="{PRACTICE_POSTER}" width="1280" height="720" aria-label="วิดีโอแนะนำห้องซ้อม DJ ของ DJ LAB SIAM">'
             f'<source src="{PRACTICE_VIDEO}" type="video/mp4"></video>'

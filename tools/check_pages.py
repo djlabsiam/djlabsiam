@@ -265,7 +265,8 @@ if "home" in SRC:
         ok(not os.path.exists(os.path.join(SITE, "assets", "video", "practice-room.mp4")) and _vs and "practice-room-fast.mp4" in _vs.group(1), "home: old silent practice-room.mp4 must be gone; the fast cut is the one in use")
         ok(bool(_pp) and os.path.exists(os.path.join(SITE, _pp.group(1).lstrip("/"))), "home: #practice poster file missing")
         _prt = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<video.*?</video>|<button.*?</button>", "", _pr.group(0), flags=re.S)))
-        ok('href="/book/"' in _pr.group(0) and "ห้องซ้อม" in _prt and not re.search(r"฿|บาท|\d|ชม|ชั่วโมง|โปร|ส่วนลด|ฟรี|น\.", _prt), f"home: #practice must link /book/ and carry no price/hours/promotion/opening-time text — {_prt.strip()[:120]}")
+        ok('href="/book/"' in _pr.group(0) and "ห้องซ้อม" in _prt and not re.search(r"฿|บาท|\d|ชม|ชั่วโมง|โปร|ส่วนลด|ฟรี|น\.|เปิด|ปิด|Pioneer|CDJ|DDJ|PLX", _prt), f"home: #practice must link /book/ and carry no price/hours/promotion/opening-time text — {_prt.strip()[:120]}")
+        ok("จองผ่านเว็บ" in _prt and "Set up" in _prt, "home: #practice text must say it can be booked on the web and that the Set up can be chosen (owner 3 Nov) — no model names or hours")
         ok("pr-v" in read(os.path.join(SITE, "assets", "js", "home.js")) and "prefers-reduced-motion" in read(os.path.join(SITE, "assets", "js", "home.js")), "home: practice video script (play on view, reduced-motion) missing from home.js")
     _gm = re.search(r'<section class="hsec" id="gamemember">.*?</section>', hs, re.S)   # member card was cut by the owner on 2 Nov: only the Signal Flow card remains
     ok(_gm is not None and 'href="/game/"' in _gm.group(0) and 'href="/member/"' not in _gm.group(0), "home: #gamemember must link /game/ and must not carry the member card (cut on 2 Nov)")
