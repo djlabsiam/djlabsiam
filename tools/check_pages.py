@@ -258,7 +258,11 @@ if "home" in SRC:
         _pv = re.search(r"<video[^>]*>", _pr.group(0)); _pvt = _pv.group(0) if _pv else ""
         ok(all(x in _pvt for x in (" muted", " playsinline", ' preload="none"', " loop", "poster=", "aria-label=")) and _pr.group(0).count("<video") == 1, "home: #practice video needs muted playsinline loop preload=none poster and a Thai aria-label")
         _vs = re.search(r'<source src="(/assets/video/[^"]+\.mp4)"', _pr.group(0)); _pp = re.search(r'poster="(/assets/video/[^"]+)"', _pvt)
-        ok(bool(_vs) and os.path.exists(os.path.join(SITE, _vs.group(1).lstrip("/"))) and os.path.getsize(os.path.join(SITE, _vs.group(1).lstrip("/"))) <= 8 * 1024 * 1024, "home: #practice video file missing or over 8 MB")
+        ok(bool(_vs) and os.path.exists(os.path.join(SITE, _vs.group(1).lstrip("/"))) and os.path.getsize(os.path.join(SITE, _vs.group(1).lstrip("/"))) <= 8000000, "home: #practice video file missing or over 8,000,000 bytes")
+        ok(" autoplay" not in _pvt and " muted" in _pvt, "home: #practice video must never carry autoplay and must stay muted on load")
+        _ps = re.search(r"<button[^>]*id=\"pr-snd\"[^>]*>", _pr.group(0)); _pst = _ps.group(0) if _ps else ""
+        ok("aria-pressed=" in _pst and "aria-label=\"เปิดเสียงวิดีโอ\"" in _pst, "home: #practice needs a sound toggle button with aria-pressed and Thai aria-label")
+        ok(not os.path.exists(os.path.join(SITE, "assets", "video", "practice-room.mp4")) and _vs and "practice-room-fast.mp4" in _vs.group(1), "home: old silent practice-room.mp4 must be gone; the fast cut is the one in use")
         ok(bool(_pp) and os.path.exists(os.path.join(SITE, _pp.group(1).lstrip("/"))), "home: #practice poster file missing")
         _prt = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<video.*?</video>|<button.*?</button>", "", _pr.group(0), flags=re.S)))
         ok('href="/book/"' in _pr.group(0) and "ห้องซ้อม" in _prt and not re.search(r"฿|บาท|\d|ชม|ชั่วโมง|โปร|ส่วนลด|ฟรี|น\.", _prt), f"home: #practice must link /book/ and carry no price/hours/promotion/opening-time text — {_prt.strip()[:120]}")

@@ -168,6 +168,8 @@ def line_btn(text, label, cls="pri"):
 ICON = {
     "arrow": '<path d="M5 12h14M13 6l6 6-6 6"/>',
     "play": '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+    "vol": '<path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+    "mute": '<path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z" fill="currentColor"/><path d="M17 9.5l4 5M21 9.5l-4 5"/>',
     "ext": '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
     "phone": '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/>',
     "alert": '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v5M12 16.2v.1"/>',
@@ -981,6 +983,10 @@ HOME_CSS = r"""
 .hpr-v video{display:block;width:100%;height:100%;object-fit:cover}
 .hpr-go{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--brand-base);color:#fff;cursor:pointer;box-shadow:0 10px 24px rgba(15,15,15,.3)}
 .hpr-go[hidden]{display:none}
+.hpr-snd{position:absolute;right:12px;bottom:12px;width:48px;height:48px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(15,15,15,.72);color:#fff;cursor:pointer}
+.hpr-snd:hover{background:rgba(15,15,15,.9)}
+.hpr-snd .s-on,.hpr-snd.on .s-off{display:none}
+.hpr-snd.on .s-on{display:inline-grid}
 .h3d{display:grid;gap:22px;align-items:center}
 .h3d-t{display:grid;gap:14px;align-content:center}
 .h3d-t p{color:var(--text-secondary);max-width:56ch}
@@ -1171,16 +1177,19 @@ b.hidden=true;s.appendChild(v)})})();
 EQUIP_MSG = "สนใจอุปกรณ์ DJ ของ DJ LAB SIAM"   # equipment-only pre-filled LINE message (courses use their own per-course message)
 
 
-PRACTICE_VIDEO = "/assets/video/practice-room.mp4"
+PRACTICE_VIDEO = "/assets/video/practice-room-fast.mp4"
 PRACTICE_POSTER = "/assets/video/practice-room.webp"
 PRACTICE_JS = """<script>
-(function(){var v=document.getElementById('pr-v'),b=document.getElementById('pr-go');if(!v||!b)return;
+(function(){var v=document.getElementById('pr-v'),b=document.getElementById('pr-go'),m=document.getElementById('pr-snd');if(!v||!b)return;
 var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function snd(){if(!m)return;var on=!v.muted;m.setAttribute('aria-pressed',on?'true':'false');m.setAttribute('aria-label',on?'ปิดเสียงวิดีโอ':'เปิดเสียงวิดีโอ');m.classList.toggle('on',on)}
 function play(){var p=v.play();if(p&&p.catch)p.catch(function(){b.hidden=false})}
-v.muted=true;b.addEventListener('click',play);
+v.muted=true;snd();
+if(m)m.addEventListener('click',function(){v.muted=!v.muted;snd()});
+b.addEventListener('click',play);
 v.addEventListener('play',function(){b.hidden=true});v.addEventListener('pause',function(){if(!v.ended)b.hidden=false});
 if(rm){v.loop=false;b.hidden=false}
-else if('IntersectionObserver' in window)new IntersectionObserver(function(e){if(e[0].isIntersecting)play();else v.pause()}).observe(v);
+else if('IntersectionObserver' in window)new IntersectionObserver(function(e){if(e[0].isIntersecting){v.muted=true;snd();play()}else v.pause()}).observe(v);
 else b.hidden=false})();
 </script>"""
 
@@ -1192,7 +1201,8 @@ def practice_html():
             f'<div class="acts"><a class="btn pri" href="/book/">จองห้องซ้อม</a></div></div>'
             f'<div class="hpr-v"><video id="pr-v" muted loop playsinline preload="none" poster="{PRACTICE_POSTER}" width="1280" height="720" aria-label="วิดีโอแนะนำห้องซ้อม DJ ของ DJ LAB SIAM">'
             f'<source src="{PRACTICE_VIDEO}" type="video/mp4"></video>'
-            f'<button type="button" class="hpr-go" id="pr-go" hidden aria-label="เล่นวิดีโอห้องซ้อม">{ic("play", 30)}</button></div></div></section>')
+            f'<button type="button" class="hpr-go" id="pr-go" hidden aria-label="เล่นวิดีโอห้องซ้อม">{ic("play", 30)}</button>'
+            f'<button type="button" class="hpr-snd" id="pr-snd" aria-pressed="false" aria-label="เปิดเสียงวิดีโอ"><span class="s-off">{ic("mute", 22)}</span><span class="s-on">{ic("vol", 22)}</span></button></div></div></section>')
 
 
 def home_page():
