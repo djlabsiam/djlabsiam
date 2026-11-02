@@ -974,7 +974,7 @@ HOME_CSS = r"""
 .hpr-t{display:grid;gap:14px;align-content:center}
 .hpr-t p{color:var(--text-secondary);max-width:56ch}
 .hpr-t .acts{display:flex;flex-wrap:wrap;gap:12px}
-.hpr-v{position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 24px 48px rgba(15,15,15,.22)}
+.hpr-v{position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#0F0F0F;box-shadow:0 2px 4px rgba(15,15,15,.14),0 10px 20px rgba(15,15,15,.20),0 22px 44px rgba(15,15,15,.30)}
 .hpr-v video{display:block;width:100%;height:100%;object-fit:cover}
 .hpr-go{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--brand-base);color:#fff;cursor:pointer;box-shadow:0 10px 24px rgba(15,15,15,.3)}
 .hpr-go[hidden]{display:none}
@@ -1050,6 +1050,7 @@ HOME_CSS = r"""
   .hlp .hlive h2,.hlp .hpod h2{font-size:clamp(19px,2vw,30px)}
   .hlp .hl-t{gap:14px}
   .hpr{grid-template-columns:1fr 1.25fr;gap:48px}
+  .hpr-v{box-shadow:0 2px 4px rgba(15,15,15,.14),0 14px 28px rgba(15,15,15,.22),0 40px 72px rgba(15,15,15,.34)}
   .h3d{grid-template-columns:1fr 1.25fr;gap:48px}
   .hgm-c{grid-template-columns:1.2fr 1fr}
   .hgm-c .hgm-v{aspect-ratio:auto;min-height:100%}
