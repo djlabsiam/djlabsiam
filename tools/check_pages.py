@@ -435,10 +435,13 @@ for k, s in SRC.items():
 pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
 ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 4 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
-ok("slice(0, 1)).slice(0, 4)" in pj, "popup.js: the pop-up must show at most 4 slides (promotions first, then one news/event)")
+ok("slice(0, 2)).slice(0, 4)" in pj, "popup.js: the pop-up must show at most 4 slides (promotions first, then up to two news/event items from the file)")
 ok(all(i.get("type") not in ("podcast", "facebook") for i in pop["items"]), "data/popup.json: podcast / facebook items belong to the home page sections, not the pop-up")
 _sync = [i for i in pop["items"] if i.get("link") == "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691" and i.get("until") == "2026-11-08"]
 ok(len(_sync) == 1 and _sync[0].get("img") == "event-sync-nov.webp" and _sync[0].get("bare") is True, "data/popup.json: the SYNC! event slide (owner's event, until 2026-11-08) must stay as it is")
+_sf = [i for i in pop["items"] if i.get("link") == "/game/"]
+ok(len(_sf) == 1 and _sf[0].get("type") == "update" and not _sf[0].get("bare") and not _sf[0].get("embed") and not _sf[0].get("autoplay") and all(os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(_sf[0].get(k, "")))) for k in ("img", "imgM")) and bool(str(_sf[0].get("alt", "")).strip()) and "until" not in _sf[0], "data/popup.json: the Signal Flow slide (link /game/) must be one plain update slide with both pictures, alt text, no embed/autoplay and no end date")
+ok(pop["items"].index(_sf[0]) > pop["items"].index(_sync[0]) if _sf and _sync else False, "data/popup.json: Signal Flow slide must come after the SYNC! slide")
 pim = pop.get("promoImages", {})
 ok(isinstance(pim, dict) and "default" in pim, "data/popup.json: promoImages must exist and have a \"default\" picture (every promotion needs one)")
 for pk, pv in (pim.items() if isinstance(pim, dict) else []):
