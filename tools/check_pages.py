@@ -275,7 +275,8 @@ if "home" in SRC:
         ok(_gm.group(0).count('class="hgm-c"') == 1 and "เล่นเกม Signal Flow" in _t and "hgm-m" not in _gm.group(0), "home: #gamemember must hold exactly the one Signal Flow card")
         ok(not any(p in _t for p in ("ได้ครบ Phase 3", "ขึ้นกระดานคะแนน", "เลือกอวาตาร์ประจำบัญชี")) and "สิทธิ์และประโยชน์สมาชิก" not in _t, "home: member perks must not be listed in #gamemember")
         ok(not re.search(r"ส่วนลด|แต้ม|คูปอง|ระดับ|Silver|Gold|ตัวอย่าง|แบบร่าง", _t), "home: game section carries a forbidden word")
-        ok(hs.index('id="invite"') < hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index("Open Format Contest"), "home: order must be demo invite -> shop3d -> game -> contest")
+        ok(hs.index('id="invite"') < hs.index('id="practice"') < hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index('id="podcast"'), "home: order must be demo invite -> practice -> shop3d -> game -> podcast")
+        ok("Open Format Contest" not in hs and "hevent" not in hs and "hevent" not in read(os.path.join(SITE, "assets", "css", "home.css")) and "ผู้จัดการแข่งขัน DJ ระดับประเทศ" not in hs, "home: the Open Format Contest section was cut by the owner on 3 Nov — it must not come back")
 
 # ---- shop: prices come live from the web view only; DB text is never HTML; no 3D files; VAT wording ----
 sh = SRC.get("shop", "")

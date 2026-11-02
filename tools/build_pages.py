@@ -970,11 +970,6 @@ HOME_CSS = r"""
 .eq svg{width:100%;max-width:118px;height:auto;margin:10px auto 6px;stroke:var(--text-primary);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .eq svg .r{stroke:var(--brand-base)}
 .eq b{display:block;font:700 18px/1.4 var(--font-family-display)}
-.hevent{display:grid;gap:14px;padding:26px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg)}
-.hevent h3{font-size:24px;line-height:1.35}
-.hevent p{color:var(--text-secondary);max-width:60ch}
-.hev-m{margin:0;grid-column:1/-1}
-.hev-m img{display:block;width:100%;height:auto;border-radius:var(--radius-md)}
 .hpr{display:grid;gap:22px;align-items:center}
 .hpr-t{display:grid;gap:14px;align-content:center}
 .hpr-t p{color:var(--text-secondary);max-width:56ch}
@@ -1049,7 +1044,6 @@ HOME_CSS = r"""
   .pgm>.hero.hhero{padding-right:0}
   .eqgrid{grid-template-columns:repeat(6,1fr)}
   .hsec h2{font-size:38px}
-  .hevent{grid-template-columns:1fr 1.3fr;align-items:center;padding:36px}
   .hlive{grid-template-columns:1.4fr 1fr;align-items:center;padding:44px}
   .hlp{grid-template-columns:1fr 1fr;gap:24px}
   .hlp .hlive{align-content:space-between}
@@ -1112,18 +1106,6 @@ def home_faq_pairs():
     pairs = [(qs[i], by_id[i]) for i in cfg["ids"]]
     pairs += [(x["q"], x["a"]) for x in cfg["extra"]]
     return pairs
-
-
-CONTEST = load(os.path.join(SITE, "data", "contest.json")) if os.path.exists(os.path.join(SITE, "data", "contest.json")) else {}
-
-
-def contest_media():
-    if not CONTEST.get("img"):
-        return ""
-    img = f'<img src="/assets/img/{E(CONTEST["img"])}" width="1280" height="720" alt="{E(CONTEST.get("alt", ""))}" loading="lazy" decoding="async">'
-    if re.fullmatch(r"[A-Za-z0-9_-]{11}", CONTEST.get("yt", "")):
-        img = f'<a href="https://www.youtube.com/watch?v={CONTEST["yt"]}" target="_blank" rel="noopener">{img}</a>'
-    return f'<figure class="hev-m">{img}</figure>'
 
 
 SUNDAY = (load(os.path.join(SITE, "data", "sunday-covers.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "sunday-covers.json")) else []
@@ -1227,8 +1209,6 @@ def home_page():
         f'<ul><li>Phase 1–2 เล่นฟรีทุกคน</li><li>Phase 3 (14 ด่าน) เฉพาะสมาชิก</li><li>Phase 4 และเกมอื่น ยังไม่เปิดให้เล่น</li></ul>'
         f'<div class="acts"><a class="btn pri" href="/game/">ไปที่หน้าเกม</a></div></div></article>'
         f'</div></section>'
-        f'<section class="hsec"><div class="hevent"><h3>DJ LAB Open Format Contest ร่วมกับ AlphaTheta และ Mahajak</h3>'
-        f'<p>DJ LAB SIAM เป็นผู้จัดการแข่งขัน DJ ระดับประเทศ ร่วมกับ AlphaTheta และ Mahajak ไม่ใช่แค่โรงเรียน แต่เป็นศูนย์กลางของคนรัก DJ</p>{contest_media()}</div></section>'
         f'<section class="hsec" id="podcast"><div class="hlp"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
