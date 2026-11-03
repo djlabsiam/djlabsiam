@@ -372,6 +372,8 @@ ok(bool(_sv) and _sv.group(1).count("<img") == len(_sun) and _sv.group(1).count(
 _lat = re.search(r'<div class="slc" id="podcast">.*?class="lat"', _ct, re.S)
 _pe = json.loads(read(os.path.join(SITE, "data", "podcast-episodes.json")))["items"]
 ok(bool(_lat) and ("/assets/img/podcast/" + _pe[0]["img"]) in _ct, "content: the Podcast card must show the latest episode (first item of data/podcast-episodes.json)")
+_sl = re.search(r'<div class="slc" id="sunday-live">(.*?)</div></div>', _ct, re.S)
+ok(bool(_sl) and ("/assets/img/sunday/" + _sun[0]["img"]) in _sl.group(1) and 'href="#clips" data-tab-go="sunday-live"' in _sl.group(1) and "goTab" in _ct, "content: the Sunday Live card must show the newest cover and a 'ดูย้อนหลัง' button that opens the Sunday Live tab (stays on the page)")
 ok(".cl-list{" in _ct and "grid-template-columns" in _ct and "content-categories" in _ct and "cl-tab" in _ct, "content: its own CSS (card grid, tabs) is missing")
 ok(all(".cl-list{" not in s_ for k_, s_ in SRC.items() if k_ != "content"), "the content page's CSS must stay out of every other page (page size)")
 

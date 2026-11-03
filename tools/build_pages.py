@@ -958,6 +958,8 @@ function buildTabs(){
   var list=[{id:'all',label:'ทั้งหมด'}].concat((Array.isArray(CAT.tabs)?CAT.tabs:[]).filter(function(t){return t&&typeof t.id==='string'&&/^[a-z0-9-]{1,30}$/.test(t.id)&&typeof t.label==='string'&&ids[t.id]}));
   if(list.length<2){tabsBox.hidden=true;return}
   list.forEach(function(t){var b=el('button','cl-tab',t.label);b.type='button';b.dataset.tab=t.id;b.setAttribute('aria-pressed',t.id==='all'?'true':'false');b.addEventListener('click',function(){setTab(t.id)});tabsBox.appendChild(b)})}
+function goTab(e){var a=e.target.closest&&e.target.closest('[data-tab-go]');if(!a)return;var b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===a.dataset.tabGo})[0];if(!b)return;
+  e.preventDefault();setTab(a.dataset.tabGo);document.getElementById('clips').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});b.focus({preventScroll:true})}
 function hashTab(){var h=location.hash.slice(1),b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===h})[0];if(b&&cur!==h)setTab(h)}
 async function pics(){try{var r=await fetch('/assets/img/yt/manifest.json');if(r.ok){var j=await r.json();if(j&&j.ids&&typeof j.ids==='object')TH=j.ids}}catch(e){}}
 async function cats(){try{var r=await fetch('/data/content-categories.json');if(r.ok){var j=await r.json();if(j&&typeof j.clips==='object'&&j.clips)CAT={tabs:j.tabs,clips:j.clips,desc:(j.descriptions&&typeof j.descriptions==='object')?j.descriptions:{}}}}catch(e){}}
@@ -965,6 +967,7 @@ async function start(){status.removeAttribute('role');status.textContent='กำ
   await Promise.all(groups.filter(function(g){return !g.items.length}).map(function(g){return g.fill(false)}));
   groups.forEach(function(g){g.render()});banner();hashTab()}
 window.addEventListener('hashchange',hashTab);
+document.addEventListener('click',goTab);
 start();
 })();
 </script>
@@ -998,8 +1001,13 @@ def content_page():
             im = f'<img src="/assets/img/podcast/{E(ep["img"])}" width="960" height="540" alt="{E(ep["alt"])}" loading="lazy" decoding="async">'
             inner += (f'<a class="lat" href="https://www.youtube.com/watch?v={E(ep["yt"])}" target="_blank" rel="noopener">{im}<b>ตอนล่าสุด</b></a>'
                       if re.fullmatch(r"[A-Za-z0-9_-]{11}", ep.get("yt") or "") else f'<div class="lat">{im}<b>ตอนล่าสุด</b></div>')
+        if not pod and SUNDAY:   # newest Sunday Live cover (first of data/sunday-covers.json): fills the card like the Podcast's latest cover
+            sc = SUNDAY[0]
+            inner += (f'<div class="lat"><img src="/assets/img/sunday/{E(sc["img"])}" width="960" height="540" alt="{E(sc["alt"])}" loading="lazy" decoding="async"><b>ตอนล่าสุด</b></div>')
         if p.get("link"):
             btns = f'<a class="btn pri" href="{E(p["link"])}" target="_blank" rel="noopener">{E(p.get("link_label", "ดูรายการ"))} {ic("ext", 18)}</a>'
+            if not pod:   # stays on this page: opens the Sunday Live tab of the clip list below (plain #clips link when JavaScript is off)
+                btns += '<a class="btn sec" href="#clips" data-tab-go="sunday-live">ดูย้อนหลัง</a>'
             if p["name"] == "DJ LAB Podcast":   # Spotify belongs to the Podcast, not to the page hero
                 btns += "".join(f'<a class="btn sec" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for x in LISTEN if "spotify" in x["url"])
             inner += f'<div class="acts2">{btns}</div>'
