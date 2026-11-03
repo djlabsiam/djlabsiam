@@ -52,6 +52,17 @@
       "alt": "ฉากเกม Signal Flow: เครื่อง CDJ มิกเซอร์ เทิร์นเทเบิล และลำโพงที่ต่อสายสัญญาณครบ",
       "link": "/game/",
       "cta": "เล่นเลย"
+    },
+    {
+      "type": "podcast",
+      "title": "Podcast EP.5 — ทำไม DJ ไม่เปิดเพลงใหม่",
+      "img": "podcast-ep5.webp",
+      "imgM": "podcast-ep5-m.webp",
+      "alt": "ปก Podcast EP.5 หัวข้อ ทำไม DJ ไม่เปิดเพลงใหม่ เผยแพร่ 4 พ.ย. 2569 เวลา 18:00 น.",
+      "bare": true,
+      "link": "https://www.youtube.com/@DJLABSIAM",
+      "cta": "ดูบน YouTube",
+      "until": "2026-11-11"
     }
   ]
 }

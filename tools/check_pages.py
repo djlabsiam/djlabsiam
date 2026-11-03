@@ -436,7 +436,9 @@ pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
 ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 4 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
 ok("slice(0, 3)).slice(0, 4)" in pj, "popup.js: the pop-up must show at most 4 slides (promotions first, then up to three news/event items from the file)")
-ok(all(i.get("type") not in ("podcast", "facebook") for i in pop["items"]), "data/popup.json: podcast / facebook items belong to the home page sections, not the pop-up")
+ok(all(i.get("type") != "facebook" for i in pop["items"]), "data/popup.json: facebook items belong to the home page sections, not the pop-up (a podcast slide is allowed only as an image-only slide linking out, owner 2026-11-03)")
+_ep = [i for i in pop["items"] if i.get("type") == "podcast"]
+ok(all(i.get("bare") and not i.get("embed") and not i.get("autoplay") and i.get("until") and str(i.get("alt", "")).strip() and all(os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(i.get(k, "")))) for k in ("img", "imgM")) for i in _ep), "data/popup.json: a podcast slide must be bare, with both pictures, alt text and an end date, and no embed/autoplay")
 _sync = [i for i in pop["items"] if i.get("link") == "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691" and i.get("until") == "2026-11-08"]
 ok(len(_sync) == 1 and _sync[0].get("img") == "event-sync-nov.webp" and _sync[0].get("bare") is True, "data/popup.json: the SYNC! event slide (owner's event, until 2026-11-08) must stay as it is")
 _sf = [i for i in pop["items"] if i.get("link") == "/game/"]
