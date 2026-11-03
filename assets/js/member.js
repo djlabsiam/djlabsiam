@@ -205,7 +205,7 @@
   function coursePaint(c) {
     var a = el('article', 'cc'), top = el('div', 'cct');
     top.appendChild(el('h4', '', c.title));
-    top.appendChild(el('span', 'bdg ' + c.state.kind, c.state.label));
+    if (c.state) top.appendChild(el('span', 'bdg ' + c.state.kind, c.state.label));
     a.appendChild(top);
     var who = [c.teacher ? 'ครู ' + c.teacher : '', c.lang].filter(Boolean).join(' · ');
     if (who) a.appendChild(el('p', 'help', who));
@@ -213,7 +213,7 @@
       var bar = el('div', 'cp'); bar.setAttribute('role', 'progressbar'); bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(c.total)); bar.setAttribute('aria-valuenow', String(c.done));
       bar.setAttribute('aria-label', 'ความคืบหน้าของคอร์ส');
       var fill = el('span'); fill.style.width = c.pct + '%'; bar.appendChild(fill); a.appendChild(bar);
-      a.appendChild(el('b', 'cn', 'เรียนแล้ว ' + c.done + ' จาก ' + c.total + ' ครั้ง เหลือ ' + c.left + ' ครั้ง'));
+      a.appendChild(el('b', 'cn', 'เรียนแล้ว ' + c.done + ' จาก ' + c.total + ' ครั้ง' + (c.left === null ? '' : ' เหลือ ' + c.left + ' ครั้ง')));
     }
     var dl = el('dl');
     [['เริ่มเรียน', c.started], ['ใช้ได้ถึง', c.expiry], ['ปิดคอร์สเมื่อ', c.closed], ['นัดครั้งถัดไป', c.next]].forEach(function (r) { if (r[1]) { dl.appendChild(el('dt', '', r[0])); dl.appendChild(el('dd', '', r[1])); } });
@@ -227,7 +227,10 @@
     call({ action: 'my_courses' }, tok).then(function (x) {
       if (my !== CRS.seq) return;
       var v = Cm.view(x, Date.now());
-      if (!v.ok) { coursesNote('ดูข้อมูลคอร์สไม่ได้ในตอนนี้ ลองเปิดหน้านี้ใหม่อีกครั้ง หรือสอบถามทีมงาน'); return; }
+      if (!v.ok) {
+        if (v.code === 'unauthorized') { clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
+        coursesNote(v.code === 'rate' ? 'ขอข้อมูลถี่เกินไป รอสักครู่แล้วเปิดหน้านี้ใหม่อีกครั้ง' : 'ดูข้อมูลคอร์สไม่ได้ชั่วคราว ลองเปิดหน้านี้ใหม่อีกครั้ง หรือสอบถามทีมงาน'); return;
+      }
       if (!v.cards.length) { coursesNote('ยังไม่มีคอร์สที่ผูกกับบัญชีนี้ — สอบถามทีมงานได้'); return; }
       coursesNote('');
       v.cards.forEach(function (c) { list.appendChild(coursePaint(c)); });

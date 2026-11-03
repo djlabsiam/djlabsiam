@@ -24,55 +24,62 @@ const base = (o = {}) => ({
 const one = (o, now = NOW) => view(reply([base(o)]), now).cards[0];
 
 // ───── รูปแบบคำตอบ ─────
-ok('ว่าง → ok แต่ไม่มีการ์ด', JSON.stringify(view(reply([]), NOW)) === JSON.stringify({ ok: true, cards: [] }));
+ok('ว่าง → ok แต่ไม่มีการ์ด', view(reply([]), NOW).ok === true && view(reply([]), NOW).cards.length === 0);
 ok('ไม่มี courses → ไม่ใช่ "ไม่มีคอร์ส" แต่ ok=false', view({ status: 200, j: { ok: true } }, NOW).ok === false);
 ok('courses ไม่ใช่ array → ok=false', view({ status: 200, j: { ok: true, courses: 'x' } }, NOW).ok === false);
 ok('ok:false → ok=false', view({ status: 200, j: { ok: false, error: { code: 'x' } } }, NOW).ok === false);
-for (const s of [0, 401, 403, 429, 500, 503]) ok('status ' + s + ' → ok=false', view({ status: s, j: null }, NOW).ok === false);
+const E = (status, code) => view({ status, j: code ? { ok: false, error: { code, message: 'x' } } : null }, NOW);
+ok('401 / 403 (ไม่มี body หรือมี code) → unauthorized', [E(401), E(403), E(401, 'unauthorized'), E(403, 'not_member')].every(r => !r.ok && r.code === 'unauthorized'));
+ok('429 / rate_limited → rate', E(429).code === 'rate' && E(429, 'rate_limited').code === 'rate');
+ok('503 unavailable / 500 / ไม่มีคำตอบ (0) → unavailable ไม่ใช่ "ไม่มีคอร์ส"', [E(503, 'unavailable'), E(500), E(0)].every(r => !r.ok && r.code === 'unavailable' && r.cards.length === 0));
 ok('ไม่มีคำตอบ (null) → ok=false', view(null, NOW).ok === false);
 ok('รายการที่ไม่ใช่ object / ไม่มีชื่อคอร์ส ถูกข้าม', view(reply([null, 5, 'x', {}, { course_title: '  ' }, base()]), NOW).cards.length === 1);
 ok('เกิน 20 ใบ → ตัดที่ 20', view(reply(Array.from({ length: 30 }, () => base())), NOW).cards.length === 20);
 
-// ───── ความคืบหน้า ─────
+// ───── ความคืบหน้า: ตัวเลขตามที่เซิร์ฟเวอร์ส่ง ไม่คำนวณเอง ─────
 let c = one();
 ok('ชื่อ/ครู/ภาษา', c.title === 'คอร์ส Basic DJ' && c.teacher === 'Zlex' && c.lang === 'ภาษาไทย', c);
-ok('นับครั้ง 4/12 เหลือ 8 = 33%', c.hasCount && c.done === 4 && c.total === 12 && c.left === 8 && c.pct === 33, c);
+ok('4/12 เหลือ 8 = 33%', c.hasCount && c.done === 4 && c.total === 12 && c.left === 8 && c.pct === 33, c);
+ok('done+remaining ไม่เท่า total (no-show) → แสดงตามที่ส่ง ไม่แก้', one({ sessions_done: 4, sessions_remaining: 6 }).left === 6 && one({ sessions_done: 4, sessions_remaining: 6 }).done === 4);
+ok('ไม่มี sessions_remaining → ไม่โชว์ "เหลือ" ไม่คำนวณแทน', one({ sessions_remaining: null }).left === null);
+ok('ไม่มี sessions_done → ไม่แสดงแถบ', !one({ sessions_done: null }).hasCount);
+ok('done เกิน total → แถบไม่เกิน 100% ตัวเลขตามที่ส่ง', one({ sessions_done: 14, sessions_remaining: 0 }).pct === 100 && one({ sessions_done: 14, sessions_remaining: 0 }).done === 14);
 ok('ภาษา en → English', one({ teach_lang: 'en' }).lang === 'English');
-ok('ภาษาที่ไม่รู้จัก → ไม่แสดง (ไม่โชว์รหัสดิบ)', one({ teach_lang: 'zz' }).lang === '' && one({ teach_lang: null }).lang === '');
-ok('done เกิน total → ถูกหนีบ', one({ sessions_done: 99, sessions_remaining: 0 }).done === 12);
-ok('ไม่มี sessions_remaining → คำนวณจาก total-done', one({ sessions_remaining: null }).left === 8);
-ok('ไม่มี sessions_done → คำนวณจาก total-remaining', one({ sessions_done: null }).done === 4);
-ok('total = 0 หรือไม่มีตัวเลข → ไม่แสดงแถบ', !one({ sessions_total: 0 }).hasCount && !one({ sessions_total: null }).hasCount && !one({ sessions_total: 'abc' }).hasCount);
-ok('ค่าติดลบ/ใหญ่เกิน → ไม่เชื่อ', !one({ sessions_total: -3 }).hasCount && !one({ sessions_total: 99999 }).hasCount);
+ok('ภาษาที่ไม่รู้จัก/null → ไม่แสดง', one({ teach_lang: 'zz' }).lang === '' && one({ teach_lang: 'constructor' }).lang === '' && one({ teach_lang: null }).lang === '');
+ok('total = 0 / null / ตัวอักษร / ติดลบ / ใหญ่เกิน → ไม่แสดงแถบ', [0, null, 'abc', -3, 99999].every(t => !one({ sessions_total: t }).hasCount));
+ok('track = null ไม่พัง', one({ track: null }).title === 'คอร์ส Basic DJ');
 
 // ───── วันที่ (ปี พ.ศ. เวลาไทย) ─────
 c = one();
 ok('เริ่มเรียน 1 ก.ย. 2569', c.started === '1 ก.ย. 2569', c.started);
 ok('ใช้ได้ถึง 1 มี.ค. 2570', c.expiry === '1 มี.ค. 2570', c.expiry);
-ok('นัดครั้งถัดไป แสดงเวลาไทย (07:00Z = 14:00 น.)', c.next === '8 พ.ย. 2569 เวลา 14:00 น.', c.next);
-ok('นัดข้ามเที่ยงคืน UTC → วันไทยถูก (20:00Z = 03:00 น. วันถัดไป)', one({ next_session_at: '2026-11-08T20:00:00Z' }).next === '9 พ.ย. 2569 เวลา 03:00 น.');
+ok('นัดครั้งถัดไป เวลาไทย (07:00Z = 14:00 น.)', c.next === '8 พ.ย. 2569 เวลา 14:00 น.', c.next);
+ok('นัดแบบมี offset +07:00 → เวลาไทยเดิม', one({ next_session_at: '2026-11-08T14:00:00+07:00' }).next === '8 พ.ย. 2569 เวลา 14:00 น.');
+ok('นัดข้ามเที่ยงคืน UTC → วันไทยถูก', one({ next_session_at: '2026-11-08T20:00:00Z' }).next === '9 พ.ย. 2569 เวลา 03:00 น.');
+ok('null ทุกฟิลด์ที่เป็น null ได้ → ไม่พัง ไม่แสดง', (x => x.started === '' && x.expiry === '' && x.closed === '' && x.next === '')(one({ started_on: null, effective_expiry: null, closed_on: null, next_session_at: null })));
 ok('วันที่เสีย/ไม่ใช่วัน → ไม่แสดง ไม่พัง', one({ started_on: 'ไม่รู้', effective_expiry: '2026-13-40', next_session_at: 'พรุ่งนี้' }).started === '');
-ok('ไม่มีนัด → ว่าง', one({ next_session_at: null }).next === '');
 ok('นัดที่ผ่านไปแล้ว → ไม่แสดง', one({ next_session_at: '2026-10-01T07:00:00Z' }).next === '');
-ok('timestamp แบบมีวันที่เฉยๆ ไม่ถือเป็นนัด (ต้องมีเวลา)', one({ next_session_at: '2026-11-08' }).next === '');
+ok('timestamp ไม่มีเวลา ไม่ถือเป็นนัด', one({ next_session_at: '2026-11-08' }).next === '');
 
-// ───── สถานะ ─────
-ok('กำลังเรียน', one().state.label === 'กำลังเรียน' && one().state.kind === 'live');
-ok('เรียนครบ (เหลือ 0)', one({ sessions_done: 12, sessions_remaining: 0 }).state.label === 'เรียนครบแล้ว');
-ok('หมดอายุ (วันหมดอายุก่อนวันนี้ตามเวลาไทย)', one({ effective_expiry: '2026-11-03' }).state.label === 'หมดอายุแล้ว');
-ok('วันหมดอายุคือวันนี้ → ยังใช้ได้', one({ effective_expiry: '2026-11-04' }).state.label === 'กำลังเรียน');
-ok('ใกล้เที่ยงคืนไทย: 16:59Z ของวันที่ 3 = 23:59 ไทย ยังเป็นวันที่ 3', one({ effective_expiry: '2026-11-03' }, Date.parse('2026-11-03T16:59:00Z')).state.label === 'กำลังเรียน');
-ok('เลยเที่ยงคืนไทย: 17:00Z = วันที่ 4 → หมดอายุ', one({ effective_expiry: '2026-11-03' }, Date.parse('2026-11-03T17:00:00Z')).state.label === 'หมดอายุแล้ว');
-c = one({ closed_on: '2026-10-20' });
-ok('ปิดคอร์ส → แสดงวันที่ปิด ไม่แสดงวันหมดอายุ ไม่แสดงนัด', c.state.label === 'ปิดคอร์สแล้ว' && c.closed === '20 ต.ค. 2569' && c.expiry === '' && c.next === '', c);
-ok('คอร์สหมดอายุ/เรียนครบ ไม่โชว์นัดครั้งถัดไป', one({ effective_expiry: '2026-01-01' }).next === '' && one({ sessions_done: 12, sessions_remaining: 0 }).next === '');
+// ───── สถานะ: ตามค่า state ของเซิร์ฟเวอร์ ครบ 6 ค่า ─────
+const L = { active: 'กำลังเรียน', queued: 'ชำระครบ รอเริ่มเรียน', waiting_payment: 'รอชำระ ยังไม่เริ่มเรียน', completed: 'เรียนครบแล้ว', expired: 'หมดอายุแล้ว', closed: 'ปิดคอร์สแล้ว' };
+for (const [k, v] of Object.entries(L)) ok('state ' + k + ' → ' + v, one({ state: k }).state && one({ state: k }).state.label === v, one({ state: k }).state);
+ok('state ที่ไม่รู้จัก / null / ไม่ใช่ข้อความ → ไม่โชว์ป้าย', [ 'weird', null, 5, '', '__proto__', 'constructor' ].every(v => one({ state: v }).state === null));
+ok('active ที่ effective_expiry = null → ยังแสดงได้ ไม่โชว์วันหมดอายุ', one({ state: 'active', effective_expiry: null }).state.label === 'กำลังเรียน' && one({ state: 'active', effective_expiry: null }).expiry === '');
+c = one({ state: 'closed', closed_on: '2026-10-20' });
+ok('ปิดคอร์ส → วันที่ปิด ไม่แสดงวันหมดอายุ ไม่แสดงนัด', c.closed === '20 ต.ค. 2569' && c.expiry === '' && c.next === '', c);
+ok('นัดครั้งถัดไปโชว์เฉพาะ active / queued', one({ state: 'queued' }).next !== '' && ['completed', 'expired', 'closed', 'waiting_payment'].every(k => one({ state: k }).next === ''));
 
 // ───── สถานะชำระ: ตัวหนังสือ ไม่มีจำนวนเงิน ─────
 ok('จ่ายครบ', one({ paid_in_full: true }).paid.label === 'จ่ายครบแล้ว' && one({ paid_in_full: true }).paid.kind === 'paid');
-ok('ยังไม่ครบ', one({ paid_in_full: false }).paid.label === 'ยังจ่ายไม่ครบ' && one({ paid_in_full: false }).paid.kind === 'due');
-ok('ไม่รู้ (null / ไม่ใช่ boolean) → ไม่โชว์ป้ายอะไร ไม่เดา', one({ paid_in_full: null }).paid === null && one({ paid_in_full: 'true' }).paid === null && one({ paid_in_full: 1 }).paid === null);
+ok('ยังไม่ครบ → ถ้อยคำนุ่ม', one({ paid_in_full: false }).paid.label === 'ยังชำระไม่ครบ — สอบถามทีมงาน' && one({ paid_in_full: false }).paid.kind === 'due');
+ok('ไม่ใช่ boolean → ไม่โชว์ป้าย ไม่เดา', one({ paid_in_full: null }).paid === null && one({ paid_in_full: 'true' }).paid === null && one({ paid_in_full: 1 }).paid === null);
 const spy = JSON.stringify(one({ price: 20000, amount_paid: 5000, total_price: 20000, balance: 15000, equipment: 'DDJ-FLX4', paid_in_full: false }));
-ok('ฟิลด์เงิน / รุ่นอุปกรณ์ที่หลุดมาจากเซิร์ฟเวอร์ ไม่ถูกส่งต่อ', !/20000|5000|15000|DDJ|price|amount|balance|equipment/.test(spy), spy);
+ok('ฟิลด์เงิน / รุ่นอุปกรณ์ที่หลุดมา ไม่ถูกส่งต่อ', !/20000|5000|15000|DDJ|price|amount|balance|equipment/.test(spy), spy);
+
+// ───── หลายคอร์ส: ลำดับตามที่ส่ง (ใหม่สุดก่อน) ─────
+const multi = view(reply([base({ course_title: 'A', state: 'active' }), base({ course_title: 'B', state: 'closed', closed_on: '2026-01-01' }), base({ course_title: 'C', state: 'waiting_payment', paid_in_full: false })]), NOW).cards;
+ok('หลายคอร์ส เรียงตาม array', multi.map(x => x.title).join('') === 'ABC' && multi[2].paid.kind === 'due');
 
 // ───── ข้อความ: คุมอักขระ ─────
 c = one({ course_title: ' <b>x</b>\u0000\n' + 'ก'.repeat(300), teacher_name: 'ครู\tA' });
