@@ -444,6 +444,16 @@ img{display:block;max-width:100%;height:auto}
 .slc h3{font-size:30px;line-height:1.25}
 .slc p{color:var(--text-secondary);max-width:52ch}
 .slc .when{color:var(--text-primary)}
+.slc .acts2{display:flex;flex-wrap:wrap;gap:10px}
+.nxt{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.nxt a{display:grid;gap:4px;align-content:start;min-height:96px;padding:16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit;transition:border-color .2s,transform .25s cubic-bezier(.16,1,.3,1)}
+.nxt a:hover{border-color:var(--brand-base);transform:translateY(-2px)}
+.nxt b{font:700 18px/1.35 var(--font-family-display)}
+.nxt span{font-size:14px;line-height:1.5;color:var(--text-secondary)}
+.soc{display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:20px;align-items:center}
+.soc>div{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.soc small{font:600 15px/1.4 var(--font-family-body);color:var(--text-secondary)}
+@media (min-width:960px){.nxt{grid-template-columns:repeat(4,1fr);gap:16px}.nxt a{padding:20px}}
 @media (min-width:960px){
   h1{font-size:44px}
   .topbar>div{padding:7px 80px}
@@ -916,6 +926,12 @@ CONTENT_NOTE = ('<details class="fc-priv"><summary>ข้อมูลควา�
                 'Google อาจเก็บข้อมูลการใช้งานตามนโยบายของ Google ร้านไม่ได้รับข้อมูลนั้น · <a href="/privacy.html">นโยบายความเป็นส่วนตัวของร้าน</a></p></details>')
 
 
+NEXT_TILES = [("คอร์สเรียน", "/courses/", "คอร์ส DJ ตัวต่อตัวกับทีมครู DJ LAB SIAM"),
+              ("SHOP", "/shop/", "อุปกรณ์ DJ จากแบรนด์ที่เราเป็นตัวแทนจำหน่าย"),
+              ("เกม", "/game/", "ฝึกต่อสายเครื่องเสียง DJ ผ่านเกม Signal Flow"),
+              ("สมาชิก", "/member/", "เข้าสู่ระบบสมาชิก DJ LAB SIAM")]   # equal weight, no prices or figures typed here
+
+
 def content_page():
     cards = ""
     for p in PROGRAMS:
@@ -925,15 +941,23 @@ def content_page():
         if p.get("desc"):
             inner += f'<p>{E(p["desc"])}</p>'
         if p.get("link"):
-            inner += f'<a class="btn pri" href="{E(p["link"])}" target="_blank" rel="noopener">{E(p.get("link_label", "ดูรายการ"))} {ic("ext", 18)}</a>'
-        cards += f'<div class="slc">{inner}</div>'
-    listen = "".join(f'<a class="btn {"pri" if i == 0 else "sec"}" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for i, x in enumerate(LISTEN))
+            btns = f'<a class="btn pri" href="{E(p["link"])}" target="_blank" rel="noopener">{E(p.get("link_label", "ดูรายการ"))} {ic("ext", 18)}</a>'
+            if p["name"] == "DJ LAB Podcast":   # Spotify belongs to the Podcast, not to the page hero
+                btns += "".join(f'<a class="btn sec" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for x in LISTEN if "spotify" in x["url"])
+            inner += f'<div class="acts2">{btns}</div>'
+        cards += f'<div class="slc" id="{"podcast" if p["name"] == "DJ LAB Podcast" else "sunday-live"}">{inner}</div>'
+    listen = '<a class="btn pri" href="#sunday-live">Sunday Live</a><a class="btn sec" href="#podcast">DJ LAB Podcast</a><a class="btn sec" href="#clips">คลิปล่าสุด</a>'
     api, key = book_backend()
+    nxt = "".join(f'<a href="{h}"><b>{t}</b><span>{d}</span></a>' for t, h, d in NEXT_TILES)
+    soc = (f'<div class="soc"><div><a class="btn sec" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">Facebook {ic("ext", 18)}</a><small>44K+ ผู้ติดตาม Facebook</small></div>'
+           f'<div><a class="btn sec" href="https://www.instagram.com/djlabsiam/" target="_blank" rel="noopener">Instagram {ic("ext", 18)}</a></div></div>')
     body = (f'<section class="hero">{GEAR_HERO}<h1>วิดีโอและรายการจาก DJ LAB SIAM</h1>'
             f'<p class="lede">เทคนิค อุปกรณ์ และเรื่องราววงการ DJ จากทีมงานที่เป็น DJ จริง</p><div class="listen">{listen}</div></section>'
             f'<section><h2>รายการประจำ</h2><div class="slgrid">{cards}</div></section>'
             f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
-            f'<noscript><p class="lede2">ต้องเปิด JavaScript เพื่อดูรายการคลิปในหน้านี้ หรือ <a href="https://www.youtube.com/@DJLABSIAM" target="_blank" rel="noopener">ดูคลิปทั้งหมดที่ช่อง YouTube</a></p></noscript>{CONTENT_NOTE}</section>')
+            f'<noscript><p class="lede2">ต้องเปิด JavaScript เพื่อดูรายการคลิปในหน้านี้ หรือ <a href="https://www.youtube.com/@DJLABSIAM" target="_blank" rel="noopener">ดูคลิปทั้งหมดที่ช่อง YouTube</a></p></noscript>{CONTENT_NOTE}</section>'
+            f'<section id="next"><h2>ดูต่อที่ DJ LAB SIAM</h2><div class="nxt">{nxt}</div></section>'
+            f'<section id="follow"><h2>ติดตามเรา</h2>{soc}</section>')
     return shell("/content/", "คอนเทนต์ — Sunday Live, Podcast และคลิปจาก DJ LAB SIAM", "รวมรายการประจำและคลิปจากทีม DJ LAB SIAM: Sunday Live ทุกวันอาทิตย์ 18:30 น. ทาง Facebook Page, DJ LAB Podcast ทุกวันพุธ 18:00 น. ทางช่อง YouTube พร้อมคลิปเทคนิค อุปกรณ์ และเรื่องราววงการ DJ", body, active="content",
                  script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key))
 

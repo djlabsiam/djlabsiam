@@ -345,6 +345,17 @@ ok("noindex" not in _ct and "https://djlabsiam.com/content/" in locs, "content: 
 _ctt, _ctd = re.search(r"<title>([^<]*)</title>", _ct), re.search(r'<meta name="description" content="([^"]*)"', _ct)
 ok(bool(_ctt and _ctd) and "Sunday Live" in _ctt.group(1) and "Podcast" in _ctt.group(1) and "18:30" in _ctd.group(1) and "18:00" in _ctd.group(1) and 'og:title" content="' + _ctt.group(1) in _ct, "content: its own title / description / og:title (Sunday Live + Podcast, with the real broadcast times) are missing")
 
+# ---- /content/: next-step row (4 equal tiles) + socials (Facebook + Instagram only, only the confirmed 44K+) + Spotify inside the Podcast card (owner, 3 Nov) ----
+_nx = re.search(r'<div class="nxt">(.*?)</div></section>', _ct, re.S)
+ok(bool(_nx) and re.findall(r'<a href="([^"]+)"', _nx.group(1)) == ["/courses/", "/shop/", "/game/", "/member/"], "content: the next-step row must be 4 equal tiles in this order: courses · shop · game · member")
+_fl = re.search(r'<section id="follow">(.*?)</section>', _ct, re.S)
+ok(bool(_fl) and _fl.group(1).count("<a ") == 2 and "facebook.com/PioneerDjLabSiam/" in _fl.group(1) and "instagram.com/djlabsiam/" in _fl.group(1) and not re.search(r"tiktok|discord|youtube|10K", _fl.group(1), re.I), "content: the follow row must hold only Facebook and Instagram (no TikTok / Discord / 10K+)")
+ok(re.sub(r"<[^>]+>", " ", _fl.group(1)).count("44K+ ผู้ติดตาม Facebook") == 1 and "10K+" not in _ct and not re.search(r"\d[\d,.]*\s*(K|k|พัน|หมื่น)\+?\s*(ผู้ติดตาม|followers)", _ct.replace("44K+ ผู้ติดตาม Facebook", "")), "content: only the confirmed '44K+ ผู้ติดตาม Facebook' may appear (no 10K+, no Instagram or other follower figure)")
+_pc = re.search(r'<div class="slc" id="podcast">(.*?)</div></div>', _ct, re.S)
+ok(bool(_pc) and "open.spotify.com/show/15ihoWgHK0fzmoyvvVqA2a" in _pc.group(1) and "youtube.com/@DJLABSIAM" in _pc.group(1), "content: the Podcast card must carry both the YouTube and the Spotify buttons")
+_hero = re.search(r'<div class="listen">(.*?)</div>', _ct, re.S)
+ok(bool(_hero) and "youtube.com" not in _hero.group(1) and "spotify" not in _hero.group(1), "content: the hero must not repeat the YouTube / Spotify buttons (they live in the Podcast card)")
+
 # ---- artist names (owner-approved 6 Oct) only inside Maniac's own list of achievements: never elsewhere, never in <head>, headings, alt text ----
 ARTISTS = ["Blackpink", "Lisa", "Jennie", "Dajim", "Zentyarb", "K.aglet"]
 for k, s in SRC.items():
