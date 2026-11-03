@@ -33,6 +33,7 @@
 
   /* ---- views ---- */
   function show(name) {
+    if (name !== 'profile') qrClose();   // leaving the signed-in screen always drops the QR
     VIEWS.forEach(function (v) { var e = $('v-' + v); if (e) e.hidden = v !== name; });
     var h = document.querySelector('#v-' + name + ' h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
     window.scrollTo(0, 0);
@@ -292,6 +293,97 @@
     if (s) fetch(AUTH + 'logout?scope=local', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + s.access_token } }).catch(function () { });
     show('login');
   });
+
+  /* ---- member QR: the counter scans it to tell staff which member this is (identification only). The logic is member-qr.js (window.DJLQR); the token stays inside it, is never written to
+     storage, the address bar or the console, and is dropped when the panel closes. The picture is drawn here with the shop's own copy of qrcode-generator (assets/js/qrcode.js, MIT),
+     loaded on the first press; the token goes only to member-auth. ---- */
+  var QR = { flow: null, opener: null, lib: null, seq: -1, last: null };
+  var QR_TEXT = {
+    loading: 'กำลังขอ QR…',
+    expired: 'QR หมดอายุแล้ว กด "ขอ QR ใหม่" เพื่อแสดงอีกครั้ง',
+    net: 'ต้องมีสัญญาณอินเทอร์เน็ต หรือแจ้งรหัสสมาชิกกับพนักงานแทน',
+    rate: 'ขอ QR ถี่เกินไป รอสักครู่แล้วลองใหม่',
+    denied: 'บัญชีนี้ยังใช้ QR ไม่ได้ ติดต่อพนักงานที่ร้าน หรือแจ้งรหัสสมาชิกกับพนักงานแทน',
+    unavailable: 'ขอ QR ไม่สำเร็จ ลองใหม่อีกครั้ง หรือแจ้งรหัสสมาชิกกับพนักงานแทน'
+  };
+  function qrLoad() {
+    if (window.qrcode) return Promise.resolve();
+    if (!QR.lib) QR.lib = new Promise(function (ok, no) {
+      var s = document.createElement('script'); s.src = D.qrlib; s.onload = ok; s.onerror = function () { QR.lib = null; no(); };
+      document.head.appendChild(s);
+    });
+    return QR.lib;
+  }
+  function qrDraw(token) {   // black modules on white with a 4-module quiet zone (white even in dark mode); error correction M
+    var q = window.qrcode(0, 'M'); q.addData(token, 'Byte'); q.make();
+    var n = q.getModuleCount(), NS = 'http://www.w3.org/2000/svg', d = '', r, c;
+    for (r = 0; r < n; r++) for (c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
+    var svg = document.createElementNS(NS, 'svg'), bg = document.createElementNS(NS, 'rect'), p = document.createElementNS(NS, 'path');
+    svg.setAttribute('viewBox', '-4 -4 ' + (n + 8) + ' ' + (n + 8)); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'QR สมาชิกสำหรับให้พนักงานสแกน'); svg.setAttribute('shape-rendering', 'crispEdges');
+    bg.setAttribute('x', '-4'); bg.setAttribute('y', '-4'); bg.setAttribute('width', String(n + 8)); bg.setAttribute('height', String(n + 8)); bg.setAttribute('fill', '#fff');
+    p.setAttribute('d', d); p.setAttribute('fill', '#000');
+    svg.appendChild(bg); svg.appendChild(p);
+    $('qr-box').replaceChildren(svg);
+  }
+  function qrPaint(s) {
+    var modal = $('qr-modal'), msg = $('qr-msg'), retry = $('b-qrretry'), ready = s.phase === 'ready';
+    if (s.phase === 'closed') { $('qr-box').replaceChildren(); QR.seq = -1; QR.last = null; modal.hidden = true; document.removeEventListener('keydown', qrKey); return; }
+    if (s.phase === 'signedout') { qrClose(); clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
+    QR.last = s;
+    $('qr-box').hidden = !(ready || s.phase === 'loading'); $('qr-left').parentNode.hidden = !ready;   // an error / expired panel keeps only the message and buttons so it fits a small screen
+    if (ready) {
+      if (!window.qrcode) { qrLoad().then(function () { if (QR.last && QR.last.phase === 'ready') qrPaint(QR.last); }, function () { if (QR.flow) QR.flow.close(); say('m-profile', QR_TEXT.unavailable); }); msg.textContent = QR_TEXT.loading; msg.hidden = false; }
+      else {
+        if (QR.seq !== s.seq) { try { qrDraw(s.token); QR.seq = s.seq; } catch (e) { QR.flow.close(); say('m-profile', QR_TEXT.unavailable); return; } }
+        msg.hidden = true;
+      }
+      var m = Math.floor(s.left / 60), sec = s.left % 60;
+      $('qr-left').textContent = 'เหลือ ' + m + ':' + (sec < 10 ? '0' : '') + sec;
+      $('qr-prog').style.strokeDashoffset = String(150.8 * (1 - Math.min(1, s.left / s.total)));
+    } else {
+      $('qr-box').replaceChildren(); QR.seq = -1;
+      $('qr-left').textContent = ''; $('qr-prog').style.strokeDashoffset = '150.8';
+      msg.textContent = QR_TEXT[s.phase === 'error' ? s.code : s.phase] || QR_TEXT.unavailable; msg.hidden = false;
+    }
+    retry.hidden = ready || s.phase === 'loading' || (s.phase === 'error' && s.code === 'denied');
+  }
+  function qrKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); qrClose(); return; }
+    if (e.key !== 'Tab') return;
+    var f = [].filter.call($('qr-modal').querySelectorAll('button'), function (b) { return !b.hidden && !b.disabled; });
+    if (!f.length) return;
+    var i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }
+  function qrClose() {
+    if (!QR.flow) return;
+    QR.flow.close();
+    if (QR.opener && !$('v-profile').hidden) QR.opener.focus();
+    QR.opener = null;
+  }
+  function qrOpen(opener) {
+    if (!window.DJLQR) { say('m-profile', QR_TEXT.unavailable); return; }
+    if (!QR.flow) QR.flow = window.DJLQR.create({
+      getToken: fresh,
+      request: function (tok) { return call({ action: 'qr_token' }, tok); },
+      now: function () { return Date.now(); },
+      every: function (fn, ms) { var t = setInterval(fn, ms); return function () { clearInterval(t); }; },
+      onChange: qrPaint
+    });
+    QR.opener = opener;
+    $('qr-code').textContent = $('p-code').textContent;
+    $('qr-modal').hidden = false;
+    document.addEventListener('keydown', qrKey);
+    var h = $('qr-h'); h.tabIndex = -1; h.focus({ preventScroll: true });
+    QR.flow.visible(!document.hidden);
+    QR.flow.open();
+    qrLoad().catch(function () { });   // the picture library; a failure shows up when the first QR is ready
+  }
+  $('b-qr').addEventListener('click', function () { qrOpen(this); });
+  $('b-qrretry').addEventListener('click', function () { if (QR.flow) QR.flow.retry(); });
+  $('b-qrclose').addEventListener('click', qrClose);
+  document.addEventListener('visibilitychange', function () { if (QR.flow) QR.flow.visible(!document.hidden); });
+  window.addEventListener('pagehide', qrClose);
 
   /* ---- start ---- */
   if (load()) {

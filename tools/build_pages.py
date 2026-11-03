@@ -1640,6 +1640,21 @@ def member_card_html():
             '<dl><dt>ชื่อ</dt><dd id="p-name"></dd><dt>รหัสสมาชิก</dt><dd id="p-code"></dd><dt>LINE</dt><dd id="p-line"></dd></dl></div>')
 
 
+def member_qr_html():
+    # "Show member QR": a full-screen panel with the QR (drawn by member.js from a short-lived token), the member code in big type and a 2-minute ring.
+    # It only identifies the member to staff at the counter — nothing here may read like a coupon / discount / payment.
+    return ('<button class="btn pri" id="b-qr" type="button" aria-haspopup="dialog">แสดง QR สมาชิก</button>',
+            '<div class="qrm" id="qr-modal" hidden><div class="qp" role="dialog" aria-modal="true" aria-labelledby="qr-h">'
+            '<h2 id="qr-h">QR สมาชิก</h2>'
+            '<div class="qbox" id="qr-box"></div>'
+            '<p class="qcode" id="qr-code" aria-label="รหัสสมาชิก"></p>'
+            '<div class="qtime"><svg viewBox="0 0 56 56" width="56" height="56" aria-hidden="true"><circle class="qr-tr" cx="28" cy="28" r="24"/><circle class="qr-pg" id="qr-prog" cx="28" cy="28" r="24" transform="rotate(-90 28 28)"/></svg><span id="qr-left"></span></div>'
+            '<p class="mm" id="qr-msg" role="status" hidden></p>'
+            '<p class="help">ให้พนักงานสแกนที่เคาน์เตอร์ · รหัสใช้ได้ 2 นาทีและใช้ได้ครั้งเดียว · อย่าแคปหน้าจอส่งให้คนอื่น</p>'
+            '<button class="btn sec" id="b-qrretry" type="button" hidden>ขอ QR ใหม่</button>'
+            '<button class="btn pri" id="b-qrclose" type="button">ปิด</button></div></div>')
+
+
 def member_avatar_html():
     opts = "".join(f'<button type="button" class="av-opt" data-k="{k}" aria-pressed="{"true" if k == "user" else "false"}" aria-label="{E(n)}">{avatar_svg(k)}</button>' for k, n in AVATARS)
     return (f'<section class="bd" id="p-avatar" aria-labelledby="h-avatar"{"" if AVATAR_PICKER_LIVE else " hidden"}>'
@@ -1687,6 +1702,16 @@ def member_extra_css():
             ".mem .pgrid{margin-top:4px}\n"
             ".mem .perks{margin:0;padding-left:22px;display:grid;gap:10px}\n"
             ".mem .resume{display:grid;gap:10px;padding:14px;border:1.5px solid #111;border-radius:14px;background:var(--lab-paper)}.mem .resume b{font:800 18px var(--font-family-display)}\n"
+            ".qrm{position:fixed;inset:0;z-index:2000;background:rgba(15,15,15,.6);display:grid;place-items:center;overflow-y:auto;overscroll-behavior:contain}\n"
+            ".qrm .qp{width:100%;max-width:460px;min-height:100%;box-sizing:border-box;padding:24px 16px;background:#fff;display:grid;gap:14px;justify-items:center;align-content:center;text-align:center}\n"
+            ".qrm .qp .btn{max-width:340px}\n"
+            ".qrm .qbox{width:min(88vw,52vh,380px);aspect-ratio:1;background:#fff;border:1px solid var(--lab-line);border-radius:12px;overflow:hidden;display:grid;place-items:center}\n"
+            ".qrm .qbox svg{display:block;width:100%;height:100%}\n"
+            ".qrm .qcode{margin:0;font:800 40px/1.15 var(--font-family-display);letter-spacing:.1em;overflow-wrap:anywhere}\n"
+            ".qrm .qtime{display:flex;align-items:center;gap:12px;font:700 20px var(--font-family-display)}\n"
+            ".qrm .qtime svg circle{fill:none;stroke-width:5}.qrm .qr-tr{stroke:var(--lab-line)}.qrm .qr-pg{stroke:var(--brand-base);stroke-dasharray:150.8;stroke-dashoffset:0;stroke-linecap:round}\n"
+            "@media (prefers-reduced-motion:no-preference){.qrm .qr-pg{transition:stroke-dashoffset 1s linear}}\n"
+            "@media (min-width:700px){.qrm .qp{min-height:0;border-radius:24px;padding:28px 24px}}\n"
             ".mem .pb .pgr{font:700 12.5px var(--font-family-body);color:#333}.mem .pb .pgr:empty{display:none}.mem .pb.mem .pgr{color:#fff}\n")
 
 
@@ -1734,7 +1759,7 @@ def member_page():
                '<button class="btn sec" id="b-skip" data-label="ข้ามไปก่อน" type="button">ข้ามไปก่อน</button>'
                '<p class="mm" id="m-line" role="alert" hidden></p>')
         + view("profile", "สมาชิก DJ LAB SIAM",
-               member_card_html() +
+               member_card_html() + member_qr_html()[0] +
                '<button class="btn pri" id="b-linkline" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
                '<p class="mm" id="m-profile" role="alert" hidden></p>'
                + member_avatar_html() + member_game_html() +
@@ -1756,11 +1781,16 @@ def member_page():
                '<a class="lk2" href="/game/#leaderboard">ดู Leader Board</a></section>'
                + member_perks_html() +
                '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>'))
+    with io.open(os.path.join(SITE, "assets", "js", "qrcode.js"), "rb") as fh:
+        qv = hashlib.md5(fh.read()).hexdigest()[:8]
+    with io.open(os.path.join(SITE, "assets", "js", "member-qr.js"), "rb") as fh:
+        qj = hashlib.md5(fh.read()).hexdigest()[:8]
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
-            f'<div class="mem" id="mem" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
+            f'<div class="mem" id="mem" data-qrlib="/assets/js/qrcode.js?v={qv}" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
+            + member_qr_html()[1] +
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS + member_extra_css(), bare=True, active="member",
-                 script=sf_script_tag() + f'<script src="/assets/js/member.js?v={ver}" defer></script>\n')
+                 script=sf_script_tag() + f'<script src="/assets/js/member-qr.js?v={qj}" defer></script>\n<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
