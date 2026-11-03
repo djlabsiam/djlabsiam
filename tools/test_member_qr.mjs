@@ -17,7 +17,7 @@ let pass = 0, fail = 0;
 const ok = (name, cond, got) => { if (cond) pass++; else { fail++; console.log('  ✗ ' + name + (got === undefined ? '' : ' — ได้ ' + JSON.stringify(got))); } };
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setImmediate(r)); };
 
-const TOK = n => 'DJLM1.' + 'abcdefghijklmnop'.slice(0, 8) + String(n).padStart(4, '0');
+const TOK = n => 'DJLM1.ABCDEFGHIJKLMNOPQRST2345' + String.fromCharCode(65 + (n % 26)) + String.fromCharCode(65 + (Math.floor(n / 26) % 26));   // 26 chars of A–Z 2–7 after DJLM1., like the real function
 const good = (n, ttl = 120) => ({ status: 200, j: { ok: true, token: TOK(n), expires_in: ttl } });
 
 // ตัวสร้าง flow ทดสอบ: นาฬิกา + ตัวจับเวลาจำลอง · request ตอบตามคิวที่กำหนด
@@ -102,6 +102,11 @@ for (const [name, reply, phase, code] of [
   ['429 → rate', { status: 429, j: null }, 'error', 'rate'],
   ['403 → denied', { status: 403, j: null }, 'error', 'denied'],
   ['409 → denied', { status: 409, j: null }, 'error', 'denied'],
+  ['403 not_member → signedout (เหมือนทุก action ในหน้า)', { status: 403, j: { ok: false, error: { code: 'not_member', message: 'x' } } }, 'signedout', ''],
+  ['409 no_account → denied', { status: 409, j: { ok: false, error: { code: 'no_account', message: 'x' } } }, 'error', 'denied'],
+  ['429 rate_limited → rate', { status: 429, j: { ok: false, error: { code: 'rate_limited', message: 'x' } } }, 'error', 'rate'],
+  ['503 unavailable → unavailable', { status: 503, j: { ok: false, error: { code: 'unavailable', message: 'x' } } }, 'error', 'unavailable'],
+  ['401 unauthorized (มี body) → signedout', { status: 401, j: { ok: false, error: { code: 'unauthorized', message: 'x' } } }, 'signedout', ''],
   ['ออฟไลน์ (ไม่มีคำตอบ) → net', { status: 0, j: null }, 'error', 'net'],
   ['500 → unavailable', { status: 500, j: null }, 'error', 'unavailable'],
   ['200 แต่ไม่ ok → unavailable', { status: 200, j: { ok: false } }, 'error', 'unavailable'],

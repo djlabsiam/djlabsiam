@@ -297,7 +297,7 @@
   /* ---- member QR: the counter scans it to tell staff which member this is (identification only). The logic is member-qr.js (window.DJLQR); the token stays inside it, is never written to
      storage, the address bar or the console, and is dropped when the panel closes. The picture is drawn here with the shop's own copy of qrcode-generator (assets/js/qrcode.js, MIT),
      loaded on the first press; the token goes only to member-auth. ---- */
-  var QR = { flow: null, opener: null, lib: null, seq: -1, last: null };
+  var QR = { flow: null, opener: null, lib: null, seq: -1, last: null, cool: null };
   var QR_TEXT = {
     loading: 'กำลังขอ QR…',
     expired: 'QR หมดอายุแล้ว กด "ขอ QR ใหม่" เพื่อแสดงอีกครั้ง',
@@ -327,7 +327,7 @@
   }
   function qrPaint(s) {
     var modal = $('qr-modal'), msg = $('qr-msg'), retry = $('b-qrretry'), ready = s.phase === 'ready';
-    if (s.phase === 'closed') { $('qr-box').replaceChildren(); QR.seq = -1; QR.last = null; modal.hidden = true; document.removeEventListener('keydown', qrKey); return; }
+    if (s.phase === 'closed') { $('qr-box').replaceChildren(); QR.seq = -1; QR.last = null; modal.hidden = true; document.removeEventListener('keydown', qrKey); clearTimeout(QR.cool); QR.cool = null; retry.disabled = false; retry.textContent = 'ขอ QR ใหม่'; return; }
     if (s.phase === 'signedout') { qrClose(); clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
     QR.last = s;
     $('qr-box').hidden = !(ready || s.phase === 'loading'); $('qr-left').parentNode.hidden = !ready;   // an error / expired panel keeps only the message and buttons so it fits a small screen
@@ -346,6 +346,10 @@
       msg.textContent = QR_TEXT[s.phase === 'error' ? s.code : s.phase] || QR_TEXT.unavailable; msg.hidden = false;
     }
     retry.hidden = ready || s.phase === 'loading' || (s.phase === 'error' && s.code === 'denied');
+    if (s.phase === 'error' && s.code === 'rate' && !QR.cool) {   // the server allows 6 requests a minute: the button waits a few seconds so it cannot be hammered
+      retry.disabled = true; retry.textContent = 'รอสักครู่…';
+      QR.cool = setTimeout(function () { QR.cool = null; retry.disabled = false; retry.textContent = 'ขอ QR ใหม่'; }, 10000);
+    }
   }
   function qrKey(e) {
     if (e.key === 'Escape') { e.preventDefault(); qrClose(); return; }

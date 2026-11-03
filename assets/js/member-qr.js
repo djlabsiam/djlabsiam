@@ -7,12 +7,14 @@
 
   function ttlOf(j) { var n = Number(j && j.expires_in); return n >= 10 && n <= 600 ? Math.floor(n) : DEFAULT_TTL; }
 
-  // 401 → signed out · 429 → asked too often · 403/409 → this account cannot use QR yet · no answer → offline · anything else → unavailable
+  // member-auth answers { ok:false, error:{ code } }: 401 unauthorized and 403 not_member → signed out (same as every other action on the page) · 429 rate_limited → asked too often ·
+  // 409 no_account → this account cannot use QR yet · no answer → offline · 503 / anything else → unavailable
   function kindOf(x) {
     if (!x || !x.status) return 'net';
-    if (x.status === 401) return 'unauthorized';
-    if (x.status === 429) return 'rate';
-    if (x.status === 403 || x.status === 409) return 'denied';
+    var c = x.j && x.j.error && x.j.error.code;
+    if (x.status === 401 || c === 'unauthorized' || c === 'not_member') return 'unauthorized';
+    if (x.status === 429 || c === 'rate_limited') return 'rate';
+    if (x.status === 403 || x.status === 409 || c === 'no_account') return 'denied';
     return 'unavailable';
   }
 
