@@ -356,6 +356,12 @@ ok(bool(_pc) and "open.spotify.com/show/15ihoWgHK0fzmoyvvVqA2a" in _pc.group(1) 
 _hero = re.search(r'<div class="listen">(.*?)</div>', _ct, re.S)
 ok(bool(_hero) and "youtube.com" not in _hero.group(1) and "spotify" not in _hero.group(1), "content: the hero must not repeat the YouTube / Spotify buttons (they live in the Podcast card)")
 
+# ---- /content/ clip pictures are kept on this site: the page never asks YouTube for a picture (owner D2, 3 Nov) ----
+ok(not re.search(r"ytimg|img\.youtube|youtube\.com/vi/", _ct) and "assets/img/yt/'+v.id+'.webp" in _ct and "assets/img/yt/manifest.json" in _ct, "content: clip pictures must come only from /assets/img/yt/ (never from YouTube) and the page must read assets/img/yt/manifest.json")
+_ym = json.loads(read(os.path.join(SITE, "assets", "img", "yt", "manifest.json")))
+ok(isinstance(_ym.get("ids"), dict) and all(re.fullmatch(r"[A-Za-z0-9_-]{11}", k_) and v_ in ("w", "p") and os.path.exists(os.path.join(SITE, "assets", "img", "yt", k_ + ".webp")) and os.path.getsize(os.path.join(SITE, "assets", "img", "yt", k_ + ".webp")) <= 20000 for k_, v_ in _ym["ids"].items()), "assets/img/yt/manifest.json: every id needs its .webp (<= 20 KB) and a w / p shape")
+ok(os.path.exists(os.path.join(SITE, "tools", "fetch_clip_thumbs.py")), "tools/fetch_clip_thumbs.py (the script that keeps the clip pictures) is missing")
+
 # ---- artist names (owner-approved 6 Oct) only inside Maniac's own list of achievements: never elsewhere, never in <head>, headings, alt text ----
 ARTISTS = ["Blackpink", "Lisa", "Jennie", "Dajim", "Zentyarb", "K.aglet"]
 for k, s in SRC.items():

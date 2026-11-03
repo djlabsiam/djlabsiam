@@ -417,6 +417,10 @@ img{display:block;max-width:100%;height:auto}
 .cl-list{list-style:none;margin:12px 0 0;padding:0;max-width:760px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden}
 .cl-i{display:grid;gap:8px;padding:18px 20px;border-top:1px solid var(--lab-line)}
 .cl-i:first-child{border-top:0}
+.cl-th{position:relative;aspect-ratio:16/9;background:var(--lab-tint);border-radius:var(--radius-sm);overflow:hidden}
+.cl-th.p{aspect-ratio:9/16;max-width:200px}
+.cl-th img{display:block;width:100%;height:100%;object-fit:cover}
+.cl-th.ph{background:var(--lab-tint) url(/assets/img/logo-ink-252.png) center/40% no-repeat}
 .cl-title{margin:0;font:700 18px/1.5 var(--font-family-display);overflow-wrap:anywhere}
 .cl-meta{margin:0;font-size:15px;color:var(--text-secondary)}
 .cl-actions{display:flex;flex-wrap:wrap;gap:10px}
@@ -870,7 +874,7 @@ CONTENT_JS = r"""<script>
 (function(){
 var API='@@API@@',KEY='@@KEY@@',PAGE=12,KINDS=[['podcast','Podcast'],['video','วิดีโอ'],['short','Shorts']];
 var MONTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists');
+var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),TH={};   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
 if(!status||!lists)return;
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function thDate(iso){var d=new Date(iso);if(isNaN(d))return '';var t=new Date(d.getTime()+7*3600000);return t.getUTCDate()+' '+MONTH[t.getUTCMonth()]+' '+(t.getUTCFullYear()+543)}
@@ -886,8 +890,13 @@ function play(li,v,btn){
   f.allow='autoplay; encrypted-media; picture-in-picture';f.referrerPolicy='strict-origin-when-cross-origin';f.setAttribute('allowfullscreen','');
   var t=setTimeout(function(){msg.hidden=false},10000);f.addEventListener('load',function(){clearTimeout(t)});
   box.appendChild(f);box.appendChild(msg);btn.hidden=true;li.appendChild(box)}
+function thumb(v){
+  var p=v.kind==='short',box=el('div','cl-th'+(p?' p':''));
+  if(TH[v.id]){var im=document.createElement('img');im.src='/assets/img/yt/'+v.id+'.webp';im.width=p?270:480;im.height=p?480:270;im.alt='';im.loading='lazy';im.decoding='async';
+    im.addEventListener('error',function(){im.remove();box.classList.add('ph')});box.appendChild(im)}else box.classList.add('ph');
+  return box}
 function item(v){
-  var li=el('li','cl-i');li.appendChild(el('p','cl-title',v.title));
+  var li=el('li','cl-i');li.appendChild(thumb(v));li.appendChild(el('p','cl-title',v.title));
   var meta=[thDate(v.published_at),dur(v.duration_s)].filter(Boolean).join(' · ');if(meta)li.appendChild(el('p','cl-meta',meta));
   var row=el('div','cl-actions'),btn=null;
   if(v.embeddable!==false){btn=el('button','btn pri sm','เล่นที่นี่');btn.type='button';btn.setAttribute('aria-label','เล่น: '+v.title);btn.addEventListener('click',function(){play(li,v,btn)});row.appendChild(btn)}
@@ -912,7 +921,8 @@ function banner(){status.textContent='';status.removeAttribute('role');
     var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',start);b.appendChild(r);status.appendChild(b);return}
   if(!total){var e=el('div','cl-empty');e.appendChild(el('p','','ตอนนี้ยังไม่มีคลิปแสดงที่หน้านี้ ดูคลิปทั้งหมดได้ที่ช่อง YouTube ของ DJ LAB SIAM'));
     var a=el('a','btn pri','ดูคลิปทั้งหมดบน YouTube');a.href='https://www.youtube.com/@DJLABSIAM';a.target='_blank';a.rel='noopener';e.appendChild(a);status.appendChild(e)}}
-async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';
+async function pics(){try{var r=await fetch('/assets/img/yt/manifest.json');if(r.ok){var j=await r.json();if(j&&j.ids&&typeof j.ids==='object')TH=j.ids}}catch(e){}}
+async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';await pics();
   await Promise.all(groups.filter(function(g){return !g.count}).map(function(g){return g.load()}));banner()}
 start();
 })();
