@@ -362,6 +362,19 @@ _ym = json.loads(read(os.path.join(SITE, "assets", "img", "yt", "manifest.json")
 ok(isinstance(_ym.get("ids"), dict) and all(re.fullmatch(r"[A-Za-z0-9_-]{11}", k_) and v_ in ("w", "p") and os.path.exists(os.path.join(SITE, "assets", "img", "yt", k_ + ".webp")) and os.path.getsize(os.path.join(SITE, "assets", "img", "yt", k_ + ".webp")) <= 20000 for k_, v_ in _ym["ids"].items()), "assets/img/yt/manifest.json: every id needs its .webp (<= 20 KB) and a w / p shape")
 ok(os.path.exists(os.path.join(SITE, "tools", "fetch_clip_thumbs.py")), "tools/fetch_clip_thumbs.py (the script that keeps the clip pictures) is missing")
 
+# ---- /content/: category tabs (data/content-categories.json), card grid, Sunday Live covers, latest Podcast episode (owner D5 / E, 3 Nov) ----
+ok('id="cl-tabs"' in _ct and "/data/content-categories.json" in _ct and "setTab(" in _ct and "aria-pressed" in _ct, "content: the category tab bar (reads /data/content-categories.json) is missing")
+_cc = json.loads(read(os.path.join(SITE, "data", "content-categories.json")))
+ok(isinstance(_cc.get("tabs"), list) and isinstance(_cc.get("clips"), dict) and all(re.fullmatch(r"[a-z0-9-]{1,30}", str(t.get("id", ""))) and str(t.get("label", "")).strip() for t in _cc["tabs"]) and all(re.fullmatch(r"[A-Za-z0-9_-]{11}", k_) and v_ in {t["id"] for t in _cc["tabs"]} for k_, v_ in _cc["clips"].items()), "data/content-categories.json: tabs need an id + label and every clip must point at a known tab (clip ids are 11 characters)")
+_sv = re.search(r'<ul class="sv">(.*?)</ul>', _ct, re.S)
+_sun = json.loads(read(os.path.join(SITE, "data", "sunday-covers.json")))["items"]
+ok(bool(_sv) and _sv.group(1).count("<img") == len(_sun) and _sv.group(1).count("<a href=\"https://www.youtube.com/watch?v=") == sum(1 for i in _sun if i.get("yt")), "content: the Sunday Live covers must show every cover of data/sunday-covers.json and link only the ones that have a YouTube id")
+_lat = re.search(r'<div class="slc" id="podcast">.*?class="lat"', _ct, re.S)
+_pe = json.loads(read(os.path.join(SITE, "data", "podcast-episodes.json")))["items"]
+ok(bool(_lat) and ("/assets/img/podcast/" + _pe[0]["img"]) in _ct, "content: the Podcast card must show the latest episode (first item of data/podcast-episodes.json)")
+ok(".cl-list{" in _ct and "grid-template-columns" in _ct and "content-categories" in _ct and "cl-tab" in _ct, "content: its own CSS (card grid, tabs) is missing")
+ok(all(".cl-list{" not in s_ for k_, s_ in SRC.items() if k_ != "content"), "the content page's CSS must stay out of every other page (page size)")
+
 # ---- artist names (owner-approved 6 Oct) only inside Maniac's own list of achievements: never elsewhere, never in <head>, headings, alt text ----
 ARTISTS = ["Blackpink", "Lisa", "Jennie", "Dajim", "Zentyarb", "K.aglet"]
 for k, s in SRC.items():

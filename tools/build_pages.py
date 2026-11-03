@@ -411,53 +411,10 @@ img{display:block;max-width:100%;height:auto}
 .fc-msg .btn.sec{background:transparent;border-color:#fff;color:#fff}
 .fc-box.loading .fc-msg.l,.fc-box.failed .fc-msg.e{display:grid}
 .fc-box.loading .fc-btn,.fc-box.failed .fc-btn{display:none}
-#clips [hidden]{display:none!important}
-.cl-group{margin-top:32px}
-.cl-group h3{font-size:22px;line-height:1.3}
-.cl-list{list-style:none;margin:12px 0 0;padding:0;max-width:760px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);overflow:hidden}
-.cl-i{display:grid;gap:8px;padding:18px 20px;border-top:1px solid var(--lab-line)}
-.cl-i:first-child{border-top:0}
-.cl-th{position:relative;aspect-ratio:16/9;background:var(--lab-tint);border-radius:var(--radius-sm);overflow:hidden}
-.cl-th.p{aspect-ratio:9/16;max-width:200px}
-.cl-th img{display:block;width:100%;height:100%;object-fit:cover}
-.cl-th.ph{background:var(--lab-tint) url(/assets/img/logo-ink-252.png) center/40% no-repeat}
-.cl-title{margin:0;font:700 18px/1.5 var(--font-family-display);overflow-wrap:anywhere}
-.cl-meta{margin:0;font-size:15px;color:var(--text-secondary)}
-.cl-actions{display:flex;flex-wrap:wrap;gap:10px}
-.cl-frame{position:relative;aspect-ratio:16/9;background:var(--surface-sunken);border:1px solid var(--lab-line);border-radius:var(--radius-sm);overflow:hidden}
-.cl-frame.short{aspect-ratio:9/16;max-width:300px}
-.cl-frame>iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.cl-fail{position:absolute;left:0;right:0;bottom:0;margin:0;padding:10px 14px;background:rgba(0,0,0,.84);color:#fff;font-size:15px}
-.cl-note{margin:8px 0 0;font-size:15px;color:var(--text-secondary)}
-.cl-group .btn.sec:not(.sm){margin-top:12px}
-.cl-err,.cl-empty{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px 18px;max-width:760px;border-radius:var(--radius-md)}
-.cl-err p,.cl-empty p{margin:0;flex:1 1 260px}
-.cl-err{border:1px solid var(--brand-base);background:var(--lab-tint)}
-.cl-empty{border:1px solid var(--lab-line);background:#fff}
 .fc-priv{font-size:14px}
 .fc-priv summary{display:inline-flex;align-items:center;min-height:44px;cursor:pointer;list-style:none;font:600 14px/1.4 var(--font-family-display);color:var(--text-secondary);text-decoration:underline;text-underline-offset:4px}
 .fc-priv summary::-webkit-details-marker{display:none}
 .fc-priv p{margin:0 0 8px;max-width:64ch;color:var(--text-secondary)}
-/* content page */
-.listen{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
-.slgrid{display:grid;gap:16px;margin-top:20px}
-.slc{display:grid;gap:12px;justify-items:start;align-content:start;padding:28px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);box-shadow:0 18px 36px rgba(15,15,15,.06)}
-.slc:first-child{background:#0F0F0F;border-color:#0F0F0F;color:#fff}
-.slc:first-child p{color:#D8D6CF}
-.slc:first-child .when{color:#fff}
-.slc h3{font-size:30px;line-height:1.25}
-.slc p{color:var(--text-secondary);max-width:52ch}
-.slc .when{color:var(--text-primary)}
-.slc .acts2{display:flex;flex-wrap:wrap;gap:10px}
-.nxt{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
-.nxt a{display:grid;gap:4px;align-content:start;min-height:96px;padding:16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit;transition:border-color .2s,transform .25s cubic-bezier(.16,1,.3,1)}
-.nxt a:hover{border-color:var(--brand-base);transform:translateY(-2px)}
-.nxt b{font:700 18px/1.35 var(--font-family-display)}
-.nxt span{font-size:14px;line-height:1.5;color:var(--text-secondary)}
-.soc{display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:20px;align-items:center}
-.soc>div{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
-.soc small{font:600 15px/1.4 var(--font-family-body);color:var(--text-secondary)}
-@media (min-width:960px){.nxt{grid-template-columns:repeat(4,1fr);gap:16px}.nxt a{padding:20px}}
 @media (min-width:960px){
   h1{font-size:44px}
   .topbar>div{padding:7px 80px}
@@ -502,8 +459,6 @@ img{display:block;max-width:100%;height:auto}
   .pph{position:sticky;top:96px}
   .pbody h1{font-size:64px;line-height:1.3}
   .stick .btn{width:auto;min-width:340px}
-  .slgrid{grid-template-columns:1fr 1fr;gap:24px}
-  .slc{padding:40px}
 }
 @media (max-width:700px){.topbar>div span+span{display:none}}
 @media (prefers-reduced-motion:reduce){
@@ -862,6 +817,70 @@ def teacher_page(t):
 
 
 # ───────── /content/ ─────────
+CONTENT_CSS = r"""
+#clips [hidden]{display:none!important}
+.slc,#clips,#next,#sunday-covers{scroll-margin-top:96px}
+.cl-group{margin-top:32px}
+.cl-group h3{font-size:22px;line-height:1.3}
+.cl-list{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:1fr;gap:16px}
+.cl-list.sh{grid-template-columns:1fr 1fr;gap:12px}
+.cl-i{display:grid;gap:8px;align-content:start;padding:12px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md)}
+.cl-i.playing{grid-column:1/-1}
+.cl-i.playing .cl-th{display:none}
+.cl-list.sh .cl-th.p{max-width:none}
+.cl-list.sh .cl-title{font-size:16px}
+.cl-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.cl-tab{min-height:44px;padding:6px 20px;font:700 16px/1.3 var(--font-family-display);color:var(--text-primary);background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-pill);cursor:pointer}
+.cl-tab[aria-pressed=true]{background:#0F0F0F;border-color:#0F0F0F;color:#fff}
+.slc .lat{display:grid;gap:6px;width:100%;color:inherit;text-decoration:none}
+.slc .lat img{display:block;width:100%;height:auto;border-radius:var(--radius-sm)}
+.slc .lat b{font:700 14px/1.4 var(--font-family-body);letter-spacing:.02em;color:var(--brand-base)}
+.sv{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sv a,.sv span.sv-i{display:block;color:inherit}
+.sv img{display:block;width:100%;height:auto;border-radius:var(--radius-sm);border:1px solid var(--lab-line)}
+.cl-th{position:relative;aspect-ratio:16/9;background:var(--lab-tint);border-radius:var(--radius-sm);overflow:hidden}
+.cl-th.p{aspect-ratio:9/16}
+.cl-th img{display:block;width:100%;height:100%;object-fit:cover}
+.cl-th.ph{background:var(--lab-tint) url(/assets/img/logo-ink-252.png) center/40% no-repeat}
+.cl-title{margin:0;font:700 18px/1.5 var(--font-family-display);overflow-wrap:anywhere}
+.cl-meta{margin:0;font-size:15px;color:var(--text-secondary)}
+.cl-actions{display:flex;flex-wrap:wrap;gap:10px}
+.cl-frame{position:relative;aspect-ratio:16/9;background:var(--surface-sunken);border:1px solid var(--lab-line);border-radius:var(--radius-sm);overflow:hidden}
+.cl-frame.short{aspect-ratio:9/16;max-width:300px}
+.cl-frame>iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cl-fail{position:absolute;left:0;right:0;bottom:0;margin:0;padding:10px 14px;background:rgba(0,0,0,.84);color:#fff;font-size:15px}
+.cl-note{margin:8px 0 0;font-size:15px;color:var(--text-secondary)}
+.cl-group .btn.sec:not(.sm){margin-top:12px}
+.cl-err,.cl-empty{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px 18px;max-width:760px;border-radius:var(--radius-md)}
+.cl-err p,.cl-empty p{margin:0;flex:1 1 260px}
+.cl-err{border:1px solid var(--brand-base);background:var(--lab-tint)}
+.cl-empty{border:1px solid var(--lab-line);background:#fff}
+/* content page */
+.listen{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.slgrid{display:grid;gap:16px;margin-top:20px}
+.slc{display:grid;gap:12px;justify-items:start;align-content:start;padding:28px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);box-shadow:0 18px 36px rgba(15,15,15,.06)}
+.slc:first-child{background:#0F0F0F;border-color:#0F0F0F;color:#fff}
+.slc:first-child p{color:#D8D6CF}
+.slc:first-child .when{color:#fff}
+.slc h3{font-size:30px;line-height:1.25}
+.slc p{color:var(--text-secondary);max-width:52ch}
+.slc .when{color:var(--text-primary)}
+.slc .acts2{display:flex;flex-wrap:wrap;gap:10px}
+.nxt{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.nxt a{display:grid;gap:4px;align-content:start;min-height:96px;padding:16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit;transition:border-color .2s,transform .25s cubic-bezier(.16,1,.3,1)}
+.nxt a:hover{border-color:var(--brand-base);transform:translateY(-2px)}
+.nxt b{font:700 18px/1.35 var(--font-family-display)}
+.nxt span{font-size:14px;line-height:1.5;color:var(--text-secondary)}
+.soc{display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:20px;align-items:center}
+.soc>div{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.soc small{font:600 15px/1.4 var(--font-family-body);color:var(--text-secondary)}
+@media (min-width:700px){.cl-list{grid-template-columns:repeat(2,1fr)}.cl-list.sh{grid-template-columns:repeat(3,1fr)}.sv{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:960px){.nxt{grid-template-columns:repeat(4,1fr);gap:16px}.nxt a{padding:20px}}
+@media (min-width:1100px){.cl-list{grid-template-columns:repeat(3,1fr)}.cl-list.sh{grid-template-columns:repeat(5,1fr)}.sv{grid-template-columns:repeat(5,1fr)}}
+@media (min-width:960px){.slgrid{grid-template-columns:1fr 1fr;gap:24px}.slc{padding:40px}}
+"""   # only /content/ uses these (kept out of the shared CSS so every other page stays small)
+
+
 def book_backend():
     b = io.open(os.path.join(SITE, "book", "index.html"), encoding="utf-8").read()
     api, key = re.search(r"const API='(https://[a-z0-9.-]+\.supabase\.co/rest/v1/rpc/)'", b), re.search(r"const KEY='([A-Za-z0-9._-]+)'", b)
@@ -874,7 +893,7 @@ CONTENT_JS = r"""<script>
 (function(){
 var API='@@API@@',KEY='@@KEY@@',PAGE=12,KINDS=[['podcast','Podcast'],['video','วิดีโอ'],['short','Shorts']];
 var MONTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),TH={};   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
+var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),tabsBox=document.getElementById('cl-tabs'),TH={},CAT={tabs:[],clips:{}},cur='all';   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
 if(!status||!lists)return;
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function thDate(iso){var d=new Date(iso);if(isNaN(d))return '';var t=new Date(d.getTime()+7*3600000);return t.getUTCDate()+' '+MONTH[t.getUTCMonth()]+' '+(t.getUTCFullYear()+543)}
@@ -889,7 +908,7 @@ function play(li,v,btn){
   f.src='https://www.youtube-nocookie.com/embed/'+v.id+'?autoplay=1&rel=0';f.title=v.title;
   f.allow='autoplay; encrypted-media; picture-in-picture';f.referrerPolicy='strict-origin-when-cross-origin';f.setAttribute('allowfullscreen','');
   var t=setTimeout(function(){msg.hidden=false},10000);f.addEventListener('load',function(){clearTimeout(t)});
-  box.appendChild(f);box.appendChild(msg);btn.hidden=true;li.appendChild(box)}
+  box.appendChild(f);box.appendChild(msg);btn.hidden=true;li.classList.add('playing');li.appendChild(box)}
 function thumb(v){
   var p=v.kind==='short',box=el('div','cl-th'+(p?' p':''));
   if(TH[v.id]){var im=document.createElement('img');im.src='/assets/img/yt/'+v.id+'.webp';im.width=p?270:480;im.height=p?480:270;im.alt='';im.loading='lazy';im.decoding='async';
@@ -902,28 +921,50 @@ function item(v){
   if(v.embeddable!==false){btn=el('button','btn pri sm','เล่นที่นี่');btn.type='button';btn.setAttribute('aria-label','เล่น: '+v.title);btn.addEventListener('click',function(){play(li,v,btn)});row.appendChild(btn)}
   var a=el('a','btn sec sm','ดูบน YouTube');a.href='https://www.youtube.com/watch?v='+v.id;a.target='_blank';a.rel='noopener';row.appendChild(a);li.appendChild(row);return li}
 function validItems(j){return j.items.filter(function(v){return v&&typeof v.id==='string'&&/^[A-Za-z0-9_-]{11}$/.test(v.id)&&typeof v.title==='string'&&v.title})}
+function catOf(v){return v.kind==='podcast'?'podcast':(CAT.clips[v.id]||'')}   // every Podcast episode is in the Podcast tab; other clips only where content-categories.json puts them
 function makeGroup(kind,label){
-  var box=el('section','cl-group'),ul=el('ul','cl-list'),more=el('button','btn sec','โหลดเพิ่ม'),note=el('p','cl-note');more.type='button';more.hidden=true;note.hidden=true;
+  var box=el('section','cl-group'),ul=el('ul','cl-list'+(kind==='short'?' sh':'')),more=el('button','btn sec','โหลดเพิ่ม'),note=el('p','cl-note');more.type='button';more.hidden=true;note.hidden=true;
   box.hidden=true;box.appendChild(el('h3','',label));box.appendChild(ul);box.appendChild(more);box.appendChild(note);lists.appendChild(box);
-  var g={next:null,count:0,failed:false};
-  g.load=async function(){
-    var args={p_limit:PAGE,p_kind:kind};if(g.next){args.p_before=g.next.before;args.p_before_id=g.next.before_id}
-    more.disabled=true;note.hidden=true;
-    try{var j=await rpc(args);validItems(j).forEach(function(v){ul.appendChild(item(v));g.count++});
-      g.next=j.next&&j.next.before&&j.next.before_id?j.next:null;g.failed=false;more.hidden=!g.next;box.hidden=g.count===0}
-    catch(e){if(g.count){note.textContent='โหลดเพิ่มไม่สำเร็จ ลองกดอีกครั้ง';note.hidden=false;more.hidden=false}else g.failed=true}
-    more.disabled=false};
-  more.addEventListener('click',g.load);return g}
+  var g={items:[],cache:{},next:null,done:false,failed:false,shown:PAGE};
+  async function page(lim){
+    var args={p_limit:lim,p_kind:kind};if(g.next){args.p_before=g.next.before;args.p_before_id=g.next.before_id}
+    var j=await rpc(args);validItems(j).forEach(function(v){g.items.push(v)});
+    g.next=j.next&&j.next.before&&j.next.before_id?j.next:null;g.done=!g.next}
+  g.fill=async function(all){note.hidden=true;
+    try{if(!g.items.length&&!g.done)await page(PAGE);while(all&&!g.done)await page(50);g.failed=false}
+    catch(e){if(g.items.length){note.textContent='โหลดเพิ่มไม่สำเร็จ ลองกดอีกครั้ง';note.hidden=false}else g.failed=true}}
+  g.view=function(){return cur==='all'?g.items:g.items.filter(function(v){return catOf(v)===cur})};
+  g.render=function(){var v=g.view(),n=Math.min(g.shown,v.length);ul.textContent='';
+    v.slice(0,n).forEach(function(x){ul.appendChild(g.cache[x.id]||(g.cache[x.id]=item(x)))});
+    box.hidden=v.length===0;more.hidden=!(n<v.length||(cur==='all'&&!g.done))};
+  more.addEventListener('click',async function(){more.disabled=true;g.shown+=PAGE;
+    if(cur==='all'&&g.shown>g.items.length&&!g.done)await page(PAGE).catch(function(){g.shown-=PAGE;note.textContent='โหลดเพิ่มไม่สำเร็จ ลองกดอีกครั้ง';note.hidden=false});
+    g.render();more.disabled=false});
+  return g}
 var groups=KINDS.map(function(k){return makeGroup(k[0],k[1])});
 function banner(){status.textContent='';status.removeAttribute('role');
-  var failed=groups.some(function(g){return g.failed}),total=groups.reduce(function(n,g){return n+g.count},0);
+  var failed=groups.some(function(g){return g.failed}),total=groups.reduce(function(n,g){return n+g.view().length},0);
   if(failed){status.setAttribute('role','alert');var b=el('div','cl-err');b.appendChild(el('p','','โหลดรายการคลิปไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
     var r=el('button','btn sec sm','ลองใหม่');r.type='button';r.addEventListener('click',start);b.appendChild(r);status.appendChild(b);return}
+  if(!total&&cur!=='all'){status.appendChild(el('p','cl-note','ยังไม่มีคลิปในหมวดนี้'));return}
   if(!total){var e=el('div','cl-empty');e.appendChild(el('p','','ตอนนี้ยังไม่มีคลิปแสดงที่หน้านี้ ดูคลิปทั้งหมดได้ที่ช่อง YouTube ของ DJ LAB SIAM'));
     var a=el('a','btn pri','ดูคลิปทั้งหมดบน YouTube');a.href='https://www.youtube.com/@DJLABSIAM';a.target='_blank';a.rel='noopener';e.appendChild(a);status.appendChild(e)}}
+async function setTab(id){cur=id;[].forEach.call(tabsBox.children,function(b){b.setAttribute('aria-pressed',b.dataset.tab===id?'true':'false')});
+  if(id!=='all'){status.textContent='กำลังโหลดรายการคลิป…';await Promise.all(groups.map(function(g){return g.fill(true)}))}
+  if(cur!==id)return;groups.forEach(function(g){g.render()});banner()}
+function buildTabs(){
+  if(tabsBox.children.length)return;
+  var ids={podcast:1};Object.keys(CAT.clips).forEach(function(k){ids[CAT.clips[k]]=1});
+  var list=[{id:'all',label:'ทั้งหมด'}].concat((Array.isArray(CAT.tabs)?CAT.tabs:[]).filter(function(t){return t&&typeof t.id==='string'&&/^[a-z0-9-]{1,30}$/.test(t.id)&&typeof t.label==='string'&&ids[t.id]}));
+  if(list.length<2){tabsBox.hidden=true;return}
+  list.forEach(function(t){var b=el('button','cl-tab',t.label);b.type='button';b.dataset.tab=t.id;b.setAttribute('aria-pressed',t.id==='all'?'true':'false');b.addEventListener('click',function(){setTab(t.id)});tabsBox.appendChild(b)})}
+function hashTab(){var h=location.hash.slice(1),b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===h})[0];if(b&&cur!==h)setTab(h)}
 async function pics(){try{var r=await fetch('/assets/img/yt/manifest.json');if(r.ok){var j=await r.json();if(j&&j.ids&&typeof j.ids==='object')TH=j.ids}}catch(e){}}
-async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';await pics();
-  await Promise.all(groups.filter(function(g){return !g.count}).map(function(g){return g.load()}));banner()}
+async function cats(){try{var r=await fetch('/data/content-categories.json');if(r.ok){var j=await r.json();if(j&&typeof j.clips==='object'&&j.clips)CAT={tabs:j.tabs,clips:j.clips}}}catch(e){}}
+async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';await Promise.all([pics(),cats()]);buildTabs();
+  await Promise.all(groups.filter(function(g){return !g.items.length}).map(function(g){return g.fill(false)}));
+  groups.forEach(function(g){g.render()});banner();hashTab()}
+window.addEventListener('hashchange',hashTab);
 start();
 })();
 </script>
@@ -948,28 +989,41 @@ def content_page():
         inner = f'<h3>{E(p["name"])}</h3>'
         if p.get("when"):
             inner += f'<p class="when"><b>{E(p["when"])}</b></p>'
-        if p.get("desc"):
-            inner += f'<p>{E(p["desc"])}</p>'
+        pod = p["name"] == "DJ LAB Podcast"
+        desc = p.get("desc") or (CONTENT_CATS.get("podcast_desc", "") if pod else "")   # Podcast text comes from the content team's file, never typed here
+        if desc:
+            inner += f'<p>{E(desc)}</p>'
+        if pod and PODCAST_EPS:   # latest episode, big: the first cover of data/podcast-episodes.json (newest first)
+            ep = PODCAST_EPS[0]
+            im = f'<img src="/assets/img/podcast/{E(ep["img"])}" width="960" height="540" alt="{E(ep["alt"])}" loading="lazy" decoding="async">'
+            inner += (f'<a class="lat" href="https://www.youtube.com/watch?v={E(ep["yt"])}" target="_blank" rel="noopener">{im}<b>ตอนล่าสุด</b></a>'
+                      if re.fullmatch(r"[A-Za-z0-9_-]{11}", ep.get("yt") or "") else f'<div class="lat">{im}<b>ตอนล่าสุด</b></div>')
         if p.get("link"):
             btns = f'<a class="btn pri" href="{E(p["link"])}" target="_blank" rel="noopener">{E(p.get("link_label", "ดูรายการ"))} {ic("ext", 18)}</a>'
             if p["name"] == "DJ LAB Podcast":   # Spotify belongs to the Podcast, not to the page hero
                 btns += "".join(f'<a class="btn sec" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for x in LISTEN if "spotify" in x["url"])
             inner += f'<div class="acts2">{btns}</div>'
-        cards += f'<div class="slc" id="{"podcast" if p["name"] == "DJ LAB Podcast" else "sunday-live"}">{inner}</div>'
+        cards += f'<div class="slc" id="{"podcast" if pod else "sunday-live"}">{inner}</div>'
     listen = '<a class="btn pri" href="#sunday-live">Sunday Live</a><a class="btn sec" href="#podcast">DJ LAB Podcast</a><a class="btn sec" href="#clips">คลิปล่าสุด</a>'
+    sv = ""
+    for it in SUNDAY:   # past Sunday Live covers (the home page's 15); only the ones that have a YouTube id are links
+        im = f'<img src="/assets/img/sunday/{E(it["img"])}" width="960" height="540" alt="{E(it["alt"])}" loading="lazy" decoding="async">'
+        sv += (f'<li><a href="https://www.youtube.com/watch?v={E(it["yt"])}" target="_blank" rel="noopener">{im}</a></li>'
+               if re.fullmatch(r"[A-Za-z0-9_-]{11}", it.get("yt") or "") else f'<li><span class="sv-i">{im}</span></li>')
+    sv = f'<section id="sunday-covers"><h2>Sunday Live ที่ผ่านมา</h2><ul class="sv">{sv}</ul></section>' if sv else ""
     api, key = book_backend()
     nxt = "".join(f'<a href="{h}"><b>{t}</b><span>{d}</span></a>' for t, h, d in NEXT_TILES)
     soc = (f'<div class="soc"><div><a class="btn sec" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">Facebook {ic("ext", 18)}</a><small>44K+ ผู้ติดตาม Facebook</small></div>'
            f'<div><a class="btn sec" href="https://www.instagram.com/djlabsiam/" target="_blank" rel="noopener">Instagram {ic("ext", 18)}</a></div></div>')
     body = (f'<section class="hero">{GEAR_HERO}<h1>วิดีโอและรายการจาก DJ LAB SIAM</h1>'
             f'<p class="lede">เทคนิค อุปกรณ์ และเรื่องราววงการ DJ จากทีมงานที่เป็น DJ จริง</p><div class="listen">{listen}</div></section>'
-            f'<section><h2>รายการประจำ</h2><div class="slgrid">{cards}</div></section>'
-            f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
+            f'<section><h2>รายการประจำ</h2><div class="slgrid">{cards}</div></section>{sv}'
+            f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-tabs" class="cl-tabs" role="group" aria-label="หมวดคลิป"></div><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
             f'<noscript><p class="lede2">ต้องเปิด JavaScript เพื่อดูรายการคลิปในหน้านี้ หรือ <a href="https://www.youtube.com/@DJLABSIAM" target="_blank" rel="noopener">ดูคลิปทั้งหมดที่ช่อง YouTube</a></p></noscript>{CONTENT_NOTE}</section>'
             f'<section id="next"><h2>ดูต่อที่ DJ LAB SIAM</h2><div class="nxt">{nxt}</div></section>'
             f'<section id="follow"><h2>ติดตามเรา</h2>{soc}</section>')
     return shell("/content/", "คอนเทนต์ — Sunday Live, Podcast และคลิปจาก DJ LAB SIAM", "รวมรายการประจำและคลิปจากทีม DJ LAB SIAM: Sunday Live ทุกวันอาทิตย์ 18:30 น. ทาง Facebook Page, DJ LAB Podcast ทุกวันพุธ 18:00 น. ทางช่อง YouTube พร้อมคลิปเทคนิค อุปกรณ์ และเรื่องราววงการ DJ", body, active="content",
-                 script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key))
+                 script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key), css_extra=CONTENT_CSS)
 
 
 # ───────── / (home) ─────────
@@ -1146,6 +1200,7 @@ def home_faq_pairs():
 SUNDAY = (load(os.path.join(SITE, "data", "sunday-covers.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "sunday-covers.json")) else []
 
 
+CONTENT_CATS = load(os.path.join(SITE, "data", "content-categories.json")) if os.path.exists(os.path.join(SITE, "data", "content-categories.json")) else {}
 PODCAST_EPS = (load(os.path.join(SITE, "data", "podcast-episodes.json")).get("items") or []) if os.path.exists(os.path.join(SITE, "data", "podcast-episodes.json")) else []
 
 

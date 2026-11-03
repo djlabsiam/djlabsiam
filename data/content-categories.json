@@ -1,0 +1,25 @@
+{
+  "_about": "หมวดคลิปของหน้า /content/ — ไฟล์ตัวอย่างจนกว่าทีมคอนเทนต์ส่งไฟล์จริง (Content Creator/output/content-categories.json) · tabs = แท็บที่มีได้ (id ตัวพิมพ์เล็ก/ตัวเลข/ขีด) แท็บที่ไม่มีคลิปจะไม่แสดง · clips = { รหัสวิดีโอ YouTube 11 ตัว : id แท็บ } คลิปที่ไม่อยู่ใน clips เห็นเฉพาะแท็บ \"ทั้งหมด\" (ตอน Podcast อยู่แท็บ podcast เสมอ ไม่ต้องใส่) · podcast_desc = คำอธิบายรายการ DJ LAB Podcast ที่การ์ด Podcast (ว่าง = ไม่แสดง ห้ามแต่งเอง) · tabs/clips อ่านตอนเปิดหน้า (ไม่ต้อง build) · podcast_desc ต้องรัน tools/build_pages.py --home / --shop /shop/",
+  "tabs": [
+    {
+      "id": "sunday-live",
+      "label": "Sunday Live"
+    },
+    {
+      "id": "podcast",
+      "label": "Podcast"
+    },
+    {
+      "id": "dj-show",
+      "label": "DJ Show"
+    },
+    {
+      "id": "review",
+      "label": "Review"
+    }
+  ],
+  "clips": {
+    "XRPV0EfDvoc": "sunday-live"
+  },
+  "podcast_desc": ""
+}
