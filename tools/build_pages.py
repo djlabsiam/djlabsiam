@@ -837,6 +837,10 @@ CONTENT_CSS = r"""
 .slc .lat b{font:700 14px/1.4 var(--font-family-body);letter-spacing:.02em;color:var(--brand-base)}
 .sv{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sv a,.sv span.sv-i{display:block;color:inherit}
+.sv span.sv-i{cursor:default}
+.sv a{position:relative}
+.sv a::after{content:"ดูบน YouTube";position:absolute;left:8px;bottom:8px;padding:4px 10px;font:600 14px/1.4 var(--font-family-body);color:#fff;background:rgba(15,15,15,.82);border-radius:var(--radius-pill)}
+.sv a:hover img,.sv a:focus-visible img{border-color:var(--brand-base)}
 .sv img{display:block;width:100%;height:auto;border-radius:var(--radius-sm);border:1px solid var(--lab-line)}
 .cl-th{position:relative;aspect-ratio:16/9;background:var(--lab-tint);border-radius:var(--radius-sm);overflow:hidden}
 .cl-th.p{aspect-ratio:9/16}
@@ -891,7 +895,7 @@ def book_backend():
 
 CONTENT_JS = r"""<script>
 (function(){
-var API='@@API@@',KEY='@@KEY@@',PAGE=12,KINDS=[['podcast','Podcast'],['video','วิดีโอ'],['short','Shorts']];
+var API='@@API@@',KEY='@@KEY@@',PAGE=12,PHONE=matchMedia('(max-width:699px)').matches,FIRST=PHONE?4:PAGE,STEP=PHONE?6:PAGE,KINDS=[['podcast','Podcast'],['video','วิดีโอ'],['short','Shorts']];
 var MONTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),tabsBox=document.getElementById('cl-tabs'),TH={},CAT={tabs:[],clips:{},desc:{}},cur='all',descBox=document.getElementById('cl-desc');   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
 if(!status||!lists)return;
@@ -926,7 +930,7 @@ function catOf(v){return v.kind==='podcast'?'podcast':(CAT.clips[v.id]||'')}   /
 function makeGroup(kind,label){
   var box=el('section','cl-group'),ul=el('ul','cl-list'+(kind==='short'?' sh':'')),more=el('button','btn sec','โหลดเพิ่ม'),note=el('p','cl-note');more.type='button';more.hidden=true;note.hidden=true;
   box.hidden=true;box.appendChild(el('h3','',label));box.appendChild(ul);box.appendChild(more);box.appendChild(note);lists.appendChild(box);
-  var g={items:[],cache:{},next:null,done:false,failed:false,shown:PAGE};
+  var g={items:[],cache:{},next:null,done:false,failed:false,shown:FIRST};
   async function page(lim){
     var args={p_limit:lim,p_kind:kind};if(g.next){args.p_before=g.next.before;args.p_before_id=g.next.before_id}
     var j=await rpc(args);validItems(j).forEach(function(v){g.items.push(v)});
@@ -938,8 +942,8 @@ function makeGroup(kind,label){
   g.render=function(){var v=g.view(),n=Math.min(g.shown,v.length);ul.textContent='';
     v.slice(0,n).forEach(function(x){ul.appendChild(g.cache[x.id]||(g.cache[x.id]=item(x)))});
     box.hidden=v.length===0;more.hidden=!(n<v.length||(cur==='all'&&!g.done))};
-  more.addEventListener('click',async function(){more.disabled=true;g.shown+=PAGE;
-    if(cur==='all'&&g.shown>g.items.length&&!g.done)await page(PAGE).catch(function(){g.shown-=PAGE;note.textContent='โหลดเพิ่มไม่สำเร็จ ลองกดอีกครั้ง';note.hidden=false});
+  more.addEventListener('click',async function(){more.disabled=true;g.shown+=STEP;
+    if(cur==='all'&&g.shown>g.items.length&&!g.done)await page(PAGE).catch(function(){g.shown-=STEP;note.textContent='โหลดเพิ่มไม่สำเร็จ ลองกดอีกครั้ง';note.hidden=false});
     g.render();more.disabled=false});
   return g}
 var groups=KINDS.map(function(k){return makeGroup(k[0],k[1])});

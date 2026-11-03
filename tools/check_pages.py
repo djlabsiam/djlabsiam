@@ -377,6 +377,7 @@ ok(bool(_sl) and ("/assets/img/sunday/" + _sun[0]["img"]) in _sl.group(1) and 'h
 _pl = re.search(r'<div class="slc" id="podcast">.*?<(?:a|div) class="lat"( data-premiere="[^"]+")?[^>]*>.*?<b>(.*?)</b>', _ct, re.S)
 ok(bool(_pl) and ((_pl.group(2) == "ตอนล่าสุด" and not _pl.group(1)) or (_pl.group(2).startswith("ตอนใหม่ · ฉาย ") and _pl.group(1) and _pe[0].get("premiere") in _pl.group(1))) and "data-premiere" in _ct and "Date.parse(a.dataset.premiere)" in _ct, "content: the featured Podcast episode must say 'ตอนใหม่ · ฉาย …' only while its premiere (data/podcast-episodes.json) is in the future, and the page script must flip it to 'ตอนล่าสุด' after that")
 ok("hashTab" not in _ct and "hashchange" not in _ct and 'href="#sunday-live"' in _ct and 'href="#podcast"' in _ct, "content: the hero buttons must be plain #anchor links to the cards (a # in the address must not change the clip filter)")
+ok("FIRST=PHONE?4:PAGE" in _ct and "g.shown+=STEP" in _ct and ".sv span.sv-i{cursor:default}" in _ct and '.sv a::after' in _ct, "content: phones must start with a short clip list (+ load more), and Sunday covers without a YouTube id must not look pressable")
 ok(".cl-list{" in _ct and "grid-template-columns" in _ct and "content-categories" in _ct and "cl-tab" in _ct, "content: its own CSS (card grid, tabs) is missing")
 ok(all(".cl-list{" not in s_ for k_, s_ in SRC.items() if k_ != "content"), "the content page's CSS must stay out of every other page (page size)")
 
