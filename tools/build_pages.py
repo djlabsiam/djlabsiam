@@ -893,7 +893,7 @@ CONTENT_JS = r"""<script>
 (function(){
 var API='@@API@@',KEY='@@KEY@@',PAGE=12,KINDS=[['podcast','Podcast'],['video','วิดีโอ'],['short','Shorts']];
 var MONTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),tabsBox=document.getElementById('cl-tabs'),TH={},CAT={tabs:[],clips:{}},cur='all';   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
+var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),tabsBox=document.getElementById('cl-tabs'),TH={},CAT={tabs:[],clips:{},desc:{}},cur='all',descBox=document.getElementById('cl-desc');   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
 if(!status||!lists)return;
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function thDate(iso){var d=new Date(iso);if(isNaN(d))return '';var t=new Date(d.getTime()+7*3600000);return t.getUTCDate()+' '+MONTH[t.getUTCMonth()]+' '+(t.getUTCFullYear()+543)}
@@ -949,7 +949,7 @@ function banner(){status.textContent='';status.removeAttribute('role');
   if(!total&&cur!=='all'){status.appendChild(el('p','cl-note','ยังไม่มีคลิปในหมวดนี้'));return}
   if(!total){var e=el('div','cl-empty');e.appendChild(el('p','','ตอนนี้ยังไม่มีคลิปแสดงที่หน้านี้ ดูคลิปทั้งหมดได้ที่ช่อง YouTube ของ DJ LAB SIAM'));
     var a=el('a','btn pri','ดูคลิปทั้งหมดบน YouTube');a.href='https://www.youtube.com/@DJLABSIAM';a.target='_blank';a.rel='noopener';e.appendChild(a);status.appendChild(e)}}
-async function setTab(id){cur=id;[].forEach.call(tabsBox.children,function(b){b.setAttribute('aria-pressed',b.dataset.tab===id?'true':'false')});
+async function setTab(id){cur=id;var t=typeof CAT.desc[id]==='string'?CAT.desc[id]:'';descBox.textContent=t;descBox.hidden=!t;[].forEach.call(tabsBox.children,function(b){b.setAttribute('aria-pressed',b.dataset.tab===id?'true':'false')});
   if(id!=='all'){status.textContent='กำลังโหลดรายการคลิป…';await Promise.all(groups.map(function(g){return g.fill(true)}))}
   if(cur!==id)return;groups.forEach(function(g){g.render()});banner()}
 function buildTabs(){
@@ -960,7 +960,7 @@ function buildTabs(){
   list.forEach(function(t){var b=el('button','cl-tab',t.label);b.type='button';b.dataset.tab=t.id;b.setAttribute('aria-pressed',t.id==='all'?'true':'false');b.addEventListener('click',function(){setTab(t.id)});tabsBox.appendChild(b)})}
 function hashTab(){var h=location.hash.slice(1),b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===h})[0];if(b&&cur!==h)setTab(h)}
 async function pics(){try{var r=await fetch('/assets/img/yt/manifest.json');if(r.ok){var j=await r.json();if(j&&j.ids&&typeof j.ids==='object')TH=j.ids}}catch(e){}}
-async function cats(){try{var r=await fetch('/data/content-categories.json');if(r.ok){var j=await r.json();if(j&&typeof j.clips==='object'&&j.clips)CAT={tabs:j.tabs,clips:j.clips}}}catch(e){}}
+async function cats(){try{var r=await fetch('/data/content-categories.json');if(r.ok){var j=await r.json();if(j&&typeof j.clips==='object'&&j.clips)CAT={tabs:j.tabs,clips:j.clips,desc:(j.descriptions&&typeof j.descriptions==='object')?j.descriptions:{}}}}catch(e){}}
 async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';await Promise.all([pics(),cats()]);buildTabs();
   await Promise.all(groups.filter(function(g){return !g.items.length}).map(function(g){return g.fill(false)}));
   groups.forEach(function(g){g.render()});banner();hashTab()}
@@ -1018,7 +1018,7 @@ def content_page():
     body = (f'<section class="hero">{GEAR_HERO}<h1>วิดีโอและรายการจาก DJ LAB SIAM</h1>'
             f'<p class="lede">เทคนิค อุปกรณ์ และเรื่องราววงการ DJ จากทีมงานที่เป็น DJ จริง</p><div class="listen">{listen}</div></section>'
             f'<section><h2>รายการประจำ</h2><div class="slgrid">{cards}</div></section>{sv}'
-            f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-tabs" class="cl-tabs" role="group" aria-label="หมวดคลิป"></div><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
+            f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-tabs" class="cl-tabs" role="group" aria-label="หมวดคลิป"></div><p id="cl-desc" class="cl-note" hidden></p><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
             f'<noscript><p class="lede2">ต้องเปิด JavaScript เพื่อดูรายการคลิปในหน้านี้ หรือ <a href="https://www.youtube.com/@DJLABSIAM" target="_blank" rel="noopener">ดูคลิปทั้งหมดที่ช่อง YouTube</a></p></noscript>{CONTENT_NOTE}</section>'
             f'<section id="next"><h2>ดูต่อที่ DJ LAB SIAM</h2><div class="nxt">{nxt}</div></section>'
             f'<section id="follow"><h2>ติดตามเรา</h2>{soc}</section>')
