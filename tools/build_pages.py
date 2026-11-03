@@ -527,7 +527,7 @@ def minify_css(c):
 RACK = siam_skyline.svg()   # footer band: Siam Square line art (MBK · Lido Connect · BTS Siam)
 CREDIT = ('ภาพเครื่อง DJ ตกแต่งเรนเดอร์จากโมเดล 3D: คอนโทรลเลอร์ "3D_DJ_Mixer0011" โดย Pravin 9271 (CC BY 4.0, ดัดแปลง) '
           'และโมเดลรูปทรงตามสเปก ไม่ใช่รูปสินค้าจริง')
-NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("เกม", "/game/", "game")]  # Shop is appended below when --shop /shop/ · Member is NOT in this list: it is its own button next to the LINE button (desktop and phone)
+NAV = [("คอร์สเรียน", "/courses/", "courses"), ("ทีมครู", "/courses/#teachers", "teachers"), ("จองห้องซ้อม", "/book/", "book"), ("เกม", "/game/", "game"), ("คอนเทนต์", "/content/", "content")]  # Shop is appended below when --shop /shop/ · Member is NOT in this list: it is its own button next to the LINE button (desktop and phone)
 if A.shop == "/shop/":
     NAV.insert(1, ("SHOP🛒", "/shop/", "shop"))
 PERSON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0117 0z"/></svg>'
@@ -934,7 +934,7 @@ def content_page():
             f'<section><h2>รายการประจำ</h2><div class="slgrid">{cards}</div></section>'
             f'<section id="clips"><h2>คลิปล่าสุด</h2><div id="cl-status" aria-live="polite"></div><div id="cl-lists"></div>'
             f'<noscript><p class="lede2">ต้องเปิด JavaScript เพื่อดูรายการคลิปในหน้านี้ หรือ <a href="https://www.youtube.com/@DJLABSIAM" target="_blank" rel="noopener">ดูคลิปทั้งหมดที่ช่อง YouTube</a></p></noscript>{CONTENT_NOTE}</section>')
-    return shell("/content/", "วิดีโอและรายการ — DJ LAB SIAM", "รายการประจำและคลิปจากทีม DJ LAB SIAM", body, robots="noindex,follow", active="content",
+    return shell("/content/", "คอนเทนต์ — Sunday Live, Podcast และคลิปจาก DJ LAB SIAM", "รวมรายการประจำและคลิปจากทีม DJ LAB SIAM: Sunday Live ทุกวันอาทิตย์ 18:30 น. ทาง Facebook Page, DJ LAB Podcast ทุกวันพุธ 18:00 น. ทางช่อง YouTube พร้อมคลิปเทคนิค อุปกรณ์ และเรื่องราววงการ DJ", body, active="content",
                  script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key))
 
 

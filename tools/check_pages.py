@@ -337,6 +337,14 @@ for k, s in SRC.items():
     noindex = bool(re.search(r'name="robots" content="[^"]*noindex', s))
     ok(listed != noindex, f"{k}: sitemap listing ({listed}) must be the opposite of noindex ({noindex})")
 
+# ---- /content/ is a public page (owner D1, 3 Nov): in the main menu of every generated page (desktop + phone list), indexable, with its own title / description ----
+for k, s_ in SRC.items():
+    ok(len(re.findall(r'<a href="/content/"[^>]*>คอนเทนต์</a>', s_)) == 2, f"{k}: the main menu (desktop and phone) must link to /content/ as 'คอนเทนต์'")
+_ct = SRC.get("content", "")
+ok("noindex" not in _ct and "https://djlabsiam.com/content/" in locs, "content: must be indexable and listed in sitemap.xml")
+_ctt, _ctd = re.search(r"<title>([^<]*)</title>", _ct), re.search(r'<meta name="description" content="([^"]*)"', _ct)
+ok(bool(_ctt and _ctd) and "Sunday Live" in _ctt.group(1) and "Podcast" in _ctt.group(1) and "18:30" in _ctd.group(1) and "18:00" in _ctd.group(1) and 'og:title" content="' + _ctt.group(1) in _ct, "content: its own title / description / og:title (Sunday Live + Podcast, with the real broadcast times) are missing")
+
 # ---- artist names (owner-approved 6 Oct) only inside Maniac's own list of achievements: never elsewhere, never in <head>, headings, alt text ----
 ARTISTS = ["Blackpink", "Lisa", "Jennie", "Dajim", "Zentyarb", "K.aglet"]
 for k, s in SRC.items():
