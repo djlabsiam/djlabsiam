@@ -99,13 +99,11 @@ function buildTabs(){
   list.forEach(function(t){var b=el('button','cl-tab',t.label);b.type='button';b.dataset.tab=t.id;b.setAttribute('aria-pressed',t.id==='all'?'true':'false');b.addEventListener('click',function(){setTab(t.id)});tabsBox.appendChild(b)})}
 function goTab(e){var a=e.target.closest&&e.target.closest('[data-tab-go]');if(!a)return;var b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===a.dataset.tabGo})[0];if(!b)return;
   e.preventDefault();setTab(a.dataset.tabGo);document.getElementById('clips').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});b.focus({preventScroll:true})}
-function hashTab(){var h=location.hash.slice(1),b=[].filter.call(tabsBox.children,function(x){return x.dataset.tab===h})[0];if(b&&cur!==h)setTab(h)}
 async function pics(){try{var r=await fetch('/assets/img/yt/manifest.json');if(r.ok){var j=await r.json();if(j&&j.ids&&typeof j.ids==='object')TH=j.ids}}catch(e){}}
 async function cats(){try{var r=await fetch('/data/content-categories.json');if(r.ok){var j=await r.json();if(j&&typeof j.clips==='object'&&j.clips)CAT={tabs:j.tabs,clips:j.clips,desc:(j.descriptions&&typeof j.descriptions==='object')?j.descriptions:{}}}}catch(e){}}
 async function start(){status.removeAttribute('role');status.textContent='กำลังโหลดรายการคลิป…';await Promise.all([pics(),cats()]);buildTabs();
   await Promise.all(groups.filter(function(g){return !g.items.length}).map(function(g){return g.fill(false)}));
-  groups.forEach(function(g){g.render()});banner();hashTab()}
-window.addEventListener('hashchange',hashTab);
+  groups.forEach(function(g){g.render()});banner()}
 document.addEventListener('click',goTab);
 start();
 })();
