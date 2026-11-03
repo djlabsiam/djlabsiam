@@ -9,7 +9,7 @@
 Each generated file carries the md5 of the courses.json it was built from; tools/check_pages.py compares that with the current file before every push.
 Standard library only.  Usage (from anywhere):  python tools/build_pages.py [--courses PATH] [--profiles PATH] [--out DIR]
 """
-import argparse, hashlib, html, io, json, os, re, sys, urllib.parse
+import argparse, datetime, hashlib, html, io, json, os, re, sys, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cdj_demo, siam_skyline
 
@@ -895,6 +895,7 @@ var API='@@API@@',KEY='@@KEY@@',PAGE=12,KINDS=[['podcast','Podcast'],['video','�
 var MONTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var status=document.getElementById('cl-status'),lists=document.getElementById('cl-lists'),tabsBox=document.getElementById('cl-tabs'),TH={},CAT={tabs:[],clips:{},desc:{}},cur='all',descBox=document.getElementById('cl-desc');   // TH = clips that have a picture kept on this site (assets/img/yt/manifest.json): w = wide, p = portrait
 if(!status||!lists)return;
+[].forEach.call(document.querySelectorAll('.lat[data-premiere]'),function(a){var t=Date.parse(a.dataset.premiere),b=a.querySelector('b');if(t&&b&&Date.now()>=t)b.textContent='ตอนล่าสุด'});   // premiere time passed: back to the normal label
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function thDate(iso){var d=new Date(iso);if(isNaN(d))return '';var t=new Date(d.getTime()+7*3600000);return t.getUTCDate()+' '+MONTH[t.getUTCMonth()]+' '+(t.getUTCFullYear()+543)}
 function dur(s){if(typeof s!=='number'||!(s>0))return '';if(s<60)return s+' วินาที';var m=Math.round(s/60),h=Math.floor(m/60);return h?h+' ชม.'+(m%60?' '+(m%60)+' นาที':''):m+' นาที'}
@@ -998,9 +999,16 @@ def content_page():
             inner += f'<p>{E(desc)}</p>'
         if pod and PODCAST_EPS:   # latest episode, big: the first cover of data/podcast-episodes.json (newest first)
             ep = PODCAST_EPS[0]
+            lab, prem = "ตอนล่าสุด", ""   # an episode with a future "premiere" (ISO time with +07:00) is "ตอนใหม่ · ฉาย …" until then; the page script flips it back at that moment
+            try:
+                pt = datetime.datetime.fromisoformat(ep["premiere"]) if ep.get("premiere") else None
+            except ValueError:
+                pt = None
+            if pt and pt.tzinfo and pt > datetime.datetime.now(datetime.timezone.utc):
+                lab, prem = f'ตอนใหม่ · ฉาย {pt.day} {["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."][pt.month - 1]} {pt:%H:%M} น.', f' data-premiere="{E(ep["premiere"])}"'
             im = f'<img src="/assets/img/podcast/{E(ep["img"])}" width="960" height="540" alt="{E(ep["alt"])}" loading="lazy" decoding="async">'
-            inner += (f'<a class="lat" href="https://www.youtube.com/watch?v={E(ep["yt"])}" target="_blank" rel="noopener">{im}<b>ตอนล่าสุด</b></a>'
-                      if re.fullmatch(r"[A-Za-z0-9_-]{11}", ep.get("yt") or "") else f'<div class="lat">{im}<b>ตอนล่าสุด</b></div>')
+            inner += (f'<a class="lat"{prem} href="https://www.youtube.com/watch?v={E(ep["yt"])}" target="_blank" rel="noopener">{im}<b>{lab}</b></a>'
+                      if re.fullmatch(r"[A-Za-z0-9_-]{11}", ep.get("yt") or "") else f'<div class="lat"{prem}>{im}<b>{lab}</b></div>')
         if not pod and SUNDAY:   # newest Sunday Live cover (first of data/sunday-covers.json): fills the card like the Podcast's latest cover
             sc = SUNDAY[0]
             inner += (f'<div class="lat"><img src="/assets/img/sunday/{E(sc["img"])}" width="960" height="540" alt="{E(sc["alt"])}" loading="lazy" decoding="async"><b>ตอนล่าสุด</b></div>')
