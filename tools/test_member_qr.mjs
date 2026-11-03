@@ -172,7 +172,7 @@ ok('member.js (ส่วน QR): ไม่เขียนที่เก็บ/U
 ok('member.js (ส่วน QR): เรียก qr_token ครั้งเดียว ผ่าน call() ไป member-auth พร้อม session token', (qrPart.match(/qr_token/g) || []).length === 1 && /request: function \(tok\) \{ return call\(\{ action: 'qr_token' \}, tok\); \}/.test(qrPart));
 ok('member.js (ส่วน QR): ไม่มีที่อยู่เว็บอื่น (ยกเว้น namespace ของ SVG)', !/https?:\/\/(?!www\.w3\.org\/2000\/svg)/.test(qrPart));
 ok('member.js (ส่วน QR): ไลบรารีมาจาก data-qrlib ของเราเองเท่านั้น', /s\.src = D\.qrlib/.test(qrPart) && !/jsdelivr|unpkg|cdnjs|qrserver|googleapis|chart\./.test(memberJs));
-ok('member.js: ออกจากหน้าโปรไฟล์ = ปิด QR', /if \(name !== 'profile'\) qrClose\(\);/.test(memberJs));
+ok('member.js: ออกจากหน้าโปรไฟล์ = ปิด QR', /if \(name !== 'profile'\) \{ qrClose\(\);/.test(memberJs));
 ok('member.js (ส่วน QR): ปิดแล้วล้างภาพ QR + token ที่ค้าง', /replaceChildren\(\); QR\.seq = -1; QR\.last = null; modal\.hidden = true;/.test(qrPart));
 ok('member.js (ส่วน QR): ใช้ error correction M และ quiet zone 4 โมดูล', /qrcode\(0, 'M'\)/.test(qrPart) && /'-4 -4 ' \+ \(n \+ 8\) \+ ' ' \+ \(n \+ 8\)/.test(qrPart));
 

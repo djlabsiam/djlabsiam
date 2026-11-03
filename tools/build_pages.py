@@ -1674,6 +1674,12 @@ def member_game_html():
             '<a class="lk2" href="/game/">ดูเกมทั้งหมด</a></section>')
 
 
+def member_courses_html():
+    # "My courses": filled by member.js from member-auth `my_courses` (progress + paid in full / not yet — never an amount, price or equipment model)
+    return ('<section class="bd" id="p-courses" aria-labelledby="h-courses"><h3 id="h-courses">คอร์สของฉัน</h3>'
+            '<p class="help" id="c-state" role="status" hidden></p><div class="cl" id="c-list"></div></section>')
+
+
 PERKS = [   # member perks: the owner's own text (confirmed 30 Oct) — word for word, nothing added or left out
     ("เล่นเกม Signal Flow ได้ครบ Phase 3", " — Phase 1–2 เล่นฟรีทุกคน Phase 3 (14 ด่าน) เปิดให้เฉพาะสมาชิก"),
     ("ขึ้นกระดานคะแนน (Leader Board)", " — ตั้งชื่อเล่นแล้วเข้าร่วมกระดาน คะแนนดีที่สุดของแต่ละด่านจะบันทึกบนบัญชี เล่นต่อได้แม้เปลี่ยนเครื่อง (เฉพาะผู้ที่เข้าร่วมกระดาน)"),
@@ -1700,6 +1706,12 @@ def member_extra_css():
             ".mem .av-opt[data-k=vinyl]{background:#faf9f6}.mem .av-opt[data-k=phones],.mem .av-opt[data-k=cdj]{background:#2a2a2a}.mem .av-opt[data-k=fader]{background:#BD2026}.mem .av-opt[data-k=wave]{background:#111}\n"
             ".mem .av-opt[aria-pressed=true]{border-color:#111;box-shadow:0 0 0 3px #FFD76A}\n"
             ".mem .pgrid{margin-top:4px}\n"
+            ".mem .cl{display:grid;gap:14px}.mem .cc{display:grid;gap:10px;padding:16px;border:1.5px solid #111;border-radius:14px;background:#fff;min-width:0}.mem .cc p{margin:0}\n"
+            ".mem .cct{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-start;justify-content:space-between}.mem .cct h4{margin:0;font:800 18px/1.3 var(--font-family-display);overflow-wrap:anywhere;flex:1 1 180px}\n"
+            ".mem .bdg{display:inline-flex;align-items:center;justify-self:start;min-height:28px;padding:0 12px;border-radius:999px;border:1.5px solid #111;background:var(--lab-paper);font:700 14px var(--font-family-display)}\n"
+            ".mem .bdg.live{background:#111;color:#fff}.mem .bdg.done,.mem .bdg.paid{background:#EEF6EF;border-color:#1F5130;color:#1F5130}.mem .bdg.off{background:#efede7;border-color:#aaa;color:#666}.mem .bdg.due{background:var(--lab-tint);border-color:var(--brand-base);color:var(--brand-press,#8f0f16)}\n"
+            ".mem .cp{height:12px;border-radius:999px;background:#efede7;border:1px solid var(--lab-line);overflow:hidden}.mem .cp span{display:block;height:100%;background:var(--brand-base);border-radius:999px}\n"
+            ".mem .cn{font:700 16px var(--font-family-display);overflow-wrap:anywhere}.mem .cc dl{font-size:15px}.mem .cc dd{overflow-wrap:anywhere}\n"
             ".mem .perks{margin:0;padding-left:22px;display:grid;gap:10px}\n"
             ".mem .resume{display:grid;gap:10px;padding:14px;border:1.5px solid #111;border-radius:14px;background:var(--lab-paper)}.mem .resume b{font:800 18px var(--font-family-display)}\n"
             ".qrm{position:fixed;inset:0;z-index:2000;background:rgba(15,15,15,.6);display:grid;place-items:center;overflow-y:auto;overscroll-behavior:contain}\n"
@@ -1762,7 +1774,7 @@ def member_page():
                member_card_html() + member_qr_html()[0] +
                '<button class="btn pri" id="b-linkline" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
                '<p class="mm" id="m-profile" role="alert" hidden></p>'
-               + member_avatar_html() + member_game_html() +
+               + member_courses_html() + member_avatar_html() + member_game_html() +
                '<section class="bd" id="p-board" aria-labelledby="h-board" hidden>'
                '<h3 id="h-board">กระดานคะแนนเกม Leader Board</h3>'
                '<p class="help" id="bd-state" role="status"></p>'
@@ -1785,12 +1797,14 @@ def member_page():
         qv = hashlib.md5(fh.read()).hexdigest()[:8]
     with io.open(os.path.join(SITE, "assets", "js", "member-qr.js"), "rb") as fh:
         qj = hashlib.md5(fh.read()).hexdigest()[:8]
+    with io.open(os.path.join(SITE, "assets", "js", "member-courses.js"), "rb") as fh:
+        cj = hashlib.md5(fh.read()).hexdigest()[:8]
     body = ('<section class="hero"><h1>สมาชิก DJ LAB SIAM</h1><p class="lede">เข้าสู่ระบบด้วยรหัสสมาชิกและรหัสผ่านของคุณ</p></section>'
             f'<div class="mem" id="mem" data-qrlib="/assets/js/qrcode.js?v={qv}" data-fn="{E(fn)}" data-rest="{E(api)}" data-key="{E(key)}" data-liff="{MEMBER_LIFF_ID}" data-line="1" data-games="{E(fn.replace("member-auth", "game-scores"))}">{views}'
             + member_qr_html()[1] +
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS + member_extra_css(), bare=True, active="member",
-                 script=sf_script_tag() + f'<script src="/assets/js/member-qr.js?v={qj}" defer></script>\n<script src="/assets/js/member.js?v={ver}" defer></script>\n')
+                 script=sf_script_tag() + f'<script src="/assets/js/member-qr.js?v={qj}" defer></script>\n<script src="/assets/js/member-courses.js?v={cj}" defer></script>\n<script src="/assets/js/member.js?v={ver}" defer></script>\n')
 
 
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
