@@ -75,7 +75,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .patch li.dj{color:var(--fg);font-weight:700}
 .patch li.dj i{color:var(--amber)}
 /* จอแคบ: ใบแพตช์เป็นแถบเต็มกว้างใต้แถบลอย · ภาพรวมโต๊ะ 3D อยู่ใต้ทั้งสองแถบ (--inset) */
-@media (max-width:600px){.patch{align-self:stretch;font-size:11px;line-height:1.4;padding:3px 8px 4px;min-width:0}.patch b{font-size:12px;margin:0}.patch ol{grid-template-columns:repeat(4,auto);gap:0 8px;justify-content:start}.patch li{gap:3px}}
+@media (max-width:600px),(max-height:500px){.patch{align-self:stretch;font-size:11px;line-height:1.4;padding:3px 8px 4px;min-width:0}.patch b{font-size:12px;margin:0}.patch ol{grid-template-columns:repeat(4,auto);gap:0 8px;justify-content:start}.patch li{gap:3px}}
 .loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--dim);font-size:14px;text-align:center;padding:16px}
 .dock{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .toast{margin:0;padding:6px 10px;font-size:13px;line-height:1.45;border-left:4px solid var(--dim)}
@@ -141,6 +141,60 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 @keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 .shake{animation:shake .22s 2}
 @media (prefers-reduced-motion:reduce){.shake,.nofx circle{animation:none}}
+/* จอมือถือ: เกมจอเดียวเต็มจอ · โต๊ะ 3D กินพื้นที่ทั้งหมด · แถวบนเหลือเมนู + ด่าน + มาตร · ถาดสายอยู่ล่างจอ (แนวนอน = ขวาจอ) ให้นิ้วถึง
+   ปุ่มรอง + แถบเว็บอยู่ในเมนู (.sheet) · จอใหญ่ .sheet เป็น display:contents ผังเดิมไม่เปลี่ยน · หน้าล็อก Phase (body.locked) ใช้ผังเดิม */
+.sheet{display:contents}
+.mbar,#menuClose{display:none}
+@media (max-width:600px),(max-height:500px){
+  :root{--tray:92px;--rail:0px}
+  body:not(.locked){position:fixed;inset:0;padding:0;overflow:hidden}
+  body:not(.locked) .wrap{max-width:none;height:100dvh;min-height:0;gap:0}
+  body:not(.locked) .board{min-height:0;border:0;border-radius:0}
+  .stage,.wincenter{right:var(--rail);bottom:var(--tray)}
+  .hudo{right:calc(var(--rail) + 8px)}
+  .dock{right:calc(var(--rail) + 8px);bottom:calc(var(--tray) + 8px)}
+  /* เบลอทับภาพ 3D กินเครื่องมือถือ และทำให้ถาดสายอิงจอไม่ได้ → ใช้พื้นทึบ */
+  .deck{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(15,18,23,.84);padding:4px 6px 6px;gap:4px}
+  .deck>.row{flex-wrap:nowrap;gap:8px}
+  .chips{flex:none}
+  .chip:nth-child(-n+2){display:none}
+  .meter{flex:1 1 0;min-width:0;font-size:12px;gap:6px}
+  .track{min-width:24px}
+  .back{min-height:44px}
+  .mbar{display:flex;align-items:center;gap:6px;min-width:0}
+  .mbar button{flex:none;min-height:44px;padding:0 10px;background:rgba(255,255,255,.06)}
+  .mbar .ic{width:44px;padding:0;display:grid;place-items:center}
+  .mbar svg{width:22px;height:22px}
+  .mbar #mDrop{border-color:var(--amber);color:var(--amber)}
+  .mlvl{flex:1;min-width:0;font-family:var(--f-cond);font-weight:700;font-size:16px;line-height:1.15;letter-spacing:.02em}
+  .mlvl span{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;letter-spacing:0;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tray{position:fixed;left:0;right:0;bottom:0;height:var(--tray);padding:6px 8px 2px;gap:8px;border-top:1px solid var(--line);background:var(--panel)}
+  .tray .tl{flex:0 0 52px;font-size:14px;white-space:nowrap}
+  .tray .tl span{font-size:11px;white-space:normal}
+  .cards{touch-action:pan-x}
+  .cc{flex-basis:56px}
+  /* เมนูเต็มจอ */
+  body:not(.locked) .sheet{display:none}
+  body.menu:not(.locked) .sheet{display:flex;flex-direction:column;gap:14px;position:fixed;inset:0;z-index:20;padding:var(--sheet-top,14px) 16px 16px;overflow-y:auto;background:var(--bg)}
+  .sheet .top{justify-content:space-between}
+  .sheet .phases{order:1;flex:1 0 100%;display:grid;grid-template-columns:1fr 1fr}
+  .sheet .ph{display:flex;align-items:center;min-height:44px}
+  .sheet .hud{background:none;border:0;padding:0;gap:0}
+  .sheet .hud .row .row:not([hidden]){display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:8px}
+  .sheet .hud select{grid-column:1/-1;font-size:16px}   /* ต่ำกว่า 16px iPhone จะซูมหน้าเมื่อแตะ */
+  .sheet button,.sheet select{min-height:44px}
+  .sheet #drop{display:none}
+  body.menu #menuClose{display:block;flex:none;margin-top:auto;min-height:48px;font-size:16px}
+}
+@media (orientation:landscape) and (max-height:500px){
+  :root{--tray:0px;--rail:76px}
+  .tray{left:auto;top:0;width:var(--rail);height:auto;flex-direction:column;align-items:stretch;padding:6px;border-top:0;border-left:1px solid var(--line)}
+  .tray .tl{flex:none;text-align:center}
+  .cards{flex-direction:column;overflow:hidden auto;overscroll-behavior:contain;touch-action:pan-y;padding:0}
+  .cc{flex:0 0 auto}
+  .deck{flex-direction:row;align-items:center;gap:10px}
+  .mbar,.deck>.row{flex:1 1 0}
+}
 </style>
 </head>
 <body>
@@ -159,6 +213,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 .sitebar .sb-mem i{display:none;width:7px;height:7px;border-radius:50%;background:#3DD68C}
 .sitebar .sb-mem.in i{display:block}
 .wrap{height:calc(100dvh - 62px)}
+@media (max-width:600px),(max-height:500px){body:not(.locked) .sitebar{display:none}body.menu:not(.locked) .sitebar{display:flex;position:fixed;top:0;left:0;right:0;margin:0;z-index:21}body{--sheet-top:60px}}
 @media (max-width:600px){.sitebar{gap:10px}.sitebar .sb-logo img{width:78px;height:26px}.sitebar .sb-long{display:none}.sitebar a{font-size:13px}.sitebar .sb-mem{padding:0 12px}}
 </style>
 <nav class="sitebar" aria-label="เว็บไซต์ DJ LAB SIAM">
@@ -174,6 +229,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 })();
 </script>
 <div class="wrap">
+  <div class="sheet" id="sheet">
   <header class="top">
     <h1>Signal Flow</h1>
     <div class="phases" aria-label="4 Phase">
@@ -185,17 +241,25 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
     <button id="snd" type="button" aria-pressed="true" style="margin-left:auto">เสียง: เปิด</button>
   </header>
 
-    <section class="game" aria-label="กระดานเกม">
       <div class="hud">
         <div class="row">
           <div class="lvl"><b id="lvlNo" style="font:inherit"></b><span id="lvlTitle"></span></div>
           <div class="row" style="gap:6px"><select id="lvlSel" aria-label="เลือกด่าน"></select><button id="adv" type="button">คำแนะนำ</button><button id="helpBtn" type="button">วิธีเล่น</button><button id="drop" type="button">วางสายคืน</button><button id="reset" type="button">ถอดสายทั้งหมด</button><button id="restart" type="button">เริ่มด่านใหม่</button></div>
         </div>
       </div>
+      <button class="amber" id="menuClose" type="button">กลับไปเล่น</button>
+  </div>
 
+    <section class="game" aria-label="กระดานเกม">
       <div class="board" id="board">
         <div class="hudo" id="hudo">
           <div class="deck glass" id="deck">
+            <div class="mbar">
+              <button class="ic" id="menuBtn" type="button" aria-label="เมนู" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+              <div class="mlvl"><b id="mNo" style="font:inherit"></b><span id="mTitle"></span></div>
+              <button id="mDrop" type="button" hidden>วางสายคืน</button>
+              <button class="ic" id="fsBtn" type="button" aria-label="เต็มจอ" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
             <div class="row">
               <div class="chips" id="chips"></div>
               <div class="meter" title="เส้นประ = เป้าหมายความยาวสายรวม">
@@ -250,7 +314,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
           <div class="card glass">
             <div class="tag" id="helpTitle">วิธีเล่น</div>
             <ul>
-          <li>คลิกสายในถาดด้านบนเพื่อหยิบ (เลื่อนถาดซ้ายขวาเพื่อดูสายทั้งหมด)</li>
+          <li>แตะสายในถาดเพื่อหยิบ (เลื่อนถาดซ้ายขวาเพื่อดูสายทั้งหมด)</li>
           <li>ซูมด้วยล้อเมาส์ หรือถ่างสองนิ้วบนมือถือ ลากพื้นที่ว่างเพื่อเลื่อนภาพ กด "ดูทั้งโต๊ะ" เพื่อกลับภาพรวม</li>
           <li>แตะช่องต่อบนตัวเครื่องเพื่อเสียบทีละปลาย ซูมเข้าแล้วจะมีวงบอกตำแหน่งช่องให้แตะง่ายขึ้น</li>
           <li>ปลายสายที่ยังไม่ได้เสียบลากได้ ไกลสุดเท่าความยาวสาย ปล่อยบนช่องเพื่อเสียบ</li>
@@ -350,6 +414,7 @@ function sfStart(){
     document.getElementById('lockTag').textContent=LOCK.reason==='prev'?'ยังล็อก':'สมาชิกเท่านั้น';
     document.getElementById('lockFree').hidden=LOCK.reason==='prev';
     document.getElementById('lvlNo').textContent='Phase '+PH; document.getElementById('lvlTitle').textContent=LOCK.reason==='soon'?'เร็วๆ นี้':LOCK.reason==='prev'?'ยังล็อก':'สำหรับสมาชิก';
+    document.body.classList.add('locked');
     document.getElementById('lvlSel').parentNode.hidden=true; document.getElementById('hudo').hidden=true;
     document.getElementById('loading').hidden=true; document.getElementById('advice').hidden=true;
     document.getElementById('lockTitle').textContent=LT[0]; document.getElementById('lockBody').textContent=LT[1];
@@ -371,6 +436,8 @@ function sfStart(){
   var stage=document.getElementById('stage'), cv=document.getElementById('cv'), ov=document.getElementById('ov');
   document.getElementById('lvlTitle').textContent=L.title;
   document.getElementById('lvlNo').textContent='Phase '+L.phase+' · ด่าน '+L.number+' / '+L.of;
+  document.getElementById('mTitle').textContent=L.title;
+  document.getElementById('mNo').textContent='ด่าน '+L.number+' / '+L.of;
   cv.setAttribute('aria-label',L.canvasLabel);
   document.getElementById('goalLi').textContent=L.goal;
   L.notes.forEach(function(t){var li=document.createElement('li');li.textContent=t;document.getElementById('notesList').appendChild(li);});
@@ -393,6 +460,17 @@ function sfStart(){
   if(LOCKED_LV)setTimeout(function(){toast('ด่าน '+LOCKED_LV+' ยังล็อก · ผ่านด่าน '+LV+' ก่อน','warn');},0);
   sel.addEventListener('change',function(){location.search=lvUrl(PH,+sel.value);});
   document.getElementById('restart').addEventListener('click',function(){location.reload();});
+  // เมนูจอมือถือ · ปุ่มในแถบด่านทำงานเสร็จแล้วปิดเมนูให้เห็นผล
+  var menuBtn=document.getElementById('menuBtn');
+  function setMenu(on){document.body.classList.toggle('menu',on);menuBtn.setAttribute('aria-expanded',on?'true':'false');(on?document.getElementById('menuClose'):menuBtn).focus();}
+  menuBtn.addEventListener('click',function(){setMenu(true);});
+  document.getElementById('menuClose').addEventListener('click',function(){setMenu(false);});
+  document.querySelector('.hud').addEventListener('click',function(e){if(e.target.closest('button'))setMenu(false);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('menu'))setMenu(false);});
+  // เต็มจอจริงเฉพาะเบราว์เซอร์ที่อนุญาต (Android) · ที่ไม่อนุญาตไม่แสดงปุ่ม
+  if(document.fullscreenEnabled){var fsBtn=document.getElementById('fsBtn');fsBtn.hidden=false;
+    fsBtn.addEventListener('click',function(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();});
+    document.addEventListener('fullscreenchange',function(){fsBtn.setAttribute('aria-pressed',document.fullscreenElement?'true':'false');});}
 
   /* ---------- เสียงประกอบ: สังเคราะห์ด้วย Web Audio ไม่ใช้ไฟล์เสียง · เริ่มทำงานหลังผู้เล่นแตะครั้งแรก (กติกาเบราว์เซอร์) ---------- */
   var AC=null, muted=false;
@@ -548,7 +626,7 @@ function sfStart(){
   }
   // ความสูงที่แถบลอยบังด้านบนกระดาน (จอแคบนับใบแพตช์ด้วย เพราะเต็มกว้าง)
   var INSET=0, hudo=document.getElementById('hudo');
-  function inset(){var el=matchMedia('(max-width:600px)').matches?hudo:document.getElementById('deck');
+  function inset(){var el=matchMedia('(max-width:600px),(max-height:500px)').matches?hudo:document.getElementById('deck');
     return Math.max(0,Math.min(H()*0.5,el.getBoundingClientRect().bottom-stage.getBoundingClientRect().top+6));}
   function zoomed(){return !!home&&view.halfH<home.halfH*0.999;}
   function setView(v){
@@ -1029,6 +1107,7 @@ function sfStart(){
     var fl=document.getElementById('fill');fl.style.width=Math.min(100,ev.length/BARMAX*100)+'%';fl.className='fill'+(ev.length>TARGET+1e-6?' over':'');
     document.getElementById('tick').style.left=(TARGET/BARMAX*100)+'%';
     document.getElementById('drop').disabled=!held;
+    document.getElementById('mDrop').hidden=!held;
   }
   function render(){
     var ev=R.evaluate(L,state);
@@ -1120,7 +1199,7 @@ function sfStart(){
     var j=R.byId(L.jacks,id);
     if(j.usable&&R.occupantAt(L,state,id)){pullEnd(id);return;}
     if(!j.usable){toast(j.name+': '+j.hint,held?'bad':'warn');if(held)deny(id);else SFX.info();return;}
-    if(!held){SFX.info();toast('เลือกสายจากถาดด้านบนก่อน แล้วค่อยคลิกช่องต่อ','warn');return;}
+    if(!held){SFX.info();toast('เลือกสายจากถาดก่อน แล้วค่อยแตะช่องต่อ','warn');return;}
     taps++;MOVES.push(['p',held,id]);
     var cab=cableOf(held), r=R.tryPlug(L,state,held,id);
     if(!r.ok){render();toast(explain(r,cab,j),'bad');deny(id);return;}
@@ -1140,6 +1219,7 @@ function sfStart(){
     else toast('ต่อ '+cableFull(cableOf(doneId))+' แล้ว ต่อข้างที่เหลือ');
   }
   document.getElementById('drop').addEventListener('click',function(){if(!held)return;release();render();SFX.back();toast('วางสายคืนถาดแล้ว');});
+  document.getElementById('mDrop').addEventListener('click',function(){document.getElementById('drop').click();});
   document.getElementById('reset').addEventListener('click',function(){
     var hadAd=Object.keys(state.adapt||{}).length>0;
     state=R.withFixed(L,{plugs:{}});held=null;dangle=null;taps=0;MOVES=[];clock={t:0,since:null};render();SFX.unplug();
@@ -1260,7 +1340,7 @@ function sfStart(){
   document.getElementById('helpBtn').addEventListener('click',function(){advEl.hidden=true;helpEl.hidden=false;});
   document.getElementById('helpOk').addEventListener('click',function(){helpEl.hidden=true;});
 
-  render();toast('เลือกสายจากถาดด้านบน ซูมด้วยล้อเมาส์หรือถ่างนิ้ว แล้วแตะช่องต่อเพื่อเสียบ');showAdvice(0);
+  render();toast('เลือกสายจากถาด ซูมด้วยล้อเมาส์หรือถ่างนิ้ว แล้วแตะช่องต่อเพื่อเสียบ');showAdvice(0);
 }
 // ฉบับเว็บ djlabsiam.com (build-web.mjs ใส่ SF_MEMBERS): ด่าน Phase สมาชิกไม่อยู่บนเว็บ — ดึงจาก Edge Function game-levels ด้วย session ของหน้าสมาชิก (/member/)
 // Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลย · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
