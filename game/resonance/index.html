@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Resonance — เกมสแครชให้แก้วแตก | DJ LAB SIAM</title>
+<meta name="description" content="สแครชจานให้ตรงจังหวะของแก้วจนแก้วแตก 18 ด่าน เล่นฟรีบนมือถือ">
+<link rel="icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+@font-face{font-family:"Mitr";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/mitr-400.woff2) format("woff2")}
+@font-face{font-family:"Mitr";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/mitr-500.woff2) format("woff2")}
+@font-face{font-family:"Mitr";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/mitr-700.woff2) format("woff2")}
+.howto .back{display:block;width:max-content;min-height:44px;margin:6px auto -8px;padding:0 12px;line-height:44px;color:var(--ink);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+/* แนวโปสเตอร์ป๊อป (เจ้าของเลือก 3 พ.ย.): สีแบรนด์ แดง ดำ ขาว เส้นหนา เงาแข็ง · จอเดียวไม่เลื่อน บนดูแก้ว ล่างเป็นจาน ใช้นิ้วโป้งเล่นได้ */
+:root {
+  color-scheme: light;
+  --red: #BD2026; --ink: #010101; --paper: #FFFFFF;
+  --font: "Mitr", "Noto Sans Thai", system-ui, sans-serif;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+body { background: var(--red); color: var(--paper); font: 400 14px/1.45 var(--font); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.app { height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
+  padding-block: 10px 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 560px; margin: 0 auto; grid-template-areas: "top" "stage" "note" "deck"; }
+.top { grid-area: top; display: grid; gap: 8px; }
+.tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding-right: 3px; }
+button { font: inherit; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); border-radius: 10px; box-shadow: 2px 2px 0 var(--ink); padding: 6px 8px; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--paper); outline-offset: 2px; }
+button:disabled { opacity: .55; cursor: default; }
+button:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }   /* กดแล้วจมลงในเงา แบบเดียวกับแท็บที่เลือกอยู่ */
+::selection { background: var(--ink); color: var(--paper); }
+.phases { grid-template-columns: repeat(3, minmax(0, 1fr)); font-size: 12px; }
+.tabs button { display: grid; padding: 4px 0; line-height: 1.25; text-align: center; border-width: 3px; box-shadow: 3px 3px 0 var(--ink); }
+.tabs b { font-weight: 500; }
+.tabs small { font-size: 10px; letter-spacing: -1px; }
+.off { opacity: .62; }   /* ดาวว่างบนพื้นขาว ≥ 4.5:1 */
+.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); box-shadow: none; transform: translate(2px, 2px); }
+.tabs button[aria-pressed="true"] b { font-weight: 700; }
+.phases button { border-width: 2px; box-shadow: 2px 2px 0 var(--ink); }   /* Phase เบากว่าแท็บด่าน ให้แท็บด่านเด่นกว่า */
+.opts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; }
+.opts label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.opts input { accent-color: var(--ink); margin: 0; width: 20px; height: 20px; }
+.opts .right { margin-left: auto; display: flex; gap: 6px; padding-right: 2px; }
+.opts button { padding: 3px 8px; }
+/* พื้นที่กดแถวบนสูงราว 44px โดยไม่แย่งพื้นที่แก้ว · ขยายเข้าช่องว่างเท่านั้น ไม่ทับปุ่มข้างเคียง */
+.phases button, .opts button, .opts label { position: relative; }
+.phases button::after { content: ""; position: absolute; inset: -13px 0 -8px; }
+/* แถว opts: ขยายขึ้นลงเท่าๆ กัน ไม่ยื่นทับขอบบนจอแก้ว (เดิมยื่นลงไป 19px ทับแก้ว 11px) */
+.opts button::after { content: ""; position: absolute; inset: -7px 0 -8px; }
+.opts label::after { content: ""; position: absolute; inset: -12px 0 -12px; }
+#stage { grid-area: stage; width: 100%; height: 100%; min-height: 0; display: block; touch-action: none; cursor: pointer; }
+.note { grid-area: note; min-height: 42px; display: grid; align-content: center; justify-items: center; text-align: center; }
+.note p { margin: 0; padding: 4px 16px; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; font-weight: 500; text-wrap: balance; }
+.score { display: flex; justify-content: center; align-items: baseline; gap: 10px; color: var(--paper); font-size: 16px; font-weight: 700; }
+.score .stars { font-size: 28px; line-height: 1; letter-spacing: 2px; text-shadow: 2px 2px 0 var(--ink); }
+.score .off { color: var(--ink); opacity: 1; text-shadow: none; }
+/* ดาวที่ได้เด้งลงทีละดวงหลังแผงผลขึ้น · 1 ดาวจบเร็ว 3 ดาวได้ลุ้นครบสามจังหวะ */
+.score .stars i { display: inline-block; font-style: normal; animation: pop .4s cubic-bezier(.34, 1.56, .64, 1) .4s both; }
+.score .stars i:nth-child(2) { animation-delay: .58s; }
+.score .stars i:nth-child(3) { animation-delay: .76s; }
+@keyframes pop { from { opacity: 0; transform: scale(2.4) rotate(-20deg); } }
+/* แผงผลอยู่ที่เดียวกับจาน · width/height 0 + min 100% ไม่ให้แผงไปขยายแถวหรือคอลัมน์ แก้วจึงไม่ขยับ */
+.result { grid-area: deck; grid-row: note-start / deck-end; z-index: 1; width: 0; min-width: 100%; height: 0; min-height: 100%; display: grid; align-content: start;   /* แนวตั้ง: กินแถวข้อความด้วย แผงผลจะได้ชิดใต้แก้ว */ justify-items: center; gap: 10px; text-align: center; }
+.tip { margin: 0; padding: 6px 16px; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 3px 3px 0 var(--ink); font-weight: 500; text-wrap: balance; }
+.tip b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.finale { margin: 0; display: grid; font-size: 15px; font-weight: 500; line-height: 1.3; }
+.finale b { font-size: 22px; font-weight: 700; text-shadow: 2px 2px 0 var(--ink); }
+.acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.acts button { white-space: nowrap; padding: 9px 16px; border-width: 3px; box-shadow: 3px 3px 0 var(--ink); font-weight: 500; }
+.acts .main { background: var(--ink); color: var(--paper); box-shadow: 3px 3px 0 var(--paper); font-weight: 700; }
+.deck { grid-area: deck; display: flex; justify-content: center; align-items: center; gap: 14px; }
+#platter { width: min(60vw, 34vh, 270px); aspect-ratio: 1; max-width: 100%; display: block; touch-action: none; cursor: grab; }
+/* แก้วแตก: ผังค้างไว้ 0.8 วิ ให้เห็นการแตกเต็มตา แล้วจานจมลง แผงผลขึ้นแทนที่ · ไม่ย่อจาน แก้วจึงไม่กระโดด */
+.done .deck { pointer-events: none; animation: sink .28s cubic-bezier(.7, 0, .84, 0) forwards; }
+.result:not([hidden]) { animation: rise .5s cubic-bezier(.16, 1, .3, 1) .1s both; }
+@keyframes sink { to { opacity: 0; transform: translateY(36px); } }
+@keyframes rise { from { opacity: 0; transform: translateY(40px); } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .done .deck { animation-name: fade-out; }
+  .result:not([hidden]), .score .stars i { animation-name: fade-in; }
+}
+#clutch { width: 84px; height: 84px; border-radius: 50%; flex: none; font-size: 13px; line-height: 1.2; touch-action: none; }
+#clutch.on { background: var(--ink); color: var(--paper); font-weight: 700; }
+.copybox { position: fixed; inset: 12% max(16px, env(safe-area-inset-left, 0px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; padding: 12px; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; z-index: 5; }
+.copybox textarea { width: 100%; box-sizing: border-box; height: 100%; resize: none; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); font: 400 11px ui-monospace, Menlo, monospace; -webkit-user-select: text; user-select: text; }
+.howto { width: calc(100vw - 32px); max-width: 340px; box-sizing: border-box; padding: 16px; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); }
+.howto::backdrop { background: rgba(1, 1, 1, .55); }
+.howto h2 { margin: 0 0 2px; font-size: 20px; font-weight: 700; }
+.howto p { margin: 0 0 10px; }
+.howto ol { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 6px; }
+.howto button { width: 100%; padding: 9px; background: var(--red); color: var(--paper); border-width: 3px; box-shadow: 3px 3px 0 var(--ink); font-weight: 700; }
+.howto .quiet { margin-top: 8px; background: var(--paper); color: var(--ink); }
+.howto #copy { display: block; width: auto; min-height: 44px; margin: 6px auto -8px; padding: 0 12px; background: none; border: 0; box-shadow: none; font-size: 13px; font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }   /* ของผู้ทดสอบ: ลิงก์เล็ก ไม่แย่งปุ่มเริ่มเล่น */
+.howto #copy:disabled { display: none; }
+.howto button:focus-visible, .copybox button:focus-visible { outline-color: var(--ink); }   /* กล่องพื้นขาว วงโฟกัสขาวจะมองไม่เห็น */
+@media (orientation: portrait) and (max-height: 700px) {   /* จอเตี้ย: ย่อแถบบนกับจาน ให้แก้วยังใหญ่พอ */
+  .top { gap: 5px; }
+  .tabs button { padding: 2px 0; }
+  .tabs small { font-size: 9px; }
+  .phases button::after { bottom: -6px; }
+  .opts label::after { bottom: -10px; }
+  .opts { flex-wrap: nowrap; font-size: 12px; gap: 6px; white-space: nowrap; }
+  .opts button { padding: 2px 5px; }
+  .opts .right { gap: 4px; }
+  #platter { width: min(60vw, 27vh); }
+}
+/* จอแนวนอน (เจ้าของวางผัง 12 พ.ย.): แถบบนอยู่กลางด้านบน · แก้วซ้าย จานขวา วางเคียงกัน */
+@media (orientation: landscape) and (min-aspect-ratio: 4/3) {
+  .app { max-width: 1100px; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "top top" "stage deck" "note deck"; column-gap: 24px; }
+  .top { justify-self: center; width: 100%; max-width: 560px; }
+  #platter { width: min(40vw, 62vh, 440px); }
+  .result { grid-row: deck; align-content: center; }
+}
+@media (orientation: landscape) and (max-height: 520px) {   /* มือถือแนวนอน: ความสูงน้อย แถบบนย้ายไปอยู่เหนือแก้ว */
+  .app { max-width: none; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "top deck" "stage deck" "note deck"; column-gap: 8px; }
+  /* แนวนอน: Phase กับปุ่มอยู่แถวบน แท็บด่านได้เต็มแถวล่าง กว้างพอกด · จานเล็กลง แก้วได้ที่มากขึ้น */
+  .top { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "phases opts" "tabs tabs"; gap: 8px; }
+  #phases { grid-area: phases; } #tabs { grid-area: tabs; } .opts { grid-area: opts; flex-wrap: nowrap; white-space: nowrap; }
+  .phases { font-size: 11px; }
+  .phases button { min-height: 30px; }
+  .phases button::after { inset: -10px 0 -4px; }
+  #platter { width: min(32vw, 60vh); }
+  .result { grid-row: deck; align-content: center; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="tabs phases" id="phases"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="helper" checked> ตัวช่วย</label>
+      <label hidden><input type="checkbox" id="useClutch" autocomplete="off"> คลัตช์</label>
+      <span class="right">
+        <button id="midiOpen" type="button" hidden>ต่อเครื่อง</button>
+        <button id="howtoOpen" type="button">วิธีเล่น</button>
+        <button id="restart" type="button">เริ่มใหม่</button>
+      </span>
+    </div>
+  </div>
+  <canvas id="stage" role="img" aria-label="แก้ว แตะเพื่อเคาะฟังจังหวะ"></canvas>
+  <div class="note" id="note"></div>   <!-- ไม่ใช้ aria-live: ข้อความเปลี่ยนแทบทุกวินาทีระหว่างเล่น screen reader จะอ่านรัว · ผลจบด่านประกาศที่ #result -->
+  <div class="deck">
+    <canvas id="platter" role="img" aria-label="จาน ลากไปกลับเพื่อสแครช"></canvas>
+    <button id="clutch" type="button" hidden>กดค้าง<br>คลัตช์</button>
+  </div>
+  <div class="result" id="result" aria-live="polite" hidden></div>
+</div>
+<div class="copybox" id="copyBox" hidden>
+  <b>คัดลอกข้อความนี้ส่งให้ทีมพัฒนา</b>
+  <textarea id="copyText" readonly aria-label="ผลทดสอบ"></textarea>
+  <button id="copyClose" type="button">ปิด</button>
+</div>
+<dialog class="howto" id="howto" aria-labelledby="howtoTitle">
+  <h2 id="howtoTitle">สแครชให้แก้วแตก</h2>
+  <p>สแครชให้ตรงจังหวะของแก้ว แรงจะสะสมจนแก้วแตก</p>
+  <ol>
+    <li>แตะแก้ว → ฟังจังหวะ</li>
+    <li>ลากจานไปกลับตามขีดแดง → แก้วแกว่งแรงขึ้น</li>
+    <li>เข็มอยู่ในแถบดำ และลากกว้าง → แรงสั่นขึ้น</li>
+    <li>แรงสั่นเกินเส้นแดงค้างไว้ → แก้วร้าวจนแตก</li>
+  </ol>
+  <button id="howtoClose" type="button">เริ่มเล่น</button>
+  <button id="copy" type="button" class="quiet" disabled>คัดลอกผล</button>
+  <a class="back" href="/game/">กลับหน้ารวมเกม</a>
+</dialog>
+<dialog class="howto" id="midiBox" aria-labelledby="midiTitle">
+  <h2 id="midiTitle">ต่อเครื่อง</h2>
+  <p id="midiMsg" aria-live="polite"></p>
+  <button id="midiGo" type="button" hidden></button>
+  <button id="midiClose" type="button" class="quiet">ปิด</button>
+</dialog>
+
+<script src="rules.js"></script>
+<script>
+(function () {
+  var R = window.ResRules;
+  var LEVELS = R.LEVELS;
+  var PHASES = ['จับจังหวะ', 'เปลี่ยนจังหวะ', 'จังหวะเลื่อน'], PHASE_SIZE = 6;
+  var PITCH = 300;            // เสียงแก้ว = ความถี่มือ × ตัวคูณนี้ (ย่อสเกล แก้วจริงสั่นเร็วกว่ามือมาก)
+  var KEY = 'resonance-s0-runs';
+  var HOWTO_KEY = 'resonance-s0-howto-seen';
+  var BEST_KEY = 'resonance-best';
+  var HOLD = 0.8;             // วินาทีที่ค้างภาพแก้วแตกไว้ก่อนแผงผลขึ้น
+  var bpm = function (hz) { return Math.round(hz * 60); };   // ไป + กลับ 1 ครั้ง = 1 บีต
+  var css = getComputedStyle(document.documentElement);
+  var C = {};
+  ['red', 'ink', 'paper', 'font'].forEach(function (k) { C[k] = css.getPropertyValue('--' + k).trim(); });
+  var $ = function (id) { return document.getElementById(id); };
+  document.documentElement.lang = 'th';   // ไฟล์นี้ไม่มีแท็ก html เพราะ Artifact ห่อให้
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var nowS = function () { return performance.now() / 1000; };
+
+  var levelIx = 0, run = null, runs = [];
+  try { runs = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { runs = []; }
+  var best = {};
+  try { best = JSON.parse(localStorage.getItem(BEST_KEY)) || {}; } catch (e) { best = {}; }
+  function starsText(n) { return '★'.repeat(n) + '<span class="off">' + '★'.repeat(3 - n) + '</span>'; }
+
+  // ── รอบเล่น ───────────────────────────────────────────────
+  function newRun() {
+    var lv = LEVELS[levelIx], o = R.create(lv);
+    o.t = nowS();
+    run = { lv: lv, o: o, tr: R.tracker(), kicks: [], revs: [], cracks: makeCracks(lv), shards: null, doneAt: null, summary: null, score: null, record: false,
+      angle: run ? run.angle : 0, lastAng: null, input: '', tapped: false, saved: false, m: 0, modeAt: null, shown: false, unevenAt: null };
+    $('result').hidden = true; document.querySelector('.app').classList.remove('done');
+    showNote();
+  }
+  function saveRun(broke) {
+    if (run.saved || run.revs.length < 6) return;
+    run.saved = true;
+    var s = R.summarize(run.kicks, run.lv, broke ? run.o.broke : null), r3 = function (x) { return x === null ? null : Math.round(x * 1000) / 1000; };
+    var t0 = run.revs[0][0];
+    runs.push({ at: new Date().toISOString(), name: run.lv.name, f0: run.lv.f0, Q: run.lv.Q, hold: run.lv.hold, helper: $('helper').checked, clutch: $('useClutch').checked, input: run.input, jog: run.input === 'midi' ? { status: jog.status, ccs: jog.ccs, kind: jog.kind, perRev: jog.perRev } : null,
+      broke: broke, points: broke ? run.score.points : null, seconds: r3(s.seconds), best: r3(s.best), hz: r3(s.hz), errHz: r3(s.errHz), evenness: r3(s.evenness), ripple: r3(s.ripple),
+      revs: run.revs.map(function (v) { return [r3(v[0] - t0), v[1], Math.round(v[2] * 57.3), v[3]]; }) });
+    if (runs.length > 40) runs = runs.slice(-40);
+    try { localStorage.setItem(KEY, JSON.stringify(runs)); } catch (e) { /* เก็บในหน้านี้อย่างเดียว */ }
+    updateCopy();
+  }
+  function updateCopy() {
+    $('copy').disabled = !runs.length;
+    $('copy').textContent = runs.length ? 'คัดลอกผล (' + runs.length + ')' : 'คัดลอกผล';
+  }
+  function clutchOpen() { return !$('useClutch').checked || clutchDown; }
+  function onReversal(e) {
+    var open = clutchOpen(), prev = run.revs.length ? run.revs[run.revs.length - 1][0] : null;
+    run.revs.push([e.t, e.dir, e.speed, open ? 1 : 0]);
+    if (!open) return;
+    R.kick(run.o, e.t, e.dir, R.strengthOf(e.speed));
+    // ด่านเล่นช้า: ขาเดียวยาวไม่เท่าก็ทำแรงร่วง · ไม่นับขาแรกหลังพักมือ
+    if (prev !== null && e.t - prev < 1 / R.peek(run.o, e.t).f && R.uneven(run.o, e.t, e.t - prev)) run.unevenAt = nowS();
+    run.kicks.push(R.record(run.o, e.t));
+    if (run.o.broke !== null) finish();
+  }
+  function finish() {
+    if (run.doneAt !== null) return;
+    run.doneAt = nowS();
+    run.summary = R.summarize(run.kicks, run.lv, run.o.broke);
+    run.score = R.score(run.summary, run.lv);
+    var prev = best[run.lv.name];
+    run.prev = prev ? prev.points : null;
+    if (!prev || run.score.points > prev.points) {
+      run.record = !!prev;
+      best[run.lv.name] = run.score;
+      try { localStorage.setItem(BEST_KEY, JSON.stringify(best)); } catch (e) { /* เก็บในหน้านี้อย่างเดียว */ }
+      renderTabs();
+    }
+    run.shards = makeShards();
+    audio.shatter();
+    saveRun(true);
+    showNote();
+  }
+  // ความถี่จากจังหวะมือล่าสุด นับทุกจุดกลับทิศ แม้ยังปิดคลัตช์ จะได้จับจังหวะก่อนส่งแรง
+  function handHz(t) {
+    var v = run.revs, n = v.length;
+    if (n < 3 || t - v[n - 1][0] > 1.5) return null;
+    var a = [];
+    for (var i = Math.max(2, n - (run.lv.slide ? 2 : 6)); i < n; i++) a.push(v[i][0] - v[i - 2][0]);   // เป้าเลื่อน: ดูเฉพาะล่าสุด เข็มจะได้ไม่ตามหลัง
+    a.sort(function (x, y) { return x - y; });
+    return 1 / a[a.length >> 1];
+  }
+
+  // ── ข้อความ ───────────────────────────────────────────────
+  var lastNote = '';
+  function setNote(html) { if (html !== lastNote) { lastNote = html; $('note').innerHTML = html; } }
+  function showNote() {
+    if (!run) return;
+    if (run.summary) return;   // ข้อความเดิมค้างไว้ช่วงภาพแก้วแตก ผังจะได้ไม่ขยับ
+    var p = R.peek(run.o, nowS());
+    if (p.m !== run.m) { run.m = p.m; run.modeAt = nowS(); }
+    if (run.msg && nowS() - run.msgAt < 1.5) setNote('<p>' + run.msg + '</p>');
+    else if (run.modeAt !== null && nowS() - run.modeAt < 1.5) setNote('<p>เปลี่ยนจังหวะเป็น ' + bpm(p.f) + ' BPM</p>');
+    else if (p.A >= 0.9 && p.dwell > 0) setNote('<p>ประคองจังหวะไว้ รอยร้าวกำลังลาม</p>');
+    else if (run.unevenAt !== null && nowS() - run.unevenAt < 1.5 && inTempo(p.f)) setNote('<p>ลากไปกับกลับให้ยาวเท่ากัน</p>');
+    else if ($('useClutch').checked && !clutchDown && run.revs.length) setNote('<p>จับจังหวะได้แล้ว กดคลัตช์ค้างเพื่อส่งแรงเข้าแก้ว</p>');
+    else if (run.revs.length && !$('helper').checked) setNote('<p>แก้วแกว่งแรงขึ้น แปลว่าตรงจังหวะ</p>');
+    else if (run.revs.length) setNote(tempoNote(handHz(nowS()), p.f));
+    else if (run.tapped) setNote($('helper').checked ? '<p>ลากจานตามขีดแดง</p>' : '<p>ลากจานไปกลับให้ตรงจังหวะที่แก้วแกว่ง</p>');
+    else setNote('<p>' + (run.lv.hint || ($('helper').checked ? 'แตะแก้ว แล้วลากจานตามขีดแดง' : 'แตะแก้วเพื่อฟังจังหวะ แล้วลากจานไปกลับตาม')) + '</p>');
+  }
+  function showResult() {
+    run.shown = true;
+    var s = run.summary, a = R.advice(s, run.lv), last = levelIx === LEVELS.length - 1;
+    var tip = {
+      fast: 'ช่วงแก้วร้าว มือเร็วไป <b>' + a.bpm + ' BPM</b>',
+      slow: 'ช่วงแก้วร้าว มือช้าไป <b>' + a.bpm + ' BPM</b>',
+      off: 'ช่วงแก้วร้าว คลาดจังหวะ <b>' + a.bpm + ' BPM</b>',
+      time: 'เข้าจังหวะให้ไวขึ้น ใช้ <b>' + s.seconds.toFixed(1) + ' วิ</b> ด่านนี้เร็วสุด <b>' + s.best.toFixed(1) + ' วิ</b>',
+      even: 'จังหวะมือยังไม่นิ่ง ลากแต่ละรอบให้เท่ากัน',
+      clean: 'ตรงจังหวะ มือนิ่ง ใช้ <b>' + s.seconds.toFixed(1) + ' วิ</b>'
+    }[a.kind];
+    var n = run.score.stars, stars = '★★★'.slice(0, n).replace(/★/g, '<i>★</i>') + '<span class="off">' + '★'.repeat(3 - n) + '</span>';
+    var html = '<div class="score"><span class="stars" role="img" aria-label="' + n + ' ดาว">' + stars + '</span>' +
+      '<span>' + run.score.points + ' คะแนน' + (run.record ? ' · สถิติใหม่!' : run.prev !== null ? ' · ดีสุด ' + run.prev : '') + '</span></div><p class="tip">' + tip + '</p>';
+    var next = last ? -1 : levelIx + 1, nextText = 'ด่านถัดไป';
+    if (last) {   // ฉากจบ: ดาวรวมทั้งเกม แล้วพาไปด่านแรกที่ยังไม่ครบ 3 ดาว
+      var total = 0, all = true;
+      LEVELS.forEach(function (l, i) {
+        var n = best[l.name] ? best[l.name].stars : 0;
+        total += n; if (!n) all = false;
+        if (next < 0 && n < 3 && i !== levelIx) next = i;
+      });
+      html += '<p class="finale"><b>' + (total === LEVELS.length * 3 ? '3 ดาวครบทุกด่าน!' : all ? 'ผ่านครบ ' + LEVELS.length + ' ด่าน' : 'ด่านสุดท้ายแล้ว') + '</b><span>ดาวรวม ' + total + '/' + LEVELS.length * 3 + '</span></p>';
+      if (next >= 0) nextText = 'ไปด่าน' + LEVELS[next].name;
+    }
+    html += '<div class="acts"><button type="button" id="again"' + (next < 0 ? ' class="main"' : '') + '>เล่นอีกครั้ง</button>' +
+      (next < 0 ? '' : '<button type="button" id="next" class="main">' + nextText + '</button>') + '</div>';
+    setNote('');
+    $('result').hidden = false; $('result').innerHTML = html;
+    document.querySelector('.app').classList.add('done');
+    $('again').onclick = newRun;
+    if (next >= 0) $('next').onclick = function () { setLevel(next); };
+    $('result').querySelector('.main').focus({ preventScroll: true });
+  }
+  function inTempo(f) { var hz = handHz(nowS()); return hz !== null && Math.abs(hz - f) <= R.tolerance(run.lv, f); }
+  function tempoNote(hz, f) {
+    var tol = R.tolerance(run.lv, f);
+    if (hz === null) return '<p>ลากจานไปกลับต่อเนื่อง ให้เข็มเข้าแถบดำ</p>';
+    if (hz < f - tol) return '<p>ช้าไป เร่งมืออีกนิด</p>';
+    if (hz > f + tol) return '<p>เร็วไป ผ่อนมือลงนิด</p>';
+    if (R.strengthOf(run.revs[run.revs.length - 1][2]) < 0.8) return '<p>ตรงจังหวะแล้ว ลากให้กว้างขึ้น</p>';
+    return '<p>ตรงจังหวะแล้ว ลากต่อให้นิ่ง</p>';
+  }
+
+  // ── เสียง (สังเคราะห์ทั้งหมด) ─────────────────────────────────
+  var audio = (function () {
+    var ctx = null, tone = null, scratch = null, band = null, noiseBuf = null, master = null;
+    function noise() { var s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; return s; }
+    function ensure() {
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.7;
+      var comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      var d = noiseBuf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      tone = ctx.createGain(); tone.gain.value = 0; tone.connect(master);
+      tone.oscs = [[1, 1], [2.32, 0.35], [4.25, 0.12]].map(function (p) {
+        var o = ctx.createOscillator(), g = ctx.createGain(); g.gain.value = p[1]; o.connect(g); g.connect(tone); o.start(); o.mult = p[0]; return o;
+      });
+      scratch = ctx.createGain(); scratch.gain.value = 0;
+      band = ctx.createBiquadFilter(); band.type = 'bandpass'; band.Q.value = 1.1; band.frequency.value = 900;
+      var n = noise(); n.connect(band); band.connect(scratch); scratch.connect(master); n.start();
+    }
+    return {
+      ensure: ensure,
+      update: function (f0, A, x, handSpeed) {
+        if (!ctx) return;
+        var t = ctx.currentTime, level = Math.pow(Math.min(1, A / 1.5), 0.9) * 0.4;
+        // ดังเบาตามการแกว่งจริง ให้ได้ยินจังหวะที่ f0 ไม่ใช่แค่เสียงยาวๆ
+        var pulse = A > 1e-3 ? 0.6 + 0.4 * (x / A) : 1;
+        tone.gain.setTargetAtTime(level * pulse, t, 0.012);
+        tone.oscs.forEach(function (o) { o.frequency.setTargetAtTime(f0 * PITCH * o.mult, t, 0.02); });
+        var s = Math.min(1, handSpeed / 8);
+        scratch.gain.setTargetAtTime(s * 0.2, t, 0.012);
+        band.frequency.setTargetAtTime(500 + s * 2400, t, 0.02);
+      },
+      shatter: function () {
+        if (!ctx) return;
+        var t = ctx.currentTime, n = noise(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+        hp.type = 'highpass'; hp.frequency.value = 2400;
+        g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        n.connect(hp); hp.connect(g); g.connect(master); n.start(t); n.stop(t + 0.65);
+        for (var i = 0; i < 7; i++) {
+          var o = ctx.createOscillator(), e = ctx.createGain(), at = t + i * 0.035 + Math.random() * 0.05;
+          o.frequency.value = 2200 + Math.random() * 4200;
+          e.gain.setValueAtTime(0.1, at); e.gain.exponentialRampToValueAtTime(0.001, at + 0.25);
+          o.connect(e); e.connect(master); o.start(at); o.stop(at + 0.27);
+        }
+      },
+    };
+  })();
+
+  // ── วาด ──────────────────────────────────────────────────
+  var stage = $('stage'), sc = stage.getContext('2d'), platter = $('platter'), pc = platter.getContext('2d');
+  function fit(cv) {
+    var r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+    var w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    cv.getContext('2d').setTransform(d, 0, 0, d, 0, 0);
+    return { w: r.width, h: r.height };
+  }
+  function seeded(n) { var s = n * 2654435761 >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var runSeed = 1;
+  function makeCracks(lv) {
+    var r = seeded(runSeed++), out = [];
+    for (var i = 0; i < 9; i++) {
+      var x = (r() * 1.7 - 0.85) * lv.width, y = -1 + r() * 0.1, pts = [[x, y]], n = 3 + Math.floor(r() * 4);
+      for (var j = 0; j < n; j++) { x += (r() - 0.5) * 0.09; y += 0.03 + r() * 0.06; pts.push([x, y]); }
+      out.push(pts);
+    }
+    return out;
+  }
+  function bowlPath(g, lv) {
+    var w = lv.width, top = -1, low = -(lv.stem + 0.02);
+    g.beginPath();
+    g.moveTo(-w * 0.88, top);
+    g.bezierCurveTo(-w * 1.1, top + 0.22, -w * 1.05, low - 0.08, -0.03, low);
+    g.lineTo(0.03, low);
+    g.bezierCurveTo(w * 1.05, low - 0.08, w * 1.1, top + 0.22, w * 0.88, top);
+    g.closePath();
+  }
+  function baseGlass(g, lv, px) {
+    var foot = Math.max(0.17, lv.width * 0.8), top = lv.stem + 0.02;
+    g.strokeStyle = C.ink; g.lineWidth = 11 * px;
+    g.beginPath(); g.moveTo(0, -0.02); g.lineTo(0, -top); g.stroke();
+    g.strokeStyle = C.paper; g.lineWidth = 4 * px; g.stroke();
+    g.fillStyle = C.paper; g.strokeStyle = C.ink; g.lineWidth = 4 * px;
+    g.beginPath(); g.ellipse(0, 0, foot, 0.03, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+  }
+  function makeShards() {
+    var r = seeded(runSeed++), out = [], lv = run.lv;
+    for (var i = 0; i < 30; i++) {
+      var y = -1 + r() * (1 - lv.stem), x = (r() * 2 - 1) * lv.width * 0.95, a = Math.atan2(y + 0.7, x);
+      out.push({ x: x, y: y, vx: Math.cos(a) * (0.3 + r() * 0.8) + (x > 0 ? 0.2 : -0.2), vy: -0.3 - r() * 0.7, rot: r() * 6, spin: (r() - 0.5) * 14, s: 0.02 + r() * 0.05 });
+    }
+    return out;
+  }
+  // ลายจุดฮาล์ฟโทน: ตารางจุด 11px เอียง 30° วาดครั้งเดียวแล้วใช้ซ้ำ
+  var dots = null;
+  function halftone(g) {
+    if (dots) return dots;
+    var c = document.createElement('canvas'), x = c.getContext('2d');
+    c.width = c.height = 22;
+    x.fillStyle = C.ink; x.beginPath(); x.arc(11, 11, 5.4, 0, Math.PI * 2); x.fill();
+    dots = g.createPattern(c, 'repeat');
+    dots.setTransform(new DOMMatrix().rotate(30).scale(0.5));
+    return dots;
+  }
+  // ดาวระเบิดแบบการ์ตูน: หนามยาวสลับสั้น
+  function spikes(g, R, n) {
+    g.beginPath();
+    for (var i = 0; i < n; i++) {
+      var r = i % 2 ? R * 0.68 : (i % 4 ? R * 0.86 : R), a = i * 2 * Math.PI / n;
+      g.lineTo(r * Math.cos(a), r * Math.sin(a));
+    }
+    g.closePath();
+  }
+  function pill(g, x, y, w, h, r) {
+    g.beginPath();
+    g.arc(x + w - r, y + r, r, -Math.PI / 2, 0);
+    g.arc(x + w - r, y + h - r, r, 0, Math.PI / 2);
+    g.arc(x + r, y + h - r, r, Math.PI / 2, Math.PI);
+    g.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
+    g.closePath();
+  }
+  function zigzag(g, x, y, dir, n, amp) {
+    g.beginPath(); g.moveTo(x, y);
+    for (var i = 1; i <= n; i++) g.lineTo(x + (i % 2 ? dir * amp : 0), y + i * 15);
+    g.stroke();
+  }
+  function drawGlass(g, lv, p, A, H) {
+    var px = 1 / H, w = lv.width, low = -(lv.stem + 0.02);
+    g.rotate(Math.max(-1.4, Math.min(1.4, p.x)) * 6 * Math.PI / 180);
+    baseGlass(g, lv, px);
+    bowlPath(g, lv);
+    g.fillStyle = C.paper; g.fill();
+    g.save();
+    g.clip();
+    if (lv.slide) {   // ระดับน้ำตามเป้าจริง ไม่ใช่นาฬิกาแยก
+      var water = low + (-1 - low) * (0.1 + 0.7 * (p.f - lv.f0) / lv.slide.by);
+      g.fillStyle = C.red; g.fillRect(-1, water, 2, low - water);
+    }
+    var shown = p.dwell / lv.hold * run.cracks.length;
+    g.strokeStyle = C.ink; g.lineWidth = 3 * px;
+    run.cracks.forEach(function (c, i) {
+      var part = Math.min(1, shown - i);
+      if (part <= 0) return;
+      var seg = Math.ceil((c.length - 1) * part);
+      g.beginPath(); g.moveTo(c[0][0], c[0][1]);
+      for (var k = 1; k <= seg; k++) g.lineTo(c[k][0], c[k][1]);
+      g.stroke();
+    });
+    g.strokeStyle = C.red; g.lineWidth = 6 * px;
+    g.beginPath(); g.moveTo(-w * 0.62, -0.92); g.quadraticCurveTo(-w * 0.72, (low - 1) / 2, -w * 0.45, low - (1 + low) * 0.2); g.stroke();
+    g.restore();
+    bowlPath(g, lv);
+    g.strokeStyle = C.ink; g.lineWidth = 4.5 * px; g.stroke();
+    g.fillStyle = C.paper;
+    g.beginPath(); g.ellipse(0, -1, w * 0.88, 0.024 + Math.min(A, 1.4) * 0.01, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+  }
+  function drawBreak(g, lv, cx, baseY, w, h, H, age) {
+    // ก้านที่เหลือ
+    g.save();
+    g.translate(cx, baseY); g.scale(H, H);
+    baseGlass(g, lv, 1 / H);
+    g.restore();
+    // ดาวระเบิด + คำว่าเพล้ง! เด้งขึ้นครั้งเดียวแล้วค้างไว้ ไม่กะพริบ · ยิ่งเล่นดี ดาวระเบิดยิ่งใหญ่
+    var R = Math.min(w * 0.42, h * 0.46) * [0, 0.78, 0.89, 1][run.score.stars], by = Math.max(R + 6, baseY - H * 0.62);
+    var pop = reduced || age > 0.22 ? 1 : 0.6 + 0.55 * Math.sin(age / 0.22 * Math.PI * 0.75);
+    g.save();
+    g.translate(cx, by); g.scale(pop, pop);
+    g.lineJoin = 'round';
+    g.save(); g.translate(7, 8); spikes(g, R, 28); g.fillStyle = C.ink; g.fill(); g.restore();
+    spikes(g, R, 28); g.fillStyle = C.paper; g.fill();
+    g.strokeStyle = C.ink; g.lineWidth = 4; g.stroke();
+    g.rotate(-7 * Math.PI / 180);
+    g.font = '700 ' + Math.round(R * 0.42) + 'px ' + C.font; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 2; g.fillStyle = C.red; g.fillText('เพล้ง!', 0, 0); g.strokeText('เพล้ง!', 0, 0);
+    g.restore();
+    // เศษแก้ว
+    var a = reduced ? 0.3 : age, fade = reduced ? 1 : Math.max(0, 1 - age / 1.5);
+    g.save();
+    g.translate(cx, baseY); g.scale(H, H);
+    g.lineWidth = 3 / H; g.lineJoin = 'round'; g.strokeStyle = C.ink; g.fillStyle = C.paper;
+    run.shards.forEach(function (s) {
+      var x = s.x + s.vx * a, y = s.y + s.vy * a + 1.3 * a * a;
+      g.save(); g.translate(x, Math.min(y, -0.01)); g.rotate(s.rot + s.spin * a); g.globalAlpha = fade;
+      g.beginPath(); g.moveTo(-s.s, s.s * 0.6); g.lineTo(s.s * 0.2, -s.s); g.lineTo(s.s, s.s * 0.8); g.closePath(); g.fill(); g.stroke();
+      g.restore();
+    });
+    g.restore();
+  }
+  function drawStage(t, p) {
+    var box = fit(stage), w = box.w, h = box.h, lv = run.lv, tol = R.tolerance(lv, p.f), help = $('helper').checked;
+    sc.clearRect(0, 0, w, h);
+    var meterH = help ? 60 : 26, cx = w / 2, baseY = h - meterH - 12, H = Math.min(baseY - 36, w * 0.86);
+    var A = run.shards ? 0 : p.A, age = run.shards ? t - run.doneAt : 0, hot = Math.min(1, Math.max(0, (A - 0.6) / 0.6));
+
+    sc.save();
+    if (run.shards && age < 0.3 && !reduced) sc.translate(Math.sin(age * 70) * 8 * (1 - age / 0.3), Math.cos(age * 55) * 5 * (1 - age / 0.3));
+
+    // ลายจุดหลังแก้ว ขยายตามแรงสั่น
+    sc.save();
+    sc.globalAlpha = 0.34; sc.fillStyle = halftone(sc);
+    sc.beginPath(); sc.arc(cx, baseY - H * 0.55, Math.min(w * 0.47, H * 0.55) * (0.78 + (run.shards ? 0.22 : hot * 0.22)), 0, Math.PI * 2); sc.fill();
+    sc.restore();
+
+    if (run.shards) {
+      drawBreak(sc, lv, cx, baseY, w, h, H, age);
+    } else {
+      // เส้นสั่นข้างแก้ว ยิ่งแรงยิ่งยาว
+      if (A > 0.35) {
+        var side = lv.width * H * 1.05 + 16, zy = baseY - H * 0.93, jig = Math.max(-1.4, Math.min(1.4, p.x)) * 4, n = A >= 1 ? 6 : 4;
+        sc.strokeStyle = C.paper; sc.lineWidth = 4.5; sc.lineCap = 'round'; sc.lineJoin = 'round';
+        zigzag(sc, cx - side + jig, zy, -1, n, 14);
+        zigzag(sc, cx + side + jig, zy, 1, n, 14);
+      }
+      // เงาแข็งใต้ฐาน แล้วแก้วเอียงตามการแกว่งจริงรอบฐาน
+      sc.save();
+      sc.translate(cx, baseY);
+      sc.fillStyle = C.ink;
+      sc.beginPath(); sc.ellipse(6, 5, Math.max(0.17, lv.width * 0.8) * H + 3, 0.03 * H + 3, 0, 0, Math.PI * 2); sc.fill();
+      sc.scale(H, H);
+      sc.lineJoin = 'round'; sc.lineCap = 'round';
+      drawGlass(sc, lv, p, A, H);
+      sc.restore();
+    }
+    sc.restore();
+
+    sc.textBaseline = 'alphabetic';
+    if (!run.shards) {
+      // แรงสั่น: เส้นแดงคือจุดที่เริ่มร้าว เกินเส้นแล้วสีแดง
+      var mY = 24, mH = baseY - mY - 6, top = 1.6, fillH = mH * Math.min(1, A / top), lineH = mH / top;
+      sc.font = '500 12px ' + C.font; sc.textAlign = 'left'; sc.fillStyle = C.paper;
+      sc.fillText('แรงสั่น', 0, 14);
+      sc.textAlign = 'center'; sc.font = '700 13px ' + C.font;
+      sc.fillText(lv.name + ' · ' + (lv.over ? 'เล่น ' : '') + bpm(p.f) + ' BPM' + (lv.next ? ' · ' + (p.m + 1) + '/' + (lv.next.length + 1) : ''), cx, 14);
+      sc.save();
+      pill(sc, 1.5, mY, 22, mH, 11); sc.fillStyle = C.paper; sc.fill(); sc.clip();
+      sc.fillStyle = C.ink; sc.fillRect(0, mY + mH - Math.min(fillH, lineH), 24, Math.min(fillH, lineH));
+      if (fillH > lineH) { sc.fillStyle = C.red; sc.fillRect(0, mY + mH - fillH, 24, fillH - lineH); }
+      sc.fillStyle = C.red; sc.fillRect(0, mY + mH - lineH - 2, 24, 4);
+      sc.restore();
+      pill(sc, 1.5, mY, 22, mH, 11); sc.strokeStyle = C.ink; sc.lineWidth = 3; sc.stroke();
+      sc.textAlign = 'left'; sc.font = '500 12px ' + C.font; sc.fillStyle = C.paper;
+      sc.fillText('เริ่มร้าว', 29, mY + mH - lineH + 4);
+      // ความคืบหน้าของรอยร้าวดูจากรอยบนแก้วอย่างเดียว (เจ้าของตัดสติกเกอร์ "ร้าว %" 12 พ.ย.)
+    }
+
+    if (run.shards) return;
+
+    // ความถี่มือ
+    var hz = handHz(t), my = h - 6;
+    sc.textAlign = 'center'; sc.font = '500 14px ' + C.font; sc.fillStyle = C.paper;
+    var label = hz === null ? '– BPM' : bpm(hz) + ' BPM';
+    if (!help) { sc.fillText(label, cx, my); return; }
+    var mx = 2, mw = w - 4, span = Math.max(tol * 4, 0.3), X = function (f) { return mx + mw * (0.5 + (f - p.f) / (2 * span)); }, by = h - 36;
+    sc.save();
+    // แถบพองตอนขีดแดงสุดขอบ บอกจังหวะเป้าโดยไม่เพิ่มของบนจอ
+    var beat = reduced ? 0 : 5 * Math.pow(Math.max(0, Math.sin(ghost.phase)), 8), barY = by - beat / 2, barH = 16 + beat;
+    pill(sc, mx, barY, mw, barH, barH / 2); sc.fillStyle = C.paper; sc.fill(); sc.clip();
+    sc.fillStyle = C.ink; sc.fillRect(X(p.f - tol), barY, X(p.f + tol) - X(p.f - tol), barH);
+    sc.restore();
+    pill(sc, mx, barY, mw, barH, barH / 2); sc.strokeStyle = C.ink; sc.lineWidth = 3; sc.stroke();
+    var nx = hz === null ? mx + 12 : Math.max(mx + 12, Math.min(mx + mw - 12, X(hz)));   // ยังไม่เล่น: เข็มจอดซ้ายสุด
+    sc.lineJoin = 'round'; sc.fillStyle = C.paper;
+    sc.beginPath(); sc.moveTo(nx - 10, by - 18); sc.lineTo(nx + 10, by - 18); sc.lineTo(nx, by - 2); sc.closePath(); sc.fill(); sc.stroke();
+    sc.textAlign = 'left'; sc.fillStyle = C.paper; sc.font = '700 14px ' + C.font; sc.fillText(label, mx, my);
+    sc.textAlign = 'right'; sc.font = '400 14px ' + C.font; sc.fillText('เป้า ' + bpm(p.f) + ' BPM', mx + mw, my);
+  }
+  // ขีดแดง: แกว่งตามจังหวะเป้ารอบตำแหน่งที่มือเล่นอยู่ เล่นตามแล้วได้ทั้งจังหวะและแรง · แค่ความถี่ตรงก็พอ เฟสจึงเดินเองไม่ผูกกับแก้ว
+  var GHOST_SWING = 40 * Math.PI / 180, ghost = { phase: 0, center: 0, at: 0 };
+  function stepGhost(t, f) {
+    var dt = Math.min(0.1, t - ghost.at);
+    ghost.at = t;
+    ghost.phase += 2 * Math.PI * f * dt;
+    ghost.center += (run.angle - ghost.center) * dt / 0.8;
+  }
+  function drawPlatter() {
+    var box = fit(platter), s = Math.min(box.w, box.h), c = s / 2, r = c - 4;
+    pc.clearRect(0, 0, box.w, box.h);
+    pc.fillStyle = C.ink; pc.strokeStyle = C.paper; pc.lineWidth = 6;
+    pc.beginPath(); pc.arc(c, c, r, 0, Math.PI * 2); pc.fill(); pc.stroke();
+    pc.lineWidth = 2; pc.globalAlpha = 0.75;
+    [0.84, 0.68].forEach(function (k) { pc.beginPath(); pc.arc(c, c, r * k, 0, Math.PI * 2); pc.stroke(); });
+    pc.globalAlpha = 1;
+    var mark = Math.max(7, r * 0.09);
+    pc.lineCap = 'round';
+    if ($('helper').checked && run.doneAt === null) {
+      pc.save(); pc.translate(c, c); pc.rotate(ghost.center + GHOST_SWING * Math.sin(ghost.phase));
+      pc.strokeStyle = C.red; pc.lineWidth = mark * 1.7;   // กว้างกว่าขีดขาว เล่นตรงแล้วขีดขาวจะอยู่กลางแดง
+      pc.beginPath(); pc.moveTo(0, -r * 0.56); pc.lineTo(0, -r * 0.92); pc.stroke();
+      pc.restore();
+    }
+    pc.save(); pc.translate(c, c); pc.rotate(run.angle);
+    pc.lineWidth = mark;
+    pc.beginPath(); pc.moveTo(0, -r * 0.56); pc.lineTo(0, -r * 0.92); pc.stroke();
+    pc.restore();
+    // ฉลากกลางจาน: เป็นสีแดงตอนกำลังลาก
+    var dragging = handOn(nowS());
+    pc.fillStyle = dragging ? C.red : C.paper; pc.strokeStyle = C.ink; pc.lineWidth = 3;
+    pc.beginPath(); pc.arc(c, c, r * 0.46, 0, Math.PI * 2); pc.fill(); pc.stroke();
+    pc.fillStyle = dragging ? C.paper : C.ink; pc.font = '500 13px ' + C.font; pc.textAlign = 'center'; pc.textBaseline = 'middle';
+    pc.fillText('ลากไปกลับ', c, c);
+  }
+  function frame() {
+    var t = nowS(), p = R.peek(run.o, t);
+    if (p.broke !== null && run.doneAt === null) { R.advance(run.o, t); finish(); }
+    if (run.doneAt !== null && !run.shown && t - run.doneAt >= HOLD) showResult();
+    stepGhost(t, p.f);
+    var sp = run.tr.speed();
+    if (handOn(t) && t - lastMove > 0.05) sp = 0;
+    drawStage(t, p);
+    drawPlatter();
+    audio.update(p.f * (run.lv.over || 1), run.doneAt === null ? p.A : 0, p.x, handOn(t) ? sp : 0);
+    if (run.doneAt === null) showNote();
+    requestAnimationFrame(frame);
+  }
+
+  // ── การควบคุม ────────────────────────────────────────────
+  var dragId = null, unwrapped = 0, lastMove = 0, clutchDown = false, lastJog = -1;
+  function handOn(t) { return dragId !== null || (lastJog >= 0 && t - lastJog < 0.2); }
+  function feedHand(ts) {
+    lastMove = ts;
+    if (run.doneAt !== null) return;
+    var ev = run.tr.feed(unwrapped, ts);
+    if (ev) onReversal(ev);
+  }
+  function angleOf(e) {
+    var r = platter.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+    return Math.hypot(x, y) < r.width * 0.06 ? null : Math.atan2(y, x);
+  }
+  function movePoint(e) {
+    var a = angleOf(e);
+    if (a === null) return;
+    if (run.lastAng !== null) {
+      var d = a - run.lastAng;
+      if (d > Math.PI) d -= Math.PI * 2; else if (d < -Math.PI) d += Math.PI * 2;
+      unwrapped += d; run.angle += d;
+    }
+    run.lastAng = a;
+    feedHand(e.timeStamp / 1000);
+  }
+  platter.addEventListener('pointerdown', function (e) {
+    if (dragId !== null) return;
+    audio.ensure();
+    dragId = e.pointerId; run.input = e.pointerType;
+    try { platter.setPointerCapture(e.pointerId); } catch (x) { /* ไม่มีผลกับการเล่น */ }
+    run.lastAng = null; run.tr.reset();
+    movePoint(e); e.preventDefault();
+  });
+  platter.addEventListener('pointermove', function (e) {
+    if (e.pointerId !== dragId) return;
+    (e.getCoalescedEvents ? e.getCoalescedEvents() : []).concat([]).forEach(movePoint);
+    if (!e.getCoalescedEvents || !e.getCoalescedEvents().length) movePoint(e);
+    e.preventDefault();
+  });
+  function endDrag(e) { if (e.pointerId === dragId) { dragId = null; run.lastAng = null; run.tr.reset(); } }
+  platter.addEventListener('pointerup', endDrag);
+  platter.addEventListener('pointercancel', endDrag);
+
+  stage.addEventListener('pointerdown', function (e) {
+    audio.ensure();
+    if (run.doneAt !== null) return;
+    R.tap(run.o, nowS()); run.tapped = true; e.preventDefault();
+  });
+
+  // ── เครื่อง MIDI: เรียนรู้จานจากการหมุนจริง 2 ขั้น (สแครช → หมุน 1 รอบ) ไม่ผูกเลขรุ่นใด ─────
+  var JOG_KEY = 'resonance-jog', LEARN_MAX = 800;
+  var midi = null, jog = null, step = 'idle', heard = [], cand = null, sum = 0, failed = null;
+  try { jog = JSON.parse(localStorage.getItem(JOG_KEY)); } catch (e) { jog = null; }
+  function midiInputs() {
+    var out = [];
+    midi.inputs.forEach(function (i) { if (i.state === 'connected') out.push(i); });
+    return out;
+  }
+  function jogConnected() { return !!(midi && jog) && midiInputs().some(function (i) { return i.name === jog.name; }); }
+  function midiSay(text, go) {
+    $('midiMsg').textContent = text;
+    $('midiGo').hidden = !go;
+    if (go) $('midiGo').textContent = go;
+  }
+  function midiListen() {
+    midiInputs().forEach(function (input) {
+      input.onmidimessage = onMidi;
+      if (input.connection !== 'open') input.open().then(null, function () { midiSay('เปิดเครื่องไม่ได้ ปิด rekordbox หรือ Serato ก่อน'); });
+    });
+  }
+  function startScratch() { step = 'scratch'; heard = []; cand = null; failed = null; midiSay('ขั้น 1/2: วางมือแล้วสแครชจานฝั่งที่จะเล่น ไปกลับสักครู่'); }
+  function midiStep() {
+    if (!midi || !$('midiBox').open || step === 'turn') return;
+    midiListen();
+    if (!midiInputs().length) { step = 'idle'; midiSay('ยังไม่เจอเครื่อง เสียบสาย USB แล้วรอสักครู่'); return; }
+    if (jogConnected()) { step = 'idle'; midiSay('พร้อมเล่นกับ ' + jog.name, 'ตั้งค่าใหม่'); return; }
+    if (step !== 'scratch') startScratch();
+  }
+  function midiStatus() { $('midiOpen').textContent = jogConnected() ? 'ต่อแล้ว' : 'ต่อเครื่อง'; }
+  function onMidi(e) {
+    var m = [e.data[0], e.data[1], e.data[2]];
+    if (step === 'scratch') {
+      heard.push(m.concat(e.target.name));
+      if (heard.length % 20 === 0) {
+        // เรียนรู้จากเครื่องที่ส่งมาล่าสุดเครื่องเดียว กันข้อความจากพอร์ตอื่นปน
+        var found = R.learnJog(heard.filter(function (x) { return x[3] === e.target.name; }));
+        if (found) { cand = found; cand.name = e.target.name; step = 'turn'; sum = 0; failed = null; midiSay('ขั้น 2/2: หมุนจาน 1 รอบพอดีตามเข็มนาฬิกา แล้วกดเสร็จ', 'เสร็จ'); }
+        else if (heard.length >= LEARN_MAX) { failed = heard.slice(-300); heard = []; midiSay('ยังไม่เจอจาน ลองสแครชอีกครั้ง หรือคัดลอกข้อมูลส่งทีมพัฒนา', 'คัดลอกข้อมูล'); }
+      }
+      return;
+    }
+    if (step === 'turn') { if (e.target.name === cand.name) sum += R.jogTicks(cand, m); return; }
+    if (!jog || e.target.name !== jog.name) return;
+    var ticks = R.jogTicks(jog, m);
+    if (!ticks) return;
+    var d = jog.sign * ticks * 2 * Math.PI / jog.perRev, ts = e.timeStamp / 1000;   // เวลาของข้อความเอง ไม่ใช่เวลาที่หน้าเว็บได้รับ
+    unwrapped += d; run.angle += d; run.input = 'midi'; lastJog = ts;
+    feedHand(ts);
+  }
+  if (navigator.requestMIDIAccess && matchMedia('(pointer: fine)').matches) $('midiOpen').hidden = false;
+  $('midiOpen').onclick = function () {
+    audio.ensure();
+    $('midiBox').showModal();
+    if (midi) { midiStep(); return; }
+    midiSay('กำลังเปิด MIDI กดอนุญาตถ้าเบราว์เซอร์ถาม');
+    navigator.requestMIDIAccess({ sysex: false }).then(function (access) {
+      midi = access;
+      midi.onstatechange = function () { midiListen(); midiStep(); midiStatus(); };
+      midiListen(); midiStep(); midiStatus();
+    }, function () { midiSay('หน้านี้เปิด MIDI ไม่ได้ ลองเปิดด้วย Chrome หรือ Edge'); });
+  };
+  $('midiGo').onclick = function () {
+    if (failed) { $('midiBox').close(); copyOut(JSON.stringify(failed)); failed = null; return; }
+    if (step !== 'turn') { jog = null; startScratch(); return; }
+    if (Math.abs(sum) < 30) { sum = 0; midiSay('นับได้น้อยไป หมุนจาน 1 รอบพอดีอีกครั้ง แล้วกดเสร็จ', 'เสร็จ'); return; }
+    jog = { name: cand.name, status: cand.status, ccs: cand.ccs, kind: cand.kind, perRev: Math.abs(sum), sign: sum > 0 ? 1 : -1 };
+    try { localStorage.setItem(JOG_KEY, JSON.stringify(jog)); } catch (e) { /* ครั้งหน้าตั้งค่าใหม่ */ }
+    step = 'idle'; midiStatus(); $('midiBox').close();
+  };
+  $('midiClose').onclick = function () { $('midiBox').close(); };
+  $('midiBox').addEventListener('close', function () { if (step !== 'idle') step = 'idle'; });
+
+  function setClutch(v) { clutchDown = v; $('clutch').classList.toggle('on', v); }
+  $('clutch').addEventListener('pointerdown', function (e) { audio.ensure(); setClutch(true); try { $('clutch').setPointerCapture(e.pointerId); } catch (x) { /* ไม่มีผลกับการเล่น */ } e.preventDefault(); });
+  ['pointerup', 'pointercancel'].forEach(function (n) { $('clutch').addEventListener(n, function () { setClutch(false); }); });
+  addEventListener('keydown', function (e) { if (e.code === 'Space' && !e.repeat && $('useClutch').checked) { setClutch(true); e.preventDefault(); } });
+  addEventListener('keyup', function (e) { if (e.code === 'Space') setClutch(false); });
+
+  function restart() { saveRun(false); newRun(); }
+  function setLevel(i) { if (run.doneAt === null) saveRun(false); levelIx = i; renderTabs(); newRun(); }
+  function renderTabs() {
+    var phase = Math.floor(levelIx / PHASE_SIZE);
+    $('phases').innerHTML = PHASES.map(function (name, i) {
+      return '<button type="button" data-i="' + i * PHASE_SIZE + '" aria-pressed="' + (i === phase) + '"><b>' + (i + 1) + ' ' + name + '</b></button>';
+    }).join('');
+    $('tabs').innerHTML = LEVELS.slice(phase * PHASE_SIZE, (phase + 1) * PHASE_SIZE).map(function (l, k) {
+      var i = phase * PHASE_SIZE + k, n = best[l.name] ? best[l.name].stars : 0;
+      return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === levelIx) + '" aria-label="ด่าน ' + (k + 1) + ' ' + l.name + ' ' + bpm(l.f0) + ' BPM ' + n + ' ดาว"><b>' + (k + 1) + '</b><small>' + starsText(n) + '</small></button>';
+    }).join('');
+  }
+  $('phases').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b && b.getAttribute('aria-pressed') !== 'true') { audio.ensure(); setLevel(+b.dataset.i); }
+  });
+  $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { audio.ensure(); setLevel(+b.dataset.i); } });
+  $('restart').onclick = function () { audio.ensure(); restart(); };
+  $('helper').onchange = function () {   // ผลเก็บแยกตามตัวช่วย จึงต้องเริ่มด่านใหม่ · บอกผู้เล่นถ้าเล่นค้างอยู่
+    var had = run.revs.length > 0 && run.doneAt === null;
+    restart();
+    if (had) { run.msg = ($('helper').checked ? 'เปิด' : 'ปิด') + 'ตัวช่วยแล้ว เริ่มด่านใหม่'; run.msgAt = nowS(); }
+  };
+  $('useClutch').onchange = function () { $('clutch').hidden = !$('useClutch').checked; setClutch(false); restart(); };
+  $('copy').onclick = function () { copyOut(JSON.stringify(runs)); };
+  function copyOut(text) {
+    var show = function () { if ($('howto').open) $('howto').close(); $('copyBox').hidden = false; $('copyText').value = text; $('copyText').focus(); $('copyText').select(); };
+    if (!navigator.clipboard) { show(); return; }
+    navigator.clipboard.writeText(text).then(function () {
+      $('copy').textContent = 'คัดลอกแล้ว'; setTimeout(updateCopy, 1500);
+    }, show);
+  }
+  $('copyClose').onclick = function () { $('copyBox').hidden = true; };
+  $('howtoOpen').onclick = function () { $('howto').showModal(); };
+  $('howtoClose').onclick = function () { audio.ensure(); $('howto').close(); };
+  $('howto').addEventListener('close', function () { try { localStorage.setItem(HOWTO_KEY, '1'); } catch (e) { /* ครั้งหน้าแสดงอีกรอบ */ } });
+
+  renderTabs(); updateCopy(); newRun();
+  var seen = false;
+  try { seen = !!localStorage.getItem(HOWTO_KEY); } catch (e) { /* ถือว่ายังไม่เคยเห็น */ }
+  if (!seen) $('howto').showModal();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
