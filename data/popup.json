@@ -70,6 +70,17 @@
       "until": "2026-11-30"
     },
     {
+      "type": "podcast",
+      "title": "Podcast EP.6 — DJ BALLISTICONE ตามหาความหมายที่ซ่อนอยู่ในเพลง",
+      "img": "podcast-ep6.webp",
+      "imgM": "podcast-ep6-m.webp",
+      "alt": "ปก Podcast EP.6 DJ BALLISTICONE ตามหาความหมายที่ซ่อนอยู่ในเพลง ฉาย 12 พ.ย. 2569 เวลา 19:00 น.",
+      "bare": true,
+      "link": "https://youtu.be/J-uHcYXEe_U",
+      "cta": "ดูบน YouTube",
+      "until": "2026-11-19"
+    },
+    {
       "type": "update",
       "title": "Signal Flow — เกมฝึกต่อสายเครื่องเสียง DJ เล่นได้แล้ว",
       "text": "ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง Phase 1–2 เล่นฟรีทุกคน Phase 3 (14 ด่าน) เฉพาะสมาชิก",
@@ -78,17 +89,6 @@
       "alt": "ฉากเกม Signal Flow: เครื่อง CDJ มิกเซอร์ เทิร์นเทเบิล และลำโพงที่ต่อสายสัญญาณครบ",
       "link": "/game/",
       "cta": "เล่นเลย"
-    },
-    {
-      "type": "podcast",
-      "title": "Podcast EP.5 — ทำไม DJ ไม่เปิดเพลงใหม่",
-      "img": "podcast-ep5.webp",
-      "imgM": "podcast-ep5-m.webp",
-      "alt": "ปก Podcast EP.5 หัวข้อ ทำไม DJ ไม่เปิดเพลงใหม่ เผยแพร่ 4 พ.ย. 2569 เวลา 18:00 น.",
-      "bare": true,
-      "link": "https://youtu.be/z8NQC2b7SXQ",
-      "cta": "ดูบน YouTube",
-      "until": "2026-11-11"
     }
   ]
 }
