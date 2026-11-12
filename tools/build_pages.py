@@ -1158,6 +1158,7 @@ HOME_CSS = r"""
 .hgm-c ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-weight:600}
 .hgm-c li::before{content:"✓ ";color:var(--brand-base)}
 .hgm-c .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hgm-v>img{display:block;width:100%;height:100%;object-fit:cover}
 .h3d-s{position:relative;aspect-ratio:5/3;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--lab-line);background-color:#FAF9F6;
   background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
 .h3d-s img{width:100%;height:100%;object-fit:contain;padding:3%;mix-blend-mode:multiply}
@@ -1349,6 +1350,16 @@ def practice_html():
             f'<button type="button" class="hpr-snd" id="pr-snd" aria-pressed="false" aria-label="เปิดเสียงวิดีโอ"><span class="s-off">{ic("mute", 22)}</span><span class="s-on">{ic("vol", 22)}</span></button></div></div></section>')
 
 
+def news_card_html():
+    """Home page news card: the latest report (/news/sync-2026/), picture only - the clip is on the report page (nothing is preloaded here)."""
+    return ('<section class="hsec" id="news" aria-labelledby="nw-h"><div class="hgm"><article class="hgm-c"><div class="hgm-v">'
+            '<img src="/news/sync-2026/booth-800.webp" width="800" height="534" alt="โต๊ะ AlphaTheta ในงาน มีมอนิเตอร์สปีกเกอร์ แท็บเล็ต และ DJ Controller วางบนโต๊ะ" loading="lazy" decoding="async"></div>'
+            '<div class="in"><span class="tag">ข่าวล่าสุด</span><h2 id="nw-h">เปิด SYNC! ลองมิกซ์เพลงครั้งแรกในชีวิตด้วย DJ Controller</h2>'
+            '<p>กิจกรรมฟรีวันที่ 7–8 พฤศจิกายน 2569 ที่ Siam Square One ทางลาดหน้า Shop FILA ไม่ต้องมีพื้นฐาน มี Staff และ DJ Instructor แนะนำทีละสเต็ป</p>'
+            '<div class="acts"><a class="btn pri" href="/news/sync-2026/">อ่านข่าวและดูคลิป</a></div>'
+            '<small>ภาพ: Mahajak / AlphaTheta</small></div></article></div></section>')
+
+
 def home_page():
     live = A.home == "/"
     pairs = home_faq_pairs()
@@ -1357,6 +1368,7 @@ def home_page():
     pod_btns = "".join(f'<a class="btn {"pri" if i == 0 else "sec"}" href="{E(x["url"])}" target="_blank" rel="noopener">{E(x["label"])} {ic("ext", 18)}</a>' for i, x in enumerate(LISTEN))
     body = (
         cdj_demo.section_html(line_btn(EQUIP_MSG, "ทัก LINE ถามราคาอุปกรณ์")) +
+        news_card_html() +
         cdj_demo.invite_html(line_btn("อยากเริ่มเรียน DJ ที่ DJ LAB SIAM", "ทัก LINE ถามคอร์ส"), len(TEACHERS)) +
         practice_html() +
         f'<section class="hsec" id="shop3d"><div class="h3d"><div class="h3d-t"><h2>ดูเครื่องแบบ 3 มิติ แล้ววางในห้องคุณด้วย AR</h2>'
@@ -1374,7 +1386,7 @@ def home_page():
         f'<section class="hsec" id="podcast"><div class="hlp"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
-        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a><a class="btn sec" href="/news/sync-2026/">ข่าวล่าสุด: เปิด SYNC!</a></div></div>{cover_slider()}</div>'
+        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div>'
         f'<div class="hpod"><div class="hp-t"><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2>'
         f'<p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div>{cover_slider(PODCAST_EPS, "podcast", "ปกตอนของ DJ LAB Podcast เรียงจากตอนล่าสุด")}</div></div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
