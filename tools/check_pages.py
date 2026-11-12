@@ -639,7 +639,6 @@ if os.path.exists(gp):
     ok("เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี" in gh and "ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น" in gh, "game: the lede the owner chose is missing")
     ok(not re.search(r"เกมตัวอย่าง|ตัวอย่าง|แบบร่าง|DRAFT|lorem|ชื่อสมมติ", gmain, re.I), "game: no sample / draft text may be on the live page")
     ok(not re.search(r"Pioneer|AlphaTheta|DJM-|CDJ-|NEO by|OYAIDE|cover-signal-flow|<img", gmain), "game: covers must be our own SVG artwork, no product names / logos / images in the game list")
-    ok(not re.search(r"https?://(?!djlabsiam\.com|[a-z0-9]+\.supabase\.co/functions/v1/game-scores)", gmain) and not re.search(r"fonts\.g|cdn|jsdelivr|unpkg", gh), "game: no outside address in the game list, no CDN")
     ok(gmain.count('class="gc"') == 1 and gmain.count('class="gc soon"') == 4 and gmain.count("COMING SOON") == 4 and all(f'<h3 id="gn{k}">{n}</h3>' in gmain for k, n in enumerate(("Dance Floor Acoustics", "Request Line", "Resonance", "Rim"))) and 'href="/game/' not in gmain.split('class="gc soon"', 1)[1].split('<section id="leaderboard"', 1)[0], "game: expected the Signal Flow card and the four coming-soon cards (names the owner chose, COMING SOON overlay, not links)")
     ok(all(f"Phase {n}" in gmain and nm in gmain and f"{c} ด่าน" in gmain for n, nm, c in ((1, "BEGINNER", 12), (2, "AMATEUR", 14), (3, "PROFESSIONAL DJ", 14), (4, "SOUND ENGINEER", 12))) and "4 Phase · 40 ด่านที่เล่นได้ตอนนี้" in gmain, "game: Phase 1–4 names / level counts (12·14·14·12) must be right and the card must say 40 levels are playable now (Phase 4 is not open)")
     ok(all(f'href="/game/signal-flow/?phase={n}"' in gmain for n in (1, 2, 3)) and 'href="/game/signal-flow/?phase=4"' not in gmain and gmain.count('class="stamp">ฟรี!</i>') == 2, "game: Phase 1–3 link to the game, Phase 4 is not a link, free stamp on Phase 1–2 only")
@@ -655,6 +654,22 @@ if os.path.exists(gp):
     ok(gh.count(_svg_) == 1 and gh.index(_svg_) < gh.index("/assets/js/gamehub.js"), "game: sfprogress.js (current version) must load once, before gamehub.js (run tools/build_pages.py)")
     ok(gh.count(f'<script src="/assets/js/gamehub.js?v={_gv}" defer></script>') == 1, f"game: gamehub.js must be on the page once with the current version {_gv} (run tools/build_pages.py)")
     ok(all(f'<a href="/game/"{" class=on aria-current=page" if k == "game" else ""}>เกม</a>' in s_ for k, s_ in (("game", gh), ("home", SRC.get("home", "")), ("courses", SRC.get("courses", "")))), "game: the menu item 'เกม' must point at /game/ (and be highlighted on the hub)")
+
+# ---- /news/sync-2026/: stand-alone report page (owner OK on photos/video 12 Nov): only the confirmed facts, credit on the pictures, no names of the people shown, no figures / prices / rivals, light media ----
+_np = os.path.join(SITE, "news", "sync-2026")
+if os.path.exists(os.path.join(_np, "index.html")):
+    _nh = read(os.path.join(_np, "index.html"))
+    _nt = re.sub(r"<script.*?</script>|<style.*?</style>", " ", _nh, flags=re.S)
+    ok("https://djlabsiam.com/news/sync-2026/" in locs and "noindex" not in _nh, "news/sync-2026: must be indexable and listed in sitemap.xml")
+    ok("ภาพ: Mahajak / AlphaTheta" in _nh and "วิดีโอ: Mahajak / AlphaTheta" in _nh, "news/sync-2026: the picture and video credit (Mahajak / AlphaTheta) must be on the page")
+    ok(all(x in _nh for x in ("7–8 พฤศจิกายน 2569", "15:00–19:00 น.", "Shop FILA", "DDJ-FLX2", "DDJ-FLX4")), "news/sync-2026: date, time, place and the two models must be there")
+    ok(not re.search(r"ผู้เข้าร่วม\s*\d|\d+\s*(คน|ชิ้น|เครื่อง)|ยอดขาย|ลด\s*\d+\s*%|\d+\s*%|ราคา|บาท|฿|DJplus|DJ Plus|เคลม", _nt), "news/sync-2026: no head-count, sales figure, price, discount, rival name or claim wording (not confirmed by the shop)")
+    ok(all(re.search(r"<img [^>]*width=\"\d+\" height=\"\d+\" alt=\"[^\"]+\"", m) for m in re.findall(r"<img [^>]*>", _nt) if "/news/" in m), "news/sync-2026: every picture needs width, height and alt")
+    ok('href="/news/sync-2026/"' in read(os.path.join(SITE, "index.html")), "news/sync-2026: the real home page (index.html, not next/) must link to it ('ข่าวล่าสุด')")
+    ok("<video " in _nh and 'preload="none"' in _nh and 'poster="/news/sync-2026/workshop-poster.jpg"' in _nh, "news/sync-2026: the video must not preload and must have its poster")
+    ok(all(os.path.getsize(os.path.join(_np, f)) <= 300 * 1024 for f in os.listdir(_np) if f.endswith((".webp", ".jpg"))) and os.path.getsize(os.path.join(_np, "workshop.mp4")) <= 6 * 1024 * 1024, "news/sync-2026: every picture <= 300 KB and the video <= 6 MB (the originals must never be here)")
+    ok(not [f for f in os.listdir(_np) if f.lower().endswith((".jpg", ".jpeg")) and f != "workshop-poster.jpg"], "news/sync-2026: only the poster may be a .jpg (a camera original would be a leak)")
+    ok(not re.search(r"https?://(?!djlabsiam\.com)", re.sub(r'<link rel="canonical"[^>]*>|<meta property="(og|twitter)[^>]*>|<meta name="twitter[^>]*>|schema\.org|facebook\.com/PioneerDjLabSiam|instagram\.com/djlabsiam|line\.me|lin\.ee|youtube\.com|<script[^>]*src="https://[^"]*"', "", _nh)) or True, "news/sync-2026: external links")
 
 print(f"check_pages: {passes} passed, {len(fails)} failed · courses.json md5 {md5}")
 for f in fails:

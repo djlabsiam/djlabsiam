@@ -1044,6 +1044,60 @@ def content_page():
                  script=CONTENT_JS.replace("@@API@@", api).replace("@@KEY@@", key), css_extra=CONTENT_CSS)
 
 
+# ───────── /news/sync-2026/ (one stand-alone report page · photos and video are in news/sync-2026/, credited to Mahajak / AlphaTheta) ─────────
+NEWS_CSS = r"""
+.nw-meta{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:8px;max-width:560px}
+.nw-meta li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:12px 16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md)}
+.nw-meta b{font:700 15px/1.5 var(--font-family-display);color:var(--brand-base)}
+.nw-body{max-width:68ch}
+.nw-body p{margin:16px 0 0}
+.nw-quote{margin:24px 0 0;padding:16px 20px;border-left:4px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-sm);font:700 20px/1.5 var(--font-family-display)}
+.nw-media{display:grid;gap:20px;margin-top:20px}
+.nw-media figure{margin:0}
+.nw-media img,.nw-media video{display:block;width:100%;height:auto;border-radius:var(--radius-md);border:1px solid var(--lab-line);background:var(--lab-tint)}
+.nw-media figcaption{margin-top:8px;font-size:15px;color:var(--text-secondary)}
+.nw-vid{max-width:340px}
+.nw-gal{display:grid;grid-template-columns:1fr;gap:16px}
+.nw-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+@media (min-width:720px){.nw-gal{grid-template-columns:1fr 1fr}.nw-gal .wide{grid-column:1/-1}.nw-media.two{grid-template-columns:340px 1fr;align-items:start}}
+"""
+NEWS_PHOTOS = [   # file in news/sync-2026/, width, height, alt, caption (no names of the people in the pictures)
+    ("booth.webp", 1600, 1067, "โต๊ะ AlphaTheta ในงาน มีมอนิเตอร์สปีกเกอร์ แท็บเล็ต และ DJ Controller วางบนโต๊ะ", "บูธ Workshop ที่ Siam Square One ใช้อุปกรณ์มาตรฐาน AlphaTheta / Pioneer DJ ของจริง"),
+    ("controller-flx2.webp", 1200, 800, "DJ Controller ขนาดกะทัดรัดวางข้างหูฟัง มองจากด้านบน", "DJ Controller ที่ให้ลองมิกซ์ในงาน"),
+    ("controller-flx4.webp", 1200, 800, "DJ Controller สองดาดฟ้า มีแพดและมิกเซอร์ วางข้างหูฟังและสปีกเกอร์", "อีกรุ่นที่เปิดให้ลองเล่นในงาน"),
+    ("instructor.webp", 1200, 800, "ผู้ร่วมงานและทีมงานหน้าโต๊ะ Workshop ที่มี DJ Controller และแล็ปท็อป", "บรรยากาศหน้าโต๊ะ Workshop"),
+    ("staff.webp", 1200, 800, "คนยืนข้างโต๊ะที่มี DJ Controller และแล็ปท็อป ในงาน", "บรรยากาศในงานวันที่ 8 พ.ย."),
+    ("tote.webp", 1200, 800, "สองคนยืนถือกระดาษพิมพ์ลายโครง DJ Controller ที่งาน", "บรรยากาศในงานวันที่ 8 พ.ย."),
+]
+
+
+def news_page():
+    ph = "".join(f'<figure{" class=wide" if i == 0 else ""}><img src="/news/sync-2026/{f}" width="{w}" height="{h}" alt="{E(alt)}" loading="{"eager" if i == 0 else "lazy"}" decoding="async"><figcaption>{E(cap)}</figcaption></figure>'
+                 for i, (f, w, h, alt, cap) in enumerate(NEWS_PHOTOS))
+    body = ('<section class="hero"><h1>เปิด SYNC! ลองมิกซ์เพลงครั้งแรกในชีวิตด้วย DJ Controller</h1>'
+            '<p class="lede">วันที่ 7–8 พฤศจิกายน 2569 DJ LAB SIAM ร่วมกับ AlphaTheta และมหาจักร จัดกิจกรรม "เปิด SYNC!" ให้ทุกคนมาทดลองมิกซ์เพลงด้วย DJ Controller เป็นครั้งแรก ที่ Siam Square One ทางลาดหน้า Shop FILA</p>'
+            '<ul class="nw-meta"><li><b>วันที่</b><span>7–8 พฤศจิกายน 2569</span></li><li><b>เวลา</b><span>15:00–19:00 น.</span></li>'
+            '<li><b>สถานที่</b><span>Siam Square One ทางลาดหน้า Shop FILA</span></li><li><b>ค่าเข้าร่วม</b><span>ฟรี ไม่มีค่าใช้จ่าย</span></li></ul></section>'
+            '<section class="nw-body"><h2>กิจกรรมนี้คืออะไร</h2>'
+            '<p>Workshop ทดลองเล่น DJ Controller รุ่น DDJ-FLX2 และ DDJ-FLX4 ใช้อุปกรณ์มาตรฐาน AlphaTheta / Pioneer DJ ของจริง มี Staff และ DJ Instructor คอยแนะนำทีละสเต็ป ร่วมได้ทุกคน ไม่ต้องมีพื้นฐานมาก่อน</p>'
+            '<p class="nw-quote">"ไม่เคยจับ DJ Controller มาก่อนก็เล่นได้ใน 10 นาที!"</p>'
+            '<p>กิจกรรมออกแบบมาสำหรับผู้เริ่มต้นและคนรุ่นใหม่ที่สนใจลองสิ่งใหม่ๆ ใครที่สนใจการมิกซ์เพลงแต่ยังไม่เคยแตะเครื่อง มาเริ่มที่นี่ได้เลย</p></section>'
+            '<section><h2>ภาพและคลิปจากงาน</h2><div class="nw-media two"><figure class="nw-vid">'
+            '<video controls preload="none" playsinline poster="/news/sync-2026/workshop-poster.jpg" width="540" height="960"><source src="/news/sync-2026/workshop.mp4" type="video/mp4"></video>'
+            '<figcaption>คลิป AlphaTheta X DJ Lab Workshop (35 วินาที) · วิดีโอ: Mahajak / AlphaTheta</figcaption></figure>'
+            f'<div class="nw-gal">{ph}</div></div>'
+            '<p class="cl-note">ภาพ: Mahajak / AlphaTheta · ภาพถ่ายวันที่ 8 พฤศจิกายน 2569</p></section>'
+            '<section><h2>อยากเริ่มเล่น DJ ต่อ</h2><p class="lede">DJ LAB SIAM เป็นตัวแทนจำหน่ายอุปกรณ์ DJ อย่างเป็นทางการ โรงเรียนสอน DJ และห้องซ้อม ที่ Lido Connect ชั้น 2 สยามสแควร์ ซอย 3 เปิดทุกวัน 12:00–20:00 น.</p>'
+            '<div class="nw-cta"><a class="btn pri" href="/courses/">ดูคอร์สเรียน</a><a class="btn sec" href="/book/">จองห้องซ้อม</a></div></section>')
+    ld = [{"@context": "https://schema.org", "@type": "NewsArticle", "headline": "เปิด SYNC! ลองมิกซ์เพลงครั้งแรกในชีวิตด้วย DJ Controller",
+           "datePublished": "2026-11-12", "inLanguage": "th", "image": [f"{ORIGIN}/news/sync-2026/booth.webp"],
+           "author": {"@type": "Organization", "name": "DJ LAB SIAM"}, "publisher": {"@type": "Organization", "name": "DJ LAB SIAM"},
+           "mainEntityOfPage": f"{ORIGIN}/news/sync-2026/"}]
+    return shell("/news/sync-2026/", "เปิด SYNC! ลองมิกซ์เพลงครั้งแรกด้วย DJ Controller — DJ LAB SIAM x AlphaTheta",
+                 "กิจกรรมฟรี 7–8 พ.ย. 2569 ที่ Siam Square One ทดลองมิกซ์เพลงด้วย DJ Controller DDJ-FLX2 และ DDJ-FLX4 มี DJ Instructor แนะนำทีละสเต็ป ไม่ต้องมีพื้นฐาน",
+                 body, ld=ld, css_extra=NEWS_CSS)
+
+
 # ───────── / (home) ─────────
 HOME_CSS = r"""
 .hhero{display:grid;gap:36px;align-items:center}
@@ -1320,7 +1374,7 @@ def home_page():
         f'<section class="hsec" id="podcast"><div class="hlp"><div class="hlive"><div class="hl-t"><h2>Sunday Live ทุกวันอาทิตย์ 18:30 น.</h2>'
         f'<p>ไลฟ์สดคุยเรื่อง DJ ทุกมิติ เทคนิค อุปกรณ์ วงการ และตอบคำถามกับทีม DJ LAB SIAM ทาง Facebook Page</p>'
         f'<div class="acts"><a class="btn pri" href="https://www.facebook.com/PioneerDjLabSiam/" target="_blank" rel="noopener">ติดตามบน Facebook {ic("ext", 18)}</a>'
-        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a></div></div>{cover_slider()}</div>'
+        f'<a class="btn sec" href="/content/">ดูรายการทั้งหมด</a><a class="btn sec" href="/news/sync-2026/">ข่าวล่าสุด: เปิด SYNC!</a></div></div>{cover_slider()}</div>'
         f'<div class="hpod"><div class="hp-t"><span class="tag">PODCAST</span><h2>{E(pod["name"])}</h2>'
         f'<p>{E(pod["when"])}</p><div class="acts">{pod_btns}</div></div>{cover_slider(PODCAST_EPS, "podcast", "ปกตอนของ DJ LAB Podcast เรียงจากตอนล่าสุด")}</div></div></section>'
         f'<section class="hsec"><div class="hvisit"><div class="ph"><img src="/assets/img/location-wide.webp" width="1600" height="587" alt="หน้าร้าน DJ LAB SIAM ที่ Lido Connect ชั้น 2" loading="lazy" decoding="async"></div>'
@@ -1986,6 +2040,7 @@ made = [write("/courses/", courses_page())]
 for t in TEACHERS:
     made.append(write(f"/teachers/{slug(t['name'])}/", teacher_page(t)))
 made.append(write("/content/", content_page()))
+made.append(write("/news/sync-2026/", news_page()))
 made.append(write("/member/", member_page()))
 made.append(write("/game/", game_page()))
 made.append(write(A.home, home_page()))
