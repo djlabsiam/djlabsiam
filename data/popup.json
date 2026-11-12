@@ -19,10 +19,20 @@
       "imgM": "promo-alphatheta-oct-m.webp",
       "alt": "XDJ-RR, ลำโพง DM-40D-BT และหูฟัง HDJ-CUE1BT ของ Pioneer DJ"
     },
-    "beginner-10off-2026-11": {
+    "starter-pack-2026-11": {
       "img": "promo-starter-pack.webp",
       "imgM": "promo-starter-pack-m.webp",
       "alt": "DJ controller DDJ-FLX2 ของ Pioneer DJ"
+    },
+    "beginner-promo-2026-11": {
+      "img": "promo-beginner-10off.webp",
+      "imgM": "promo-beginner-10off-m.webp",
+      "alt": "DJ Controller DDJ-FLX4, DDJ-GRV6 และ DDJ-REV5 ของ Pioneer DJ"
+    },
+    "beginner-10off-2026-11": {
+      "img": "promo-beginner-10off.webp",
+      "imgM": "promo-beginner-10off-m.webp",
+      "alt": "DJ Controller DDJ-FLX4, DDJ-GRV6 และ DDJ-REV5 ของ Pioneer DJ"
     },
     "default": {
       "img": "promo-default.webp",
@@ -47,6 +57,17 @@
       "link": "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691",
       "cta": "ดูรายละเอียดบน Facebook",
       "until": "2026-11-08"
+    },
+    {
+      "type": "news",
+      "title": "เปิด SYNC! — ดูคลิปและภาพจากงาน",
+      "text": "กิจกรรมลองมิกซ์เพลงครั้งแรกด้วย DJ Controller เมื่อ 7–8 พ.ย. 2569 ที่ Siam Square One ดูคลิปและภาพบรรยากาศจากงานได้ที่หน้าข่าว",
+      "img": "event-sync-clip.webp",
+      "imgM": "event-sync-clip-m.webp",
+      "alt": "โต๊ะ AlphaTheta ในงานเปิด SYNC! มี DJ Controller แท็บเล็ต ลำโพง และหูฟังวางบนโต๊ะ",
+      "link": "/news/sync-2026/",
+      "cta": "ดูคลิปจากงาน",
+      "until": "2026-11-30"
     },
     {
       "type": "update",
