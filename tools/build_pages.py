@@ -1961,7 +1961,7 @@ def game_cover_request():
 
 def game_cover_resonance():
     # Resonance: a glass cracking as a sound wave peaks, a record at the base
-    return _svg("ภาพปกเกม Resonance: แก้วที่แตกร้าวเมื่อคลื่นเสียงตรงความถี่",
+    return _svg("ภาพปกเกม Resonance: แก้วที่แตกร้าวเมื่อคลื่นเสียงตรงจังหวะ",
                 '<g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M270 60H370L350 160Q345 190 320 190Q295 190 290 160Z"/><path d="M320 190V250M270 250H370"/></g>'
                 f'<g fill="none" stroke="{GAME_RED}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M300 70l14 34-18 18 20 30"/><path d="M345 78l-10 26 14 16"/></g>'
                 f'<path d="M30 300Q70 240 110 300T190 300T270 300T350 300T430 300T510 300T610 300" fill="none" stroke="{GAME_RED}" stroke-width="6" stroke-linecap="round"/>'
@@ -1993,9 +1993,19 @@ GAME_PHASES = [(1, "BEGINNER", 12, "free"), (2, "AMATEUR", 14, "free"), (3, "PRO
 GAME_NEXT = [   # games announced by the owner (28 Oct): names are plan names and may change when built · cover, name, one sentence, tags
     ("Dance Floor Acoustics", "วางตู้ลำโพงและซับให้เสียงดังเท่ากันทั่วฟลอร์", ["เล่นบนมือถือ"], game_cover_floor),
     ("Request Line", "คุมบูธตามคำขอเพลงของฝูงชน และแก้เหตุขัดข้องให้ทัน", ["เล่นบนมือถือ"], game_cover_request),
-    ("Resonance", "สแครชให้ตรงความถี่จนแก้วและผลึกแตก", ["ใช้เครื่อง DJ", "เล่นบนมือถือ"], game_cover_resonance),
     ("Rim", "หมุนแผ่นพายานยิงฝ่าอุโมงค์วงกลม", ["ใช้เครื่อง DJ"], game_cover_rim),
 ]
+
+
+def game_resonance_card():
+    # Resonance is open (game/resonance/, opened 12 Nov 69): 18 levels in 3 phases, all free, no account, no leader board
+    return ('<article class="gc" aria-labelledby="rs"><div class="cv">' + game_cover_resonance() + '</div><div class="in">'
+            '<h3 id="rs">Resonance</h3>'
+            '<p>สแครชให้ตรงจังหวะจนแก้วแตก 3 Phase: จับจังหวะ · เปลี่ยนจังหวะ · จังหวะเลื่อน</p>'
+            '<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">3 Phase · 18 ด่าน เล่นฟรีทั้งหมด</span>'
+            '<span class="chip2">เล่นบนมือถือ</span><span class="chip2">ใช้เครื่อง DJ</span></div>'
+            '<div class="go"><a class="btn pri" href="/game/resonance/">เริ่มเล่น</a><span class="sub">ไม่ต้องสมัครสมาชิก</span></div>'
+            '</div></article>')
 
 
 def game_soon_card(k, name, desc, tags, cover):
@@ -2022,6 +2032,7 @@ def game_page():
             f'<div class="pgrid" role="group" aria-label="เลือก Phase">{btns}</div>'
             '<div class="go"><a class="btn pri" id="gh-go" href="/game/signal-flow/">เริ่มเล่น</a><span class="sub" id="gh-sub"></span></div>'
             '</div></article>'
+            + game_resonance_card()
             + "".join(game_soon_card(k, *g) for k, g in enumerate(GAME_NEXT)) +
             '</div></section>'
             f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
