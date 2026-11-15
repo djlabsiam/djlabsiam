@@ -1812,7 +1812,8 @@ def member_page():
                '<label>รหัสผ่าน<input id="l-pw" type="password" autocomplete="current-password" required></label>'
                '<button class="btn pri" id="b-login" data-label="เข้าสู่ระบบ" type="submit">เข้าสู่ระบบ</button>'
                '<p class="mm" id="m-login" role="alert" hidden></p></form>'
-               '<button class="lk" id="go-first" type="button">เข้าใช้ครั้งแรก / ลืมรหัสผ่าน</button>')
+               '<button class="lk" id="go-first" type="button">เข้าใช้ครั้งแรก / ลืมรหัสผ่าน</button>'
+               '<p class="help">ไม่ได้เป็นสมาชิกร้าน? <a href="/account/">สมัครหรือเข้าสู่ระบบด้วย LINE / Google</a> เพื่อเล่นเกมและส่งคะแนนขึ้นกระดาน</p>')
         + view("first", "เข้าใช้ครั้งแรก / ลืมรหัสผ่าน",
                '<p class="help">กรอกรหัสสมาชิกและเบอร์โทรที่ลงทะเบียนกับร้าน ระบบจะส่งรหัสยืนยัน 6 หลักไปที่อีเมลที่ร้านมีไว้ (ถ้ามี) เพื่อให้คุณตั้งรหัสผ่านของตัวเอง</p>'
                '<form id="f-first" novalidate style="display:grid;gap:16px">'
@@ -1871,6 +1872,99 @@ def member_page():
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบสมาชิก</p></noscript></div>')
     return shell("/member/", "เข้าสู่ระบบสมาชิก — DJ LAB SIAM", "เข้าสู่ระบบสมาชิก DJ LAB SIAM", body, robots="noindex,nofollow", css_extra=MEMBER_CSS + member_extra_css(), bare=True, active="member",
                  script=sf_script_tag() + f'<script src="/assets/js/member-qr.js?v={qj}" defer></script>\n<script src="/assets/js/member-courses.js?v={cj}" defer></script>\n<script src="/assets/js/member.js?v={ver}" defer></script>\n')
+
+
+# ───────── /account/ (general-user account: LINE or Google, no password · noindex, no Meta Pixel, no pop-up — same as /member/) ─────────
+ACCOUNT_LINE_CHANNEL = "2010938781"   # LINE Login channel (web login, no LIFF). redirect_uri is fixed to https://djlabsiam.com/account/ in account.js
+ACCOUNT_GOOGLE_CLIENT_ID = ""         # Google OAuth Web client ID (public). Empty = the Google button is hidden until the owner creates it
+ACCOUNT_POLICY_VERSION = "v1"
+ACCOUNT_CSS = """
+.mem .ck{display:flex;gap:12px;align-items:flex-start;font-weight:400;font-size:15px;line-height:1.5}
+.mem .ck input{width:26px;min-width:26px;height:26px;min-height:26px;margin:1px 0 0;padding:0;accent-color:var(--brand-base)}
+.mem .consent{display:grid;gap:12px;padding:16px;border:1.5px solid var(--lab-line);border-radius:14px;background:#faf9f6}
+.mem .consent legend{font-weight:700;font-size:16px;padding:0 6px}
+.mem .opt{color:var(--text-muted);font-size:13px}
+.mem .gbtn{display:grid;justify-items:center;min-height:44px}
+.mem .btn.dn{border-color:#8f0f16;color:#8f0f16}
+"""
+
+
+def account_consent(prefix):
+    """the three consent boxes (never pre-ticked). 1 = required, 2–3 = optional and independent of using the service. Wording = draft v1 (20261115-privacy-web-account-draft.md §1), not yet approved by the owner"""
+    return ('<fieldset class="consent"><legend>ความยินยอม</legend>'
+            f'<label class="ck"><input type="checkbox" id="{prefix}1"><span>ฉันได้อ่านและยอมรับ <a href="/privacy.html" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a> '
+            'และเข้าใจว่าชื่อเล่นกับคะแนนที่ฉันส่งจะแสดงบนกระดานคะแนนสาธารณะ <span class="opt">(จำเป็น)</span></span></label>'
+            f'<label class="ck"><input type="checkbox" id="{prefix}2"><span>ฉันยินยอมให้ DJ LAB SIAM ส่งข่าวสาร โปรโมชัน และกิจกรรมของร้านถึงฉัน ผ่านช่องทางที่ฉันให้ไว้ '
+            '(อีเมลที่บัญชีให้มา / LINE ถ้าฉันเป็นเพื่อนกับ LINE@djlabsiam) ถอนได้ทุกเมื่อในหน้า "บัญชีของฉัน" <span class="opt">(ไม่บังคับ)</span></span></label>'
+            f'<label class="ck"><input type="checkbox" id="{prefix}3"><span>ฉันยินยอมให้ร้านใช้สถิติการเล่นเกมของฉันเพื่อปรับปรุงเกมและเว็บไซต์ '
+            '(เช่น เกมหรือด่านไหนถูกเล่นมาก/ยากเกินไป) ถอนได้ทุกเมื่อ <span class="opt">(ไม่บังคับ)</span></span></label></fieldset>')
+
+
+def account_page():
+    api, key = book_backend()
+    fn = api.replace("/rest/v1/rpc/", "/functions/v1/web-auth")
+    with io.open(os.path.join(SITE, "assets", "js", "account.js"), "rb") as fh:
+        ver = hashlib.md5(fh.read()).hexdigest()[:8]
+
+    def view(i, title, inner):
+        return f'<section class="card" id="v-{i}" hidden aria-labelledby="h-{i}"><h2 id="h-{i}">{title}</h2>{inner}</section>'
+    login = ('<p class="help">เล่นเกมได้โดยไม่ต้องมีบัญชี ต้องเข้าสู่ระบบเฉพาะตอนจะส่งคะแนนขึ้นกระดาน สมัครและเข้าสู่ระบบด้วย LINE หรือ Google ได้ในขั้นตอนเดียว ไม่ต้องตั้งรหัสผ่านกับเรา</p>'
+             + account_consent("c") +
+             '<div class="mm" id="inapp" role="note" hidden>เบราว์เซอร์ในแอปนี้มักใช้ Google ไม่ได้ · เข้าด้วย LINE ได้เลย หรือ '
+             '<a id="inapp-a" href="/account/?openExternalBrowser=1">เปิดในเบราว์เซอร์เพื่อใช้ Google</a></div>'
+             '<button class="btn pri" id="b-line" data-label="เข้าสู่ระบบด้วย LINE" type="button" disabled>เข้าสู่ระบบด้วย LINE</button>'
+             '<button class="btn sec" id="b-google" data-label="เข้าสู่ระบบด้วย Google" type="button" disabled>เข้าสู่ระบบด้วย Google</button>'
+             '<div class="gbtn" id="g-btn" hidden></div>'
+             '<p class="mm" id="m-login" role="alert" hidden></p>'
+             '<p class="help">ติ๊กยอมรับนโยบายก่อน ปุ่มเข้าสู่ระบบจึงจะกดได้ · เป็นสมาชิกร้านอยู่แล้ว? <a href="/member/">เข้าสู่ระบบสมาชิก</a></p>')
+    profile = ('<dl><dt>เข้าสู่ระบบด้วย</dt><dd id="p-prov"></dd></dl>'
+               '<p class="mm" id="m-profile" role="alert" hidden></p>'
+               '<a class="btn pri" id="b-back" href="/game/" hidden>กลับไปเล่นเกม</a>'
+               '<section class="bd" aria-labelledby="h-board"><h3 id="h-board">ชื่อเล่นบนกระดานคะแนน</h3>'
+               '<p class="help" id="bd-state" role="status"></p>'
+               '<form id="f-nick" novalidate style="display:grid;gap:12px">'
+               '<label>ชื่อเล่น<input id="n-nick" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false">'
+               '<span class="hint">ยาว 3–16 ตัว ใช้ไทย อังกฤษ ตัวเลข ช่องว่าง . _ - ได้ · แสดงให้ทุกคนเห็น ไม่ควรใช้ชื่อจริงหรือข้อมูลติดต่อ</span></label>'
+               '<button class="btn pri" id="b-nick" data-label="ตั้งชื่อเล่น" type="submit">ตั้งชื่อเล่น</button></form>'
+               '<p class="mm" id="m-board" role="alert" hidden></p>'
+               '<button class="btn sec" id="b-hide" data-label="ซ่อนจากกระดาน" type="button" hidden>ซ่อนจากกระดาน</button>'
+               '<button class="btn sec" id="b-del" data-label="ลบคะแนนทั้งหมดของฉัน" type="button" hidden>ลบคะแนนทั้งหมดของฉัน</button>'
+               '<div class="cf" id="bd-cf" role="alertdialog" aria-labelledby="bd-cft" hidden>'
+               '<b id="bd-cft">ลบคะแนนและชื่อเล่นทั้งหมดของคุณ?</b><span>ลบแล้วย้อนกลับไม่ได้ ต้องเล่นใหม่เพื่อกลับขึ้นกระดาน</span>'
+               '<button class="btn pri" id="b-delyes" data-label="ยืนยันลบทั้งหมด" type="button">ยืนยันลบทั้งหมด</button>'
+               '<button class="btn sec" id="b-delno" type="button">ยกเลิก</button></div>'
+               '<a class="lk2" href="/game/#leaderboard">ดู Leader Board</a></section>'
+               '<section class="bd" aria-labelledby="h-cons"><h3 id="h-cons">ความยินยอม</h3>'
+               '<p class="help" id="k-old" hidden>นโยบายความเป็นส่วนตัวมีการปรับปรุง กรุณาตรวจและบันทึกความยินยอมอีกครั้ง</p>'
+               '<form id="f-consent" novalidate style="display:grid;gap:12px">' + account_consent("k") +
+               '<p class="help">ถอนการยอมรับนโยบาย (ช่องแรก) = ชื่อเล่นของคุณหายจากกระดานทันทีและส่งคะแนนใหม่ไม่ได้ · เปลี่ยนใจเรื่องข่าวสารหรือสถิติได้ทุกเมื่อ</p>'
+               '<button class="btn pri" id="b-consent" data-label="บันทึกความยินยอม" type="submit">บันทึกความยินยอม</button>'
+               '<p class="mm" id="m-consent" role="status" hidden></p></form></section>'
+               '<section class="bd" id="p-link" aria-labelledby="h-link"><h3 id="h-link">ผูกบัญชีเพิ่ม</h3>'
+               '<p class="help">ผูกอีกช่องทางหนึ่งเพื่อเข้าสู่ระบบได้ทั้งสองทาง</p>'
+               '<button class="btn sec" id="b-link-line" data-label="ผูก LINE" type="button" hidden>ผูก LINE</button>'
+               '<button class="btn sec" id="b-link-google" data-label="ผูก Google" type="button" hidden>ผูก Google</button>'
+               '<div class="gbtn" id="g-btn-link" hidden></div>'
+               '<p class="mm" id="m-link" role="alert" hidden></p></section>'
+               '<section class="bd" aria-labelledby="h-del"><h3 id="h-del">ลบบัญชี</h3>'
+               '<p class="help">ลบบัญชี ตัวตนที่ผูกไว้ ชื่อเล่น คะแนน และบันทึกความยินยอมของคุณทั้งหมดทันที ย้อนกลับไม่ได้</p>'
+               '<button class="btn sec dn" id="b-acc-del" data-label="ลบบัญชีของฉัน" type="button">ลบบัญชีของฉัน</button>'
+               '<div class="cf" id="acc-cf" role="alertdialog" aria-labelledby="acc-cft" hidden>'
+               '<b id="acc-cft">ลบบัญชีและข้อมูลทั้งหมดของคุณ?</b><span>ชื่อเล่น คะแนน และการยินยอมจะหายทั้งหมด และเข้าสู่ระบบด้วยบัญชีนี้ต่อไม่ได้</span>'
+               '<button class="btn pri" id="b-acc-yes" data-label="ยืนยันลบบัญชี" type="button">ยืนยันลบบัญชี</button>'
+               '<button class="btn sec" id="b-acc-no" type="button">ยกเลิก</button></div>'
+               '<p class="mm" id="m-acc" role="alert" hidden></p></section>'
+               '<p class="help">เป็นสมาชิกร้าน? <a href="/member/">ไปหน้าสมาชิก</a></p>'
+               '<button class="btn sec" id="b-logout" data-label="ออกจากระบบ" type="button">ออกจากระบบ</button>')
+    views = (view("boot", "กำลังโหลด…", '<p class="help" role="status">กำลังตรวจสอบการเข้าสู่ระบบ</p>')
+             + view("login", "สมัครหรือเข้าสู่ระบบเพื่อเล่นเกม", login)
+             + view("profile", "บัญชีของฉัน", profile))
+    body = ('<section class="hero"><h1>บัญชีของฉัน</h1><p class="lede">สมัครหรือเข้าสู่ระบบด้วย LINE หรือ Google เพื่อส่งคะแนนเกมขึ้นกระดาน</p></section>'
+            f'<div class="mem" id="acc" data-fn="{E(fn)}" data-games="{E(fn.replace("web-auth", "game-scores"))}" data-key="{E(key)}" data-linech="{ACCOUNT_LINE_CHANNEL}" data-gid="{E(ACCOUNT_GOOGLE_CLIENT_ID)}">{views}'
+            '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบ</p></noscript></div>')
+    return shell("/account/", "บัญชีของฉัน — DJ LAB SIAM", "สมัครหรือเข้าสู่ระบบด้วย LINE หรือ Google เพื่อเล่นเกมและส่งคะแนน", body, robots="noindex,nofollow",
+                 css_extra=MEMBER_CSS + ACCOUNT_CSS, bare=True, active="",
+                 script=f'<script src="/assets/js/account.js?v={ver}" defer></script>\n')
 
 
 # ───────── /game/ (game hub: list of games · Leader Board placeholder) ─────────
@@ -2075,6 +2169,7 @@ for t in TEACHERS:
 made.append(write("/content/", content_page()))
 made.append(write("/news/sync-2026/", news_page()))
 made.append(write("/member/", member_page()))
+made.append(write("/account/", account_page()))
 made.append(write("/game/", game_page()))
 made.append(write(A.home, home_page()))
 made.append(write(A.shop, shop_page()))
