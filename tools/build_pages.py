@@ -1890,14 +1890,13 @@ ACCOUNT_CSS = """
 
 
 def account_consent(prefix):
-    """the three consent boxes (never pre-ticked). 1 = required, 2–3 = optional and independent of using the service. Wording = draft v1 (20261115-privacy-web-account-draft.md §1), not yet approved by the owner"""
+    """the two consent boxes (never pre-ticked). 1 = required, 2 = optional and independent of using the service. Box 3 (analytics) is cut until some analysis really runs (Internal Data Manager, 15 Nov) — account.js always sends analytics:false. Wording = draft v1 (20261115-privacy-web-account-draft.md §1), not yet approved by the owner"""
     return ('<fieldset class="consent"><legend>ความยินยอม</legend>'
             f'<label class="ck"><input type="checkbox" id="{prefix}1"><span>ฉันได้อ่านและยอมรับ <a href="/privacy.html" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a> '
             'และเข้าใจว่าชื่อเล่นกับคะแนนที่ฉันส่งจะแสดงบนกระดานคะแนนสาธารณะ <span class="opt">(จำเป็น)</span></span></label>'
             f'<label class="ck"><input type="checkbox" id="{prefix}2"><span>ฉันยินยอมให้ DJ LAB SIAM ส่งข่าวสาร โปรโมชัน และกิจกรรมของร้านถึงฉัน ผ่านช่องทางที่ฉันให้ไว้ '
             '(อีเมลที่บัญชีให้มา / LINE ถ้าฉันเป็นเพื่อนกับ LINE@djlabsiam) ถอนได้ทุกเมื่อในหน้า "บัญชีของฉัน" <span class="opt">(ไม่บังคับ)</span></span></label>'
-            f'<label class="ck"><input type="checkbox" id="{prefix}3"><span>ฉันยินยอมให้ร้านใช้สถิติการเล่นเกมของฉันเพื่อปรับปรุงเกมและเว็บไซต์ '
-            '(เช่น เกมหรือด่านไหนถูกเล่นมาก/ยากเกินไป) ถอนได้ทุกเมื่อ <span class="opt">(ไม่บังคับ)</span></span></label></fieldset>')
+            '</fieldset>')
 
 
 def account_page():
@@ -1937,7 +1936,7 @@ def account_page():
                '<section class="bd" aria-labelledby="h-cons"><h3 id="h-cons">ความยินยอม</h3>'
                '<p class="help" id="k-old" hidden>นโยบายความเป็นส่วนตัวมีการปรับปรุง กรุณาตรวจและบันทึกความยินยอมอีกครั้ง</p>'
                '<form id="f-consent" novalidate style="display:grid;gap:12px">' + account_consent("k") +
-               '<p class="help">ถอนการยอมรับนโยบาย (ช่องแรก) = ชื่อเล่นของคุณหายจากกระดานทันทีและส่งคะแนนใหม่ไม่ได้ · เปลี่ยนใจเรื่องข่าวสารหรือสถิติได้ทุกเมื่อ</p>'
+               '<p class="help">ถอนการยอมรับนโยบาย (ช่องแรก) = ชื่อเล่นของคุณหายจากกระดานทันทีและส่งคะแนนใหม่ไม่ได้ · เปลี่ยนใจเรื่องข่าวสารได้ทุกเมื่อ</p>'
                '<button class="btn pri" id="b-consent" data-label="บันทึกความยินยอม" type="submit">บันทึกความยินยอม</button>'
                '<p class="mm" id="m-consent" role="status" hidden></p></form></section>'
                '<section class="bd" id="p-link" aria-labelledby="h-link"><h3 id="h-link">ผูกบัญชีเพิ่ม</h3>'

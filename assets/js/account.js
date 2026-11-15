@@ -73,7 +73,7 @@
   var INAPP = /\bLine\//i.test(UA) || /FBAN|FBAV|Instagram|MicroMessenger|TikTok/i.test(UA);
 
   /* ---- consent boxes ---- */
-  function consentOf(prefix) { return { accepted_terms: $(prefix + '1').checked === true, marketing: $(prefix + '2').checked === true, analytics: $(prefix + '3').checked === true, policy_version: POLICY }; }
+  function consentOf(prefix) { return { accepted_terms: $(prefix + '1').checked === true, marketing: $(prefix + '2').checked === true, analytics: false, policy_version: POLICY }; }
   function gate() { var on = $('c1').checked === true; $('b-line').disabled = !on; var g = $('b-google'); if (g) g.disabled = !on || INAPP; }
 
   /* ---- sign in: LINE (redirect with PKCE) ---- */
@@ -177,7 +177,7 @@
     $('b-link-google').hidden = (me.providers || []).indexOf('google') >= 0 || !GID || INAPP;
     $('p-link').hidden = $('b-link-line').hidden && $('b-link-google').hidden;
     var c = me.consent || {};
-    $('k1').checked = c.accepted_terms === true; $('k2').checked = c.marketing === true; $('k3').checked = c.analytics === true;
+    $('k1').checked = c.accepted_terms === true; $('k2').checked = c.marketing === true;
     $('k-old').hidden = !(c.policy_version && c.policy_version !== POLICY);
     $('b-back').hidden = !safeReturn(RET); if (RET) $('b-back').href = RET;
   }
@@ -194,7 +194,7 @@
     busy(btn, true, 'กำลังบันทึก…'); say('m-consent', '');
     fresh().then(function (tok) {
       if (!tok) { toLogin('กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
-      return call({ action: 'consent', accepted_terms: c.accepted_terms, marketing: c.marketing, analytics: c.analytics, policy_version: POLICY }, tok).then(function (x) {
+      return call({ action: 'consent', accepted_terms: c.accepted_terms, marketing: c.marketing, analytics: false, policy_version: POLICY }, tok).then(function (x) {
         busy(btn, false);
         if (x.j && x.j.ok === true) { say('m-consent', c.accepted_terms ? 'บันทึกความยินยอมแล้ว' : 'บันทึกแล้ว: ชื่อเล่นของคุณหายจากกระดานและส่งคะแนนใหม่ไม่ได้จนกว่าจะยอมรับนโยบายอีกครั้ง', true); openProfileQuiet(tok); return; }
         if (!guard(x)) say('m-consent', errOf(x).message);
@@ -262,7 +262,7 @@
   $('b-logout').addEventListener('click', function () { clear(); flowDrop(); me = null; show('login'); say('m-login', 'ออกจากระบบแล้ว', true); });
 
   /* ---- wire the sign-in screen ---- */
-  ['c1', 'c2', 'c3'].forEach(function (id) { $(id).checked = false; $(id).addEventListener('change', gate); });   // never pre-ticked, even if the browser restores a form
+  ['c1', 'c2'].forEach(function (id) { $(id).checked = false; $(id).addEventListener('change', gate); });   // never pre-ticked, even if the browser restores a form
   $('b-line').addEventListener('click', function () { startLine('login'); });
   if ($('b-google')) $('b-google').addEventListener('click', function () { startGoogle('login'); });
   $('b-link-line').addEventListener('click', function () { say('m-link', ''); startLine('link'); });
