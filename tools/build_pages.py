@@ -1813,7 +1813,7 @@ def member_page():
                '<button class="btn pri" id="b-login" data-label="เข้าสู่ระบบ" type="submit">เข้าสู่ระบบ</button>'
                '<p class="mm" id="m-login" role="alert" hidden></p></form>'
                '<button class="lk" id="go-first" type="button">เข้าใช้ครั้งแรก / ลืมรหัสผ่าน</button>'
-               '<p class="help">ไม่ได้เป็นสมาชิกร้าน? <a href="/account/">สมัครหรือเข้าสู่ระบบด้วย LINE / Google</a> เพื่อเล่นเกมและส่งคะแนนขึ้นกระดาน</p>')
+               '<p class="help">ไม่ได้เป็นสมาชิกร้าน? <a href="/account/">สมัครหรือเข้าสู่ระบบเพื่อเล่นเกม</a> เพื่อเล่นเกมและส่งคะแนนขึ้นกระดาน</p>')
         + view("first", "เข้าใช้ครั้งแรก / ลืมรหัสผ่าน",
                '<p class="help">กรอกรหัสสมาชิกและเบอร์โทรที่ลงทะเบียนกับร้าน ระบบจะส่งรหัสยืนยัน 6 หลักไปที่อีเมลที่ร้านมีไว้ (ถ้ามี) เพื่อให้คุณตั้งรหัสผ่านของตัวเอง</p>'
                '<form id="f-first" novalidate style="display:grid;gap:16px">'
@@ -1900,6 +1900,7 @@ def account_consent(prefix):
 
 
 def account_page():
+    via = "LINE หรือ Google" if ACCOUNT_GOOGLE_CLIENT_ID else "LINE"   # say only what is switched on (Google stays hidden until its client ID is set)
     api, key = book_backend()
     fn = api.replace("/rest/v1/rpc/", "/functions/v1/web-auth")
     with io.open(os.path.join(SITE, "assets", "js", "account.js"), "rb") as fh:
@@ -1907,7 +1908,7 @@ def account_page():
 
     def view(i, title, inner):
         return f'<section class="card" id="v-{i}" hidden aria-labelledby="h-{i}"><h2 id="h-{i}">{title}</h2>{inner}</section>'
-    login = ('<p class="help">เล่นเกมได้โดยไม่ต้องมีบัญชี ต้องเข้าสู่ระบบเฉพาะตอนจะส่งคะแนนขึ้นกระดาน สมัครและเข้าสู่ระบบด้วย LINE หรือ Google ได้ในขั้นตอนเดียว ไม่ต้องตั้งรหัสผ่านกับเรา</p>'
+    login = ('<p class="help">เล่นเกมได้โดยไม่ต้องมีบัญชี ต้องเข้าสู่ระบบเฉพาะตอนจะส่งคะแนนขึ้นกระดาน สมัครและเข้าสู่ระบบด้วย ' + via + ' ได้ในขั้นตอนเดียว ไม่ต้องตั้งรหัสผ่านกับเรา</p>'
              + account_consent("c") +
              '<div class="mm" id="inapp" role="note" hidden>เบราว์เซอร์ในแอปนี้มักใช้ Google ไม่ได้ · เข้าด้วย LINE ได้เลย หรือ '
              '<a id="inapp-a" href="/account/?openExternalBrowser=1">เปิดในเบราว์เซอร์เพื่อใช้ Google</a></div>'
@@ -1958,10 +1959,10 @@ def account_page():
     views = (view("boot", "กำลังโหลด…", '<p class="help" role="status">กำลังตรวจสอบการเข้าสู่ระบบ</p>')
              + view("login", "สมัครหรือเข้าสู่ระบบเพื่อเล่นเกม", login)
              + view("profile", "บัญชีของฉัน", profile))
-    body = ('<section class="hero"><h1>บัญชีของฉัน</h1><p class="lede">สมัครหรือเข้าสู่ระบบด้วย LINE หรือ Google เพื่อส่งคะแนนเกมขึ้นกระดาน</p></section>'
+    body = ('<section class="hero"><h1>บัญชีของฉัน</h1><p class="lede">สมัครหรือเข้าสู่ระบบด้วย ' + via + ' เพื่อส่งคะแนนเกมขึ้นกระดาน</p></section>'
             f'<div class="mem" id="acc" data-fn="{E(fn)}" data-games="{E(fn.replace("web-auth", "game-scores"))}" data-key="{E(key)}" data-linech="{ACCOUNT_LINE_CHANNEL}" data-gid="{E(ACCOUNT_GOOGLE_CLIENT_ID)}">{views}'
             '<noscript><p class="mm">ต้องเปิด JavaScript เพื่อเข้าสู่ระบบ</p></noscript></div>')
-    return shell("/account/", "บัญชีของฉัน — DJ LAB SIAM", "สมัครหรือเข้าสู่ระบบด้วย LINE หรือ Google เพื่อเล่นเกมและส่งคะแนน", body, robots="noindex,nofollow",
+    return shell("/account/", "บัญชีของฉัน — DJ LAB SIAM", "สมัครหรือเข้าสู่ระบบด้วย " + via + " เพื่อเล่นเกมและส่งคะแนน", body, robots="noindex,nofollow",
                  css_extra=MEMBER_CSS + ACCOUNT_CSS, bare=True, active="",
                  script=f'<script src="/assets/js/account.js?v={ver}" defer></script>\n')
 

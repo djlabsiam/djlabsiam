@@ -254,15 +254,15 @@
   </p>
   <ul>
     <li><strong>What we keep:</strong> the user ID that LINE or Google issues (not your name, picture or password) · an email address, only when Google has confirmed it is yours · the date you signed up and last used the account · a record of your consent (what you ticked, when, and which policy version) · the nickname and the scores you choose to send</li>
-    <li><strong>What we do not keep:</strong> your real name, phone number, address, date of birth, profile picture, LINE/Google tokens, or an IP address linked to you</li>
+    <li><strong>What we do not keep:</strong> your real name, phone number, address, date of birth, profile picture, or LINE/Google tokens · we do not keep an IP address that identifies you — the system uses a hash of the IP to count attempts so that misuse can be stopped (deleted in rounds, see section 6)</li>
     <li><strong>How it works:</strong> the shop sends the proof that LINE or Google issued to that provider to be checked, and keeps only the user ID above. The system creates an internal sign-in account using a random email address that is never used to write to anyone</li>
     <li><strong>The public score board:</strong> your nickname, levels passed, score and time are shown to everyone (no email or user ID is shown). If you do not set a nickname, the shop does not keep your scores</li>
     <li><strong>Withdrawing consent:</strong> if you withdraw your acceptance of this policy, your nickname disappears from the board immediately and new scores cannot be sent · if you press "Delete account", the shop immediately deletes your account, linked identities, nickname, scores and consent records</li>
-    <li><strong>If you are also a shop member:</strong> you can upgrade this account by linking it to your membership number (confirmed with a code sent to the email the shop has on file); your existing scores are kept</li>
   </ul>
   <p>
     When you sign up there are 2 consent boxes, none ticked in advance: accept this policy (needed for the account) · receive news, promotions and activities from the shop (optional).
     You can change or withdraw them at any time on the "My account" page; each change adds a new record and never edits the old one.
+    After you sign in, the website keeps a sign-in token in your browser (localStorage) and keeps temporary values during sign-in in sessionStorage; they are removed when you sign out or close the tab.
     This sign-up / sign-in page does not use the Meta Pixel and shows no pop-up. If you choose Google, Google's script is loaded only when you press the Google button.
   </p>
 
@@ -313,7 +313,7 @@
     <li><strong>Member data</strong> — kept for as long as you are a member, and deleted when you ask us to delete it</li>
     <li><strong>Web member sign-in data</strong> — verification codes expired for more than 1 day and the guess-limiting counters (stored as hashes) are deleted when the clean-up is run · security event records (time, event type, success or not; no phone, e-mail, name, IP or password) are kept for 90 days · the verified e-mail and sign-in account are kept until the member is deleted or staff remove the account</li>
     <li><strong>Game leaderboard data</strong> — the nickname and best result per level are kept until you press "Hide from the board" or "Delete all my scores", or the member is deleted · the order of cable plugging is not stored · request counters (hashes) are deleted when the clean-up in the item above runs</li>
-    <li><strong>General user account</strong> — kept until you delete the account, or 24 months after your last use (the shop warns you before deleting if it has a way to reach you) · consent records are kept while the account exists and deleted with it (the shop does not keep evidence after deletion)</li>
+    <li><strong>General user account</strong> — kept until you delete the account · consent records are kept while the account exists and deleted with it (the shop does not keep evidence after deletion)</li>
     <li><strong>Chosen avatar</strong> — stored with the web member account; visible only to the account owner; not shown on the score board; kept until the member is deleted or staff remove the account, and it returns to the default when the account is linked again</li>
     <li><strong>Course information on the member page</strong> — fetched from the shop's study records when you open the page; visible only to the account owner; no copy is made on the web member account, and nothing is kept in your browser</li>
     <li><strong>Sales documents and warranty certificates</strong> — kept for the period required by accounting and tax law</li>

@@ -74,7 +74,10 @@
 
   /* ---- consent boxes ---- */
   function consentOf(prefix) { return { accepted_terms: $(prefix + '1').checked === true, marketing: $(prefix + '2').checked === true, analytics: false, policy_version: POLICY }; }
-  function gate() { var on = $('c1').checked === true; $('b-line').disabled = !on; var g = $('b-google'); if (g) g.disabled = !on || INAPP; }
+  function gate() {
+    var on = $('c1').checked === true; $('b-line').disabled = !on; var g = $('b-google'); if (g) g.disabled = !on || INAPP;
+    if (!on) { var gb = $('g-btn'); if (gb && !gb.hidden) { gb.hidden = true; gb.replaceChildren(); var f = flowGet(); if (f && f.provider === 'google' && f.mode !== 'link') flowDrop(); say('m-login', ''); } }   // the box stays in step with what is shown: no Google button without the tick
+  }
 
   /* ---- sign in: LINE (redirect with PKCE) ---- */
   function startLine(mode) {
@@ -101,6 +104,7 @@
     var consent = mode === 'link' ? null : consentOf('c'), msg = mode === 'link' ? 'm-link' : 'm-login';
     if (mode !== 'link' && !consent.accepted_terms) { say(msg, 'ต้องติ๊กยอมรับนโยบายความเป็นส่วนตัวก่อน'); $('c1').focus(); return; }
     if (!GID) { say(msg, 'การเข้าสู่ระบบด้วย Google ยังไม่เปิดใช้'); return; }
+    var shown = $(mode === 'link' ? 'g-btn-link' : 'g-btn'); if (shown && !shown.hidden && shown.firstChild) return;   // already showing the Google button: do not initialize again
     var nonce = rnd(32);
     if (!flowSet({ provider: 'google', mode: mode || 'login', consent: consent, nonce: nonce, ret: RET, t: now() })) { say(msg, 'เบราว์เซอร์นี้ไม่ยอมให้เก็บข้อมูลชั่วคราว เข้าสู่ระบบไม่ได้ ลองเปิดนอกโหมดส่วนตัว'); return; }
     loadGsi().then(function () {
@@ -115,6 +119,8 @@
   /* ---- finish: send the proof to web-auth (login or link), then draw the account ---- */
   function finish(p) {   // p = {provider, code, code_verifier?, redirect_uri?, id_token?}
     var f = flowGet() || {}, link = f.mode === 'link', msg = link ? 'm-link' : 'm-login';
+    if (!f.provider || f.provider !== p.provider || !f.nonce || !f.t || now() - f.t > 900) { flowDrop(); if (link && load()) { openProfile(''); say('m-link', 'การเข้าสู่ระบบหมดเวลา ลองใหม่อีกครั้ง'); } else { show('login'); say('m-login', 'การเข้าสู่ระบบหมดเวลาหรือไม่ถูกต้อง ลองใหม่อีกครั้ง'); } return Promise.resolve(); }
+    if (p.provider === 'google' && !link && $('c1').checked !== true) { flowDrop(); show('login'); say('m-login', 'ต้องติ๊กยอมรับนโยบายความเป็นส่วนตัวก่อน'); return Promise.resolve(); }
     var body = { action: link ? 'link' : 'login', provider: p.provider, nonce: f.nonce };
     if (p.provider === 'line') { body.code = p.code; body.code_verifier = f.verifier; body.redirect_uri = REDIRECT; } else body.id_token = p.id_token;
     if (!link) body.consent = f.consent;
@@ -259,7 +265,11 @@
     });
   });
 
-  $('b-logout').addEventListener('click', function () { clear(); flowDrop(); me = null; show('login'); say('m-login', 'ออกจากระบบแล้ว', true); });
+  $('b-logout').addEventListener('click', function () {
+    var s = load();
+    if (s) fetch(AUTH + 'logout?scope=local', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + s.access_token }, keepalive: true }).catch(function () { });   // revoke this browser's refresh token on the server too (best effort)
+    clear(); flowDrop(); me = null; show('login'); say('m-login', 'ออกจากระบบแล้ว', true);
+  });
 
   /* ---- wire the sign-in screen ---- */
   ['c1', 'c2'].forEach(function (id) { $(id).checked = false; $(id).addEventListener('change', gate); });   // never pre-ticked, even if the browser restores a form
@@ -267,7 +277,7 @@
   if ($('b-google')) $('b-google').addEventListener('click', function () { startGoogle('login'); });
   $('b-link-line').addEventListener('click', function () { say('m-link', ''); startLine('link'); });
   $('b-link-google').addEventListener('click', function () { say('m-link', ''); startGoogle('link'); });
-  if (INAPP) {
+  if (INAPP && GID) {
     var n = $('inapp'); n.hidden = false;
     var a = $('inapp-a'); a.href = location.pathname + '?openExternalBrowser=1' + (RET ? '&return=' + encodeURIComponent(RET) : '');
   }
