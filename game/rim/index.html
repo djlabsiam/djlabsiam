@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RIM · Rhythm Is Mine — เกมดนตรีจากเพลงของคุณ | DJ LAB SIAM</title>
+<meta name="description" content="เลือกเพลงของคุณเอง เกมสร้างโน้ตจากเพลงให้ แล้วรับโน้ตให้ลงจังหวะด้วยคีย์บอร์ด + เมาส์ หรือ DJ controller เล่นฟรีบนคอม">
+<link rel="icon" href="/favicon.ico">
+<style>
+@font-face{font-family:"Mitr";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/mitr-400.woff2) format("woff2")}
+@font-face{font-family:"Mitr";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/mitr-500.woff2) format("woff2")}
+@font-face{font-family:"Mitr";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/mitr-700.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/chakra-400.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/chakra-600.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/chakra-700.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:italic;font-weight:700;font-display:swap;src:url(fonts/chakra-700i.woff2) format("woff2")}
+@font-face{font-family:"Unbounded";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/unbounded-600.woff2) format("woff2")}
+@font-face{font-family:"Unbounded";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/unbounded-800.woff2) format("woff2")}
+.mRow{grid-template-columns:repeat(2,1fr)}
+.mBox .back{display:block;width:max-content;min-height:44px;margin:14px auto 0;padding:0 12px;line-height:44px;color:rgba(255,255,255,.7);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+:root { --red: #BD2026; --ink: #010101; --paper: #FFFFFF; --font: "Mitr", "Noto Sans Thai", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--ink); color: var(--paper); font: 400 14px/1.45 var(--font); overflow: hidden; -webkit-user-select: none; user-select: none; }
+/* แถบบนลอยเหนือเกม ไม่มีพื้น (Art 14 พ.ย.: ไม่มีกรอบ/แผง) · เกมเต็มจอข้างหลัง */
+header { position: fixed; top: 0; left: 0; right: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 16px; pointer-events: none; }
+header > * { pointer-events: auto; }
+header h1 { font: italic 700 18px "Chakra Petch", var(--font); margin: 0 6px 0 0; text-shadow: 0 1px 6px #000; }
+header h1 small { font-style: normal; font-weight: 400; font-size: 12px; }
+header button { font: 600 13px "Chakra Petch", var(--font); padding: 8px 13px; background: rgba(12, 9, 16, .58); color: var(--paper); border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+body:not(.playing) header { display: none; }   /* แถบบนเฉพาะตอนเล่น */
+/* ── Main menu ── ฉากหลังคือสนามเกมที่ยังวิ่งอยู่ (แผ่นหมุน) หรี่ลง */
+#menu { position: fixed; inset: 0; z-index: 3; display: grid; place-items: center; padding: 16px; overflow-y: auto;
+  background: radial-gradient(70% 55% at 50% 38%, rgba(12,6,24,.45), rgba(4,2,8,.88)); }
+body.playing #menu { display: none; }
+.mBox { width: min(440px, 100%); text-align: center; padding: 8px 0 24px; }
+.mLogo { margin: 0; font: italic 800 clamp(84px, 26vw, 150px)/.95 Unbounded, var(--font); letter-spacing: -.02em; color: #fff;
+  text-shadow: 0 0 34px rgba(255,43,60,.55), 0 7px 0 var(--red); }
+.mTag { margin: 10px 0 0; font: 700 15px "Chakra Petch", var(--font); letter-spacing: .5em; color: #63e6ff; text-shadow: 0 0 12px rgba(99,230,255,.6); }
+.mBy { margin: 4px 0 26px; font-size: 12px; color: rgba(255,255,255,.6); }
+#info { margin: 0 0 16px; font-size: 13px; color: rgba(255,255,255,.8); text-shadow: 0 1px 6px #000; }
+#menu:not([data-ready]) .mSong, #menu:not([data-ready]) #play, #menu:not([data-ready]) .mReady, #menu[data-ready] .mHome { display: none; }
+.mPick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.mPick label { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 12px; color: rgba(255,255,255,.65); }
+.mPick select { font: 600 15px "Chakra Petch", var(--font); padding: 10px 12px; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; cursor: pointer; }
+.mPick select option { background: #111; }
+.mBtns { display: grid; gap: 10px; }
+.mBtns button, .mBtns .file { font: 700 16px "Chakra Petch", var(--font); padding: 13px 16px; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.mBtns button:hover, .mBtns .file:hover { background: rgba(255,255,255,.16); }
+.mBtns .mGo { font-size: 22px; padding: 16px; background: var(--red); border-color: #ff2b3c; box-shadow: 0 0 34px rgba(189,32,38,.65); }
+.mBtns .mGo:hover { background: #d4262d; }
+.mBtns .mGo small { font-size: 12px; font-weight: 600; opacity: .75; margin-left: 6px; }
+#menu:not([data-ready]) .mMain { font-size: 20px; padding: 16px; background: var(--red); border-color: #ff2b3c; box-shadow: 0 0 34px rgba(189,32,38,.65); }
+.mRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mBtns :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+#howBox h3 { margin: 12px 0 4px; font-size: 15px; } #howBox ul { margin: 0; padding-left: 20px; } #howBox li { margin: 2px 0; }
+button:focus-visible, select:focus-visible, .file:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+dialog button, dialog select { font: 500 14px var(--font); padding: 6px 12px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+dialog { background: var(--paper); color: var(--ink); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); width: min(400px, calc(100vw - 32px)); padding: 18px; }
+dialog h2 { margin: 0 0 8px; font-size: 18px; }
+dialog label { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 8px 0; }
+dialog input[type=number] { width: 90px; font: inherit; padding: 2px 6px; }
+dialog p { margin: 6px 0; }
+.note { font-size: 12px; color: #555; }
+.row { display: flex; gap: 8px; margin-top: 12px; }
+.row button { flex: 1; }
+.go { background: var(--red); color: var(--paper); }
+.counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; margin: 10px 0; }
+.counts b { display: block; font-size: 20px; }
+.stars { font-size: 30px; color: var(--red); letter-spacing: 4px; margin: 0; }
+.credit { text-align: center; margin-top: 12px; }
+#endBox { max-height: calc(100vh - 32px); overflow-y: auto; }
+.cardHead { margin-top: 18px; font-size: 16px; }
+dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0; }
+#cardImg { display: block; width: 100%; aspect-ratio: 4 / 5; margin-top: 8px; background: #111; border: 2px solid var(--ink); }
+/* ── Leader Board ในเกม (board.js) · พื้นเข้มตามแบบภาพที่เลือก · ไม่ใช้กรอบขาวแบบหน้าตั้งค่า ── */
+#boardBox { --acc: #63e6ff; --acc2: #ff3da6; --bg1: #1a0838; --bg2: #3a1066; --hot: #ff2b3c;
+  width: min(760px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 0; display: none; flex-direction: column; overflow: hidden;
+  color: #fff; border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent); border-radius: 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 24px 80px rgba(0,0,0,.6), 0 0 60px color-mix(in srgb, var(--acc) 22%, transparent);
+  background: radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--acc2) 30%, transparent), transparent 60%), linear-gradient(170deg, var(--bg1), var(--bg2)); }
+#boardBox[open] { display: flex; }
+#boardBox[data-look="studio"] { --acc: #f2f2f2; --acc2: #BD2026; --bg1: #050505; --bg2: #141414; }
+#boardBox[data-look="laser"] { --acc: #ffd36b; --acc2: #7b5cff; --bg1: #07030a; --bg2: #1c0610; }
+#boardBox::backdrop { background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.bHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px 6px; }
+.bHead h2 { margin: 0; font: italic 800 clamp(24px, 6vw, 38px)/1 Unbounded, var(--font); letter-spacing: .02em; text-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
+.bHead p { margin: 6px 0 0; font: 700 12px "Chakra Petch", var(--font); letter-spacing: .3em; color: var(--acc); text-transform: uppercase; }
+#boardBox button { font: 700 14px "Chakra Petch", var(--font); color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); box-shadow: none; border-radius: 999px; cursor: pointer; }
+#boardBox button:hover { background: rgba(255,255,255,.14); }
+.bClose { width: 40px; height: 40px; padding: 0; flex: none; }
+.bTabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 22px 4px; }
+#boardBox .bTab { min-width: 46px; height: 40px; padding: 0 14px; font: 800 17px Unbounded, var(--font); }
+#boardBox .bTab.wide { font: 700 13px "Chakra Petch", var(--font); letter-spacing: .08em; }
+#boardBox .bTab[aria-pressed="true"] { background: var(--hot); border-color: var(--hot); box-shadow: 0 0 18px color-mix(in srgb, var(--hot) 60%, transparent); }
+.bSample { margin: 8px 22px 0; padding: 6px 12px; border-radius: 8px; font-size: 12px; background: rgba(255,211,107,.12); color: #ffd36b; border: 1px dashed rgba(255,211,107,.5); }
+.bSub { margin: 8px 22px 0; font-size: 12px; color: rgba(255,255,255,.65); }
+.bBody { overflow-y: auto; padding: 12px 22px 8px; flex: 1; min-height: 0; }
+.bFoot { margin: 0; padding: 10px 22px 16px; font-size: 11px; color: rgba(255,255,255,.5); border-top: 1px solid rgba(255,255,255,.08); }
+.bEmpty { text-align: center; padding: 40px 0; color: rgba(255,255,255,.6); }
+.bPodium { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; }
+.bPod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 26px 8px 12px; text-align: center; border-radius: 14px; min-width: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.14); }
+.bPod.p1 { padding-top: 34px; border-color: var(--hot); background: linear-gradient(180deg, color-mix(in srgb, var(--hot) 35%, transparent), rgba(255,255,255,.03)); box-shadow: 0 0 30px color-mix(in srgb, var(--hot) 35%, transparent); }
+.bPod.empty { visibility: hidden; }
+.bMedal { position: absolute; top: -16px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 800 16px Unbounded, var(--font); background: #fff; color: #111; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+.p1 .bMedal { width: 42px; height: 42px; top: -20px; font-size: 20px; background: var(--hot); color: #fff; }
+.bPod .bNick { font: 700 15px var(--font); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bPod .bScore { font: italic 800 clamp(16px, 3.6vw, 22px) "Chakra Petch", var(--font); color: var(--acc); }
+.p1 .bScore { color: #fff; text-shadow: 0 0 14px var(--hot); }
+.bMeta, .bSong { font-size: 11px; color: rgba(255,255,255,.7); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bList { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bRow { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06); }
+.bRow:hover { background: rgba(255,255,255,.09); }
+.bRow.hi { border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
+.bPos { font: italic 800 18px "Chakra Petch", var(--font); color: rgba(255,255,255,.55); text-align: center; }
+.bWho { display: flex; flex-direction: column; min-width: 0; }
+.bWho b { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bWho small { font-size: 11px; color: rgba(255,255,255,.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bLv { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); white-space: nowrap; }
+.bLv.lv4 { border-color: var(--hot); color: #fff; background: color-mix(in srgb, var(--hot) 30%, transparent); }
+.bLv.lv3 { border-color: var(--acc); color: var(--acc); }
+.bMiss { font: 600 12px "Chakra Petch", var(--font); color: rgba(255,255,255,.6); white-space: nowrap; }
+.bMiss b { color: #fff; font-size: 14px; }
+.bRow .bScore { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); text-align: right; min-width: 82px; }
+.chart .bRow { grid-template-columns: 40px minmax(0, 1fr) auto auto minmax(0, 190px); }
+.bRank { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font: 800 15px Unbounded, var(--font); background: rgba(255,255,255,.12); }
+.bRank.rS { background: var(--hot); box-shadow: 0 0 14px color-mix(in srgb, var(--hot) 60%, transparent); }
+.bRank.rA { background: color-mix(in srgb, var(--hot) 55%, #222); }
+.bDiff { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); }
+.bTop { display: flex; flex-direction: column; font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bTop small { font-size: 10px; color: rgba(255,255,255,.5); }
+@media (max-width: 560px) {
+  .bHead, .bTabs { padding-left: 14px; padding-right: 14px; } .bBody { padding: 10px 14px 8px; } .bSample, .bSub { margin-left: 14px; margin-right: 14px; } .bFoot { padding: 10px 14px 14px; }
+  .bRow { grid-template-columns: 32px minmax(0, 1fr) auto; row-gap: 4px; column-gap: 10px; }
+  .bRow .bLv, .bRow .bMiss { grid-row: 2; } .bRow .bLv { grid-column: 2; justify-self: start; } .bRow .bMiss { grid-column: 3; }
+  .bRow .bScore { grid-row: 1; grid-column: 3; min-width: 0; }
+  .chart .bRow { grid-template-columns: 32px minmax(0, 1fr) auto auto; } .chart .bTop { grid-column: 2 / -1; }
+  .bPod .bMeta, .bPod .bSong { display: none; }
+}
+</style>
+</head>
+<body>
+<!-- แถบบนโผล่เฉพาะตอนเล่น (เมนูซ่อน) · HUD ในเกมวางใต้แถบนี้ -->
+<header>
+  <h1>RIM <small>Rhythm Is Mine · by DJ LAB SIAM</small></h1>
+  <button id="stopBtn" type="button">หยุด</button>
+</header>
+<canvas id="cv" role="img" aria-label="สนามเกม"></canvas>
+
+<!-- Main menu (เจ้าของสั่ง 14 พ.ย.): ยังไม่มีเพลง = หน้าแรก · มีเพลงแล้ว (data-ready) = ขึ้นข้อมูลเพลง + ระดับ + ความยาว + ปุ่มเริ่ม · ระหว่างเล่นซ่อน -->
+<div id="menu">
+  <div class="mBox">
+    <h1 class="mLogo">RIM</h1>
+    <p class="mTag">RHYTHM IS MINE</p>
+    <p class="mBy">by DJ LAB SIAM</p>
+    <div class="mSong">
+      <div class="mPick">
+        <label>ระดับ <select id="level"><option value="easy">ง่าย</option><option value="normal">ปกติ</option><option value="hard">ยาก</option><option value="expert">ยากสุด</option></select></label>
+        <label>ความยาว <select id="full"><option value="short">ย่อ ~1.5 นาที</option><option value="full">เต็มเพลง + Fever</option></select></label>
+      </div>
+    </div>
+    <p id="info">เลือกไฟล์เพลง 1 ไฟล์ หรือ STEM 4 ไฟล์จาก StemSep</p>
+    <div class="mBtns">
+      <button id="play" type="button" class="mGo" disabled>เริ่ม <small>Enter</small></button>
+      <label class="file mMain"><span class="mHome">เลือกเพลง</span><span class="mReady">เปลี่ยนเพลง</span><input id="file" type="file" accept="audio/*" multiple hidden></label>
+      <div class="mRow">
+        <button id="howOpen" type="button">วิธีเล่น</button>
+        <button id="setOpen" type="button">ตั้งค่า</button>
+      </div>
+    </div>
+    <a class="back" href="/game/">กลับหน้ารวมเกม</a>
+  </div>
+</div>
+
+<dialog id="howBox" aria-labelledby="howTitle">
+  <h2 id="howTitle">วิธีเล่น</h2>
+  <p>รับโน้ตที่ไหลลงมาตรงขอบแผ่นเสียงให้ลงจังหวะ</p>
+  <h3>คีย์บอร์ด + เมาส์</h3>
+  <ul>
+    <li>ส่ายเมาส์ (หรือ ← →) ย้ายตัวรับไปเลนของโน้ต</li>
+    <li>Space คลิกโน้ต · ค้างไว้ตามโน้ตยาว</li>
+    <li>F เปิด/ปิด FX · ล้อเมาส์ หมุน dry/wet</li>
+    <li>Enter เริ่ม/หยุด · Esc ปล่อยเมาส์</li>
+  </ul>
+  <h3>DJ controller</h3>
+  <ul>
+    <li>ครั้งแรก: ตั้งค่า → ต่อเครื่อง</li>
+    <li>หมุนจาน ย้ายเลน · crossfader คลิก/ค้าง</li>
+    <li>ปุ่ม FX + ปุ่ม dry/wet · PLAY เริ่ม/หยุด</li>
+  </ul>
+  <h3>โน้ต</h3>
+  <ul>
+    <li>ชิ้น = คลิกครั้งเดียว</li>
+    <li>ท่อ = เปิดค้างจนสุดท่อ</li>
+    <li>ซิกแซก = ค้างไว้ + หมุนตามเส้น</li>
+    <li>FX Zone = เปิด FX → หมุน dry/wet → ปิด FX</li>
+    <li>เต็มเพลง: คอมโบจนเกจเต็ม = Fever freestyle</li>
+  </ul>
+  <div class="row"><button id="howClose" type="button" class="go">เข้าใจแล้ว</button></div>
+</dialog>
+
+<dialog id="setBox" aria-labelledby="setTitle">
+  <h2 id="setTitle">ตั้งค่า</h2>
+  <div class="row"><button id="midiOpen" type="button" hidden>ต่อเครื่อง</button></div>
+  <label>แบบภาพ <select id="look"><option value="neon">Neon Drive</option><option value="studio">Blackout Studio</option><option value="laser">Laser Club</option></select></label>
+  <label>เสียงตอนโดนโน้ต <select id="sfx"><option value="off">ปิด</option><option value="soft">เบา</option><option value="normal">ปกติ</option></select></label>
+  <p class="note">เสียงดังตอนกดจริง ไม่ใช่ตอนที่โน้ตควรโดน · ใช้หูฟังบลูทูธ (หน่วง) แนะนำให้ปิด</p>
+  <label>สลับทิศจาน <input id="flip" type="checkbox"></label>
+  <label>ตัวรับเลื่อนอิสระ (ไม่ดูดเข้าเลน) <input id="free" type="checkbox"></label>
+  <label>ระยะเฟดเดอร์ทั้งหมด (mm) <input id="travel" type="number" min="0" max="200" step="0.5"></label>
+  <label>Cut-in (mm) <input id="cutin" type="number" min="0" max="100" step="0.1"></label>
+  <p class="note" id="faderNow"></p>
+  <label>หมุนจานกี่ขีดต่อ 1 เลน <input id="perLane" type="number" min="5" max="400" step="5"></label>
+  <label>เมาส์: ส่ายกี่ px ต่อ 1 เลน <input id="mousePx" type="number" min="10" max="400" step="5"></label>
+  <p class="note">น้อย = ตัวรับไวขึ้น · มาก = ช้าลง</p>
+  <label>ชดเชยความหน่วง (ms) <input id="offset" type="number" min="-300" max="300" step="5"></label>
+  <label>เห็นโน้ตล่วงหน้า (วินาที) <input id="lead" type="number" min="0.6" max="4" step="0.1"></label>
+  <label>ตัวรับ: ความหนา (px) <input id="catchW" type="number" min="3" max="40" step="1"></label>
+  <label>ตัวรับ: ความทึบ (%) <input id="catchA" type="number" min="10" max="100" step="10"></label>
+  <p class="note">ดูท้ายเพลง: "กดเร็วไปเฉลี่ย X ms" → ลดค่านี้ลง X (ติดลบได้) · "กดช้าไป" → เพิ่มขึ้น</p>
+  <div class="row"><button id="setClose" type="button" class="go">ปิด</button></div>
+  <p class="note credit">RIM (Rhythm Is Mine) © DJ LAB SIAM · พัฒนาโดย DJ Zlex</p>
+</dialog>
+
+<dialog id="midiBox" aria-labelledby="midiTitle">
+  <h2 id="midiTitle">ต่อเครื่อง</h2>
+  <p id="midiMsg" aria-live="polite"></p>
+  <div class="row"><button id="midiGo" type="button" class="go" hidden></button><button id="midiFx" type="button" hidden>ตั้ง FX</button><button id="midiPlay" type="button" hidden>ตั้งปุ่ม PLAY</button><button id="midiClose" type="button">ปิด</button></div>
+</dialog>
+
+<dialog id="endBox" aria-labelledby="endTitle">
+  <h2 id="endTitle">จบเพลง</h2>
+  <p class="stars" id="endStars"></p>
+  <p id="endScore"></p>
+  <div class="counts" id="endCounts"></div>
+  <p id="endMore" class="note"></p>
+  <div class="row"><button id="fixOffset" type="button" hidden></button></div>
+  <div class="row"><button id="again" type="button" class="go">เล่นอีก</button><button id="copy" type="button">คัดลอกผล</button><button id="endClose" type="button">กลับเมนู</button></div>
+  <h2 class="cardHead">การ์ดผลงาน</h2>
+  <label>ชื่อผู้เล่น <input id="player" type="text" maxlength="20" placeholder="ใส่ชื่อบนการ์ด"></label>
+  <img id="cardImg" alt="การ์ดสรุปผลสำหรับแชร์">
+  <div class="row"><button id="cardSave" type="button" class="go">บันทึกรูป</button><button id="cardShare" type="button" hidden>แชร์</button></div>
+  <p class="note credit">RIM (Rhythm Is Mine) © DJ LAB SIAM · พัฒนาโดย DJ Zlex</p>
+</dialog>
+
+<script src="rules.js"></script>
+<script src="chart.js"></script>
+<script src="look.js"></script>
+
+<script src="card.js"></script>
+<script>
+(function () {
+  var R = RimRules, C = RimChart, $ = function (id) { return document.getElementById(id); };
+  var LABEL = { perfect: 'ตรงมาก', great: 'ตรง', ok: 'พอใช้', miss: 'พลาด' };
+  var SET_KEY = 'rim-settings', GEAR_KEY = 'rim-gear';
+  function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v ? Object.assign(d, v) : d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ครั้งหน้าใช้ค่าเริ่มต้น */ } }
+  var set = load(SET_KEY, { player: '', perLane: 60, offset: 0, lead: 1.6, flip: false, free: false, full: false, look: 'neon', sfx: 'soft', level: 'normal', travel: 0, cutin: 0, catchW: 9, catchA: 100, mousePx: 60 });   // travel/cutin 0 = ยังไม่ตั้ง
+  var gear = load(GEAR_KEY, {});   // { v, jog, fader, fx?, knob? } จากการเรียนรู้ (fx/knob ไม่บังคับ ไม่มีใช้คีย์ F + ล้อเมาส์)
+  if (gear.v !== 2) gear = {};      // ทิศจานที่เรียนรู้ด้วยวิธีเดิม (ก่อน 13 พ.ย.) อาจกลับด้าน ให้เรียนรู้ใหม่
+  // ระยะเฟดเดอร์ (mm) ของรุ่นที่วัดแล้ว · MIDI บอกแค่ขั้น 0–127 ไม่บอกความยาวจริง · เติมให้เมื่อผู้เล่นยังไม่ได้ใส่เอง
+  var TRAVEL = [[/FLX4/i, 45.7]];   // DDJ-FLX4 crossfader: เจ้าของวัด ~1.8 นิ้ว (13 พ.ย.)
+  function knownTravel(name) {
+    for (var i = 0; i < TRAVEL.length; i++) if (TRAVEL[i][0].test(name || '')) return TRAVEL[i][1];
+    return 0;
+  }
+  if (!set.travel && gear.jog) set.travel = knownTravel(gear.jog.name);
+  function anyDialog() { return !!document.querySelector('dialog[open]'); }
+
+  // ── เสียง + นาฬิกา: เวลาเพลงคือเวลาที่หูได้ยิน (นาฬิกาเสียงหักความหน่วงลำโพงแล้ว) ──────────
+  var ctx = null, buf = null, chart = null, song = '', src = null, startAt = 0;
+  var run = null, lastT = -1e9, pos = R.CENTER, faderUp = false, input = 'key', result = null, ended = {}, faderRaw = [];   // ended = ท่อที่เล่นเสียงจบไปแล้ว
+  var fxUp = false, spinAt = -1e9, fxRaw = [];  // FX เปิดอยู่ไหม · เวลาที่หมุน dry/wet ล่าสุด (ms) ไว้โชว์ว่ากำลังหมุน · fxRaw = ทุกครั้งที่กด FX
+  var idleLane = null;              // เลนของตัวรับตอนยังไม่เริ่ม (ลองคุมได้ ไม่นับคะแนน)
+  var count = null, clicks = [];    // นับเข้า: { beat0, len, n } ในเวลาเพลง · เสียงคลิกที่ตั้งเวลาไว้
+  var playLen = 0;                  // วินาทีที่เล่นจริง (ช่วงที่เลือก หรือทั้งเพลง)
+  function audio() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function songAt(ms) {   // ms = เวลาแบบ performance.now() (เวลาของเหตุการณ์ปุ่ม/MIDI ใช้ฐานเดียวกัน)
+    var ts = ctx.getOutputTimestamp && ctx.getOutputTimestamp();
+    var ct = ts && ts.contextTime ? ts.contextTime + (ms - ts.performanceTime) / 1000
+      : ctx.currentTime - (performance.now() - ms) / 1000 - (ctx.outputLatency || 0);
+    return ct - startAt - set.offset / 1000;
+  }
+  // ── เสียงตอนโดนโน้ต (เจ้าของเลือก 14 พ.ย. · ปิดได้) · สังเคราะห์สด ไม่มีไฟล์เสียง ──
+  // ดังตอนผู้เล่นกดจริง (ไม่ใช่ตอนที่โน้ตควรโดน — ไม่งั้นได้ยินว่าตรงทั้งที่คลาด) · โดน = เสียงตัดสั้นทุ้ม · จบท่อ = เสียงใสเบา · FX = เสียงกวาดขึ้น/ลง · พลาด = เงียบ
+  var SFX_VOL = { off: 0, soft: 0.22, normal: 0.45 }, noise = null;
+  function sfx(kind) {
+    var v = SFX_VOL[set.sfx] || 0; if (!v || !ctx) return;
+    var t0 = ctx.currentTime, out = ctx.createGain(); out.gain.value = v; out.connect(ctx.destination);
+    if (!noise) { noise = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.5), ctx.sampleRate); var d = noise.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    function env(node, peak, dur) { var gn = ctx.createGain(); gn.gain.setValueAtTime(peak, t0); gn.gain.exponentialRampToValueAtTime(0.001, t0 + dur); node.connect(gn); gn.connect(out); node.start(t0); node.stop(t0 + dur + 0.02); }
+    function tone(f0, f1, dur, peak, type) { var o = ctx.createOscillator(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); env(o, peak, dur); }
+    function hiss(f0, f1, dur, peak) {
+      var s = ctx.createBufferSource(), bp = ctx.createBiquadFilter(); s.buffer = noise; bp.type = 'bandpass'; bp.Q.value = 1.5;
+      bp.frequency.setValueAtTime(f0, t0); bp.frequency.exponentialRampToValueAtTime(f1, t0 + dur); s.connect(bp);
+      var gn = ctx.createGain(); gn.gain.setValueAtTime(peak, t0); gn.gain.exponentialRampToValueAtTime(0.001, t0 + dur); bp.connect(gn); gn.connect(out); s.start(t0); s.stop(t0 + dur + 0.02);
+    }
+    if (kind === 'hit') { tone(170, 60, 0.07, 0.9); hiss(3200, 1400, 0.035, 0.6); }
+    else if (kind === 'hold') tone(700, 690, 0.14, 0.22, 'triangle');
+    else if (kind === 'fxon') hiss(400, 6000, 0.35, 0.55);
+    else if (kind === 'fxoff') hiss(5000, 500, 0.3, 0.45);
+  }
+
+  // เหตุการณ์ต้องป้อนกติกาเรียงเวลา: ถ้ามาถึงช้ากว่าที่เดินไปแล้ว ให้นับเป็นเวลาล่าสุด
+  function at(ms) { var t = Math.max(songAt(ms), lastT); lastT = t; return t; }
+  function setLane(lane, ms) {
+    if (!run) { idleLane = lane; return; }   // ยังไม่เริ่ม: แค่ขยับตัวรับให้เห็น
+    if (lane !== run.lane) R.move(run, at(ms), lane);
+  }
+  function fader(open, ms) {   // ส่งทุกครั้ง: กติกากันซ้ำเอง และต้องเห็นการเปิดกลับระหว่างรอปิด (กันสั่น)
+    if (!run) { if (open) sfx('hit'); return; }   // ยังไม่เริ่ม: ลองฟังเสียง/ความหน่วงได้
+    var t = at(ms);
+    if (!open) { R.close(run, t); return; }
+    var before = run.active, fc = run.fever ? run.fever.clicks : -1;
+    R.open(run, t);
+    if ((run.active && run.active !== before) || (run.fever && run.fever.clicks !== fc)) sfx('hit');   // โดนโน้ตใหม่ / คลิกใน Fever (เปิดกลับในช่วงกันสั่น / เปิดเปล่า = เงียบ)
+  }
+  function fx(on, ms) {   // ยังไม่เริ่ม: แค่โชว์สถานะ
+    fxUp = on; if (!run) return;
+    fxRaw.push([Math.round(songAt(ms) * 1000), on ? 1 : 0]);
+    var good = function () { return run.zones.filter(function (z) { return (on ? z.on : z.off) && (on ? z.on : z.off) !== 'miss'; }).length; }, n0 = good();
+    (on ? R.fxOn : R.fxOff)(run, at(ms));
+    if (good() > n0) sfx(on ? 'fxon' : 'fxoff');
+  }
+  function spin(ms) { spinAt = ms; if (run) R.knob(run, at(ms)); }
+
+  // เลือก 1 ไฟล์ = เพลงเต็ม · เลือกหลายไฟล์ = STEM จาก StemSep ("<เพลง> - drums.wav" ฯลฯ ครบ 4 ไฟล์)
+  // STEM: เล่นเสียงรวมของ 4 ไฟล์ (ไม่ใช่ไฟล์ต้นฉบับ) เสียงที่ได้ยินกับแผนที่โน้ตจึงตรงกันพอดี
+  // สร้างแผนที่โน้ตจากเสียงที่อ่านไว้ · เต็มเพลงต้องคิดเสียงค้างทั้งเพลง (ช้ากว่า) จึงสร้างใหม่เมื่อสลับ "เล่นเต็มเพลง"
+  var source = null;
+  function build() {
+    $('play').disabled = true; $('info').textContent = 'กำลังสร้างแผนที่โน้ต…';
+    setTimeout(function () { chart = C.analyze(source.x, source.sr, source.stems, set.full); chart.full = set.full; info(); $('play').disabled = false; }, 30);
+  }
+  var STEMS = ['drums', 'bass', 'other', 'vocals'], STEM_RE = /\s*[-_ ]\s*(drums|bass|other|vocals)\.[^.]+$/i;
+  $('file').onchange = function () {
+    var fs = Array.prototype.slice.call(this.files), parts = {};
+    this.blur();   // ไม่ให้ Space (เฟดเดอร์) เปิดหน้าต่างเลือกไฟล์ซ้ำ
+    if (!fs.length) return;
+    fs.forEach(function (f) { var m = STEM_RE.exec(f.name); if (m) parts[m[1].toLowerCase()] = f; });
+    var stem = fs.length > 1;
+    if (stem && STEMS.some(function (s) { return !parts[s]; })) { $('info').textContent = 'STEM ต้องเลือกครบ 4 ไฟล์ (drums / bass / other / vocals) จากโฟลเดอร์ของ StemSep พร้อมกัน'; return; }
+    var list = stem ? STEMS.map(function (s) { return parts[s]; }) : fs;
+    audio(); stop();
+    $('play').disabled = true; $('info').textContent = 'กำลังอ่านเพลง…';
+    // ถอดเสียงที่ 44.1 kHz เสมอ (ไม่ใช่อัตราของการ์ดเสียงเครื่องนั้น): แผนที่โน้ต ความยากเพลง และลายนิ้วมือ ต้องได้ค่าเดียวกันทุกเครื่อง
+    //   (วัด 14 พ.ย.: ไฟล์เดียวกันถอดที่ 22 / 44.1 / 48 kHz ได้ความยาก 6.29 / 5.69 / 6.05 · บังคับ 44.1 แล้ว 5.69 / 5.70)
+    var dec = new OfflineAudioContext(1, 1, 44100);
+    Promise.all(list.map(function (f) { return f.arrayBuffer().then(function (ab) { return dec.decodeAudioData(ab); }); })).then(function (bs) {
+      $('info').textContent = 'กำลังสร้างแผนที่โน้ต…';
+      setTimeout(function () {   // ให้ข้อความขึ้นก่อนเริ่มคำนวณ
+        var len = Math.min.apply(null, bs.map(function (b) { return b.length; }));
+        var mono = bs.map(function (b) {
+          var x = new Float32Array(len);
+          for (var c = 0; c < b.numberOfChannels; c++) { var d = b.getChannelData(c); for (var i = 0; i < len; i++) x[i] += d[i] / b.numberOfChannels; }
+          return x;
+        });
+        var b = bs[0], x = mono[0];
+        if (stem) {   // เสียงรวม: บวกทุก STEM ทีละช่องเสียง (ไฟล์โมโนใช้ช่องเดียวกับทุกช่อง)
+          b = ctx.createBuffer(Math.max.apply(null, bs.map(function (s) { return s.numberOfChannels; })), len, bs[0].sampleRate);
+          for (var c = 0; c < b.numberOfChannels; c++) {
+            var out = b.getChannelData(c);
+            bs.forEach(function (s) { var d = s.getChannelData(Math.min(c, s.numberOfChannels - 1)); for (var i = 0; i < len; i++) out[i] += d[i]; });
+          }
+          x = new Float32Array(len);
+          mono.forEach(function (m) { for (var i = 0; i < len; i++) x[i] += m[i]; });
+        }
+        buf = b; song = stem ? parts.drums.name.replace(STEM_RE, '') + ' (STEM)' : fs[0].name;
+        source = { x: x, sr: b.sampleRate, stems: stem ? { drums: mono[0], bass: mono[1], other: mono[2], vocals: mono[3] } : undefined };
+        build();
+      }, 30);
+    }, function () { $('info').textContent = 'เปิดไฟล์นี้ไม่ได้ ลองไฟล์ mp3 / wav อื่น'; });
+  };
+
+  function start() {
+    if (!chart) return;
+    if (chart.full !== set.full) { chart = C.analyze(source.x, source.sr, source.stems, set.full); chart.full = set.full; }   // สลับเต็มเพลงระหว่างเล่น
+    audio(); stop();
+    // Fever เฉพาะเล่นเต็มเพลง (เจ้าของ 14 พ.ย.) · เป้าลงจังหวะ = เสียงกลองในเพลง (โน้ตระดับยาก)
+    run = R.create(notes(), null, zones(), set.full ? { fever: true, beatLen: chart.beatLen, beats: chart.levels.hard.map(function (n) { return n.t; }) } : null); lastT = -1e9; ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
+    pos = R.CENTER; faderUp = false; fxUp = false;   // เริ่มเล็งตรงกลางเสมอ ยังไม่อยู่เลนไหน · FX ถือว่าปิด (กติกาเริ่มที่ปิด)
+
+    // เล่นเพลงจริงช่วงเดียวต่อเนื่อง (ห้ามตัดต่อ) · เวลาเพลง 0 = ต้นช่วง
+    var rg = span(), a = rg ? rg[0] : 0, b = rg ? rg[1] : buf.duration, L = chart.beatLen;
+    playLen = b - a;
+    // นับเข้าตามจังหวะเพลง: คลิก n ครั้งก่อนจังหวะแรกในช่วง · นานพอให้เห็นโน้ตแรกไหลมา (n ทีละ 4)
+    var n = 4; while (n * L < set.lead) n += 4;
+    count = { beat0: ((chart.beat0 - a) % L + L) % L, len: L, n: n };
+    startAt = ctx.currentTime + 0.1 + n * L - count.beat0;
+    var gain = ctx.createGain(), end = startAt + playLen;
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0, startAt); gain.gain.linearRampToValueAtTime(1, startAt + 0.01);   // กันเสียงแตกตอนเริ่มกลางเพลง
+    if (rg && b < buf.duration - 0.5) { gain.gain.setValueAtTime(1, end - 2); gain.gain.linearRampToValueAtTime(0, end); }   // ไม่ใช่ท้ายเพลงจริง: เฟดออก 2 วิ
+    src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain);
+    src.start(startAt, a, playLen);
+    clicks = [];
+    for (var k = 0; k < n; k++) {   // คลิกตัวแรกของห้องเสียงสูงกว่า
+      var o = ctx.createOscillator(), cg = ctx.createGain(), when = startAt + count.beat0 - (n - k) * L;
+      o.frequency.value = k % 4 === 0 ? 1600 : 1000;
+      cg.gain.setValueAtTime(0.25, when); cg.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
+      o.connect(cg); cg.connect(ctx.destination); o.start(when); o.stop(when + 0.06); clicks.push(o);
+    }
+    document.body.classList.add('playing');   // ซ่อนเมนู เหลือสนามเกม + แถบบน
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  function stop() {
+    if (src) { try { src.stop(); } catch (e) { /* ยังไม่เริ่มเล่น */ } src = null; }
+    clicks.forEach(function (o) { try { o.stop(); } catch (e) { /* เล่นจบไปแล้ว */ } }); clicks = [];
+    run = null; count = null; idleLane = null; pos = R.CENTER;
+    document.body.classList.remove('playing');   // กลับเมนู
+    if (document.pointerLockElement) document.exitPointerLock();   // จบ/หยุด: คืนลูกศรเมาส์ให้กดหน้าจบเพลง
+  }
+  function finish() {
+    run.feverAt = null;   // Fever ที่นัดไว้แต่เพลงจบก่อน ไม่นับ (ผู้ตรวจ 14 พ.ย.)
+    R.tick(run, 1e9);
+    var s = R.summary(run), r2 = function (v) { return Math.round(v * 1000) / 1000; };
+    result = { at: new Date().toISOString(), song: song, bpm: chart.bpm, diff: songDiff(),   // { value, rank, nps, lps, fps }
+      print: chart.print,   // ลายนิ้วมือเพลง { bpm, dur, env[128] } สำหรับ Music Rank Chart (ระบุเพลงเดียวกันข้ามผู้เล่น)
+      range: span(), input: input, set: Object.assign({}, set), sum: s,   // สำเนาค่าตั้ง ณ ตอนเล่น (การ์ดใช้)
+      // [เวลา, เลน, ยาว, ผล, คลาด ms, ค้างได้] ต่อโน้ต ใช้ปรับค่าตั้งต้น
+      notes: run.notes.map(function (n) { return [r2(n.t), n.lane, r2(n.len), n.res, n.dt === null ? null : Math.round(n.dt * 1000), n.frac === null ? null : r2(n.frac)]; }),
+      ghostAt: run.ghostAt.map(r2),   // เวลาที่เปิดเปล่า
+      // [เวลา, ยาว, คลิก, ลงจังหวะ, เปลี่ยนเลน, แต้ม] ต่อ Fever
+      fevers: run.fevers.map(function (f) { return [r2(f.t), r2(f.len), f.clicks, f.onBeat, f.moves, f.score]; }),
+      faderRaw: faderRaw,   // [เวลา ms, ค่าดิบ 0–127] ทุกข้อความเฟดเดอร์จากเครื่อง · ไว้ดูว่าเปิดเปล่าเกิดจากเฟดเดอร์สั่นหรือคนเปิดเอง
+      fxRaw: fxRaw,   // [เวลา ms, 1 เปิด / 0 ปิด] ทุกครั้งที่กด FX (คีย์ F หรือเครื่อง) · เทียบต้นโซนดูว่าพลาดเปิดเพราะกดเร็วหรือช้า
+      // [เวลา, ยาว, ผลเปิด FX, ผลปิด FX, คลาดเปิด ms, คลาดปิด ms, หมุนอยู่] ต่อโซน
+      zones: run.zones.map(function (z) { var ms = function (d) { return d === null ? null : Math.round(d * 1000); }; return [r2(z.t), r2(z.len), z.on, z.off, ms(z.onDt), ms(z.offDt), z.frac === null ? null : r2(z.frac)]; }) };
+    stop();
+    $('endStars').textContent = '★★★'.slice(0, s.stars) + '☆☆☆'.slice(s.stars);
+    $('endScore').textContent = 'เพลง Rank ' + result.diff.rank + ' (' + result.diff.value.toFixed(2) + ') · คะแนน ' + s.score.toLocaleString() + ' · แม่น ' + Math.round(s.acc * 100) + '% · คอมโบสูงสุด ' + s.maxCombo;
+    $('endCounts').innerHTML = ['perfect', 'great', 'ok', 'miss'].map(function (k) { return '<div><b>' + s[k] + '</b>' + LABEL[k] + '</div>'; }).join('');
+    var dts = result.notes.filter(function (n) { return n[4] !== null; }).map(function (n) { return n[4]; }).sort(function (a, b) { return a - b; });
+    var mid = dts.length ? dts[Math.floor(dts.length / 2)] : 0;   // ms · ค่ากลาง ไม่ใช่ค่าเฉลี่ย กันตัวที่หลุดไกลดึง
+    $('endMore').textContent = (Math.abs(mid) < 10 ? 'จังหวะตรงดี' : (mid < 0 ? 'กดเร็วไป' : 'กดช้าไป') + 'เฉลี่ย ' + Math.abs(mid) + ' ms') +
+      ' · เปิดเฟดเดอร์ตอนไม่มีโน้ต ' + s.ghosts + ' ครั้ง · เล่นด้วย' + (input === 'midi' ? 'เครื่อง' : 'คีย์บอร์ด') +
+      (result.zones.length ? ' · FX ' + result.zones.length + ' โซน หมุน dry/wet เฉลี่ย ' + Math.round(100 * result.zones.reduce(function (a, z) { return a + (z[6] || 0); }, 0) / result.zones.length) + '% ของเวลาในโซน' : '') +
+      (result.fevers.length ? ' · Fever ' + result.fevers.length + ' ครั้ง +' + s.fever.toLocaleString() : '');
+    // ปรับชดเชยให้: เวลาที่ตัดสิน = เวลาที่ได้ยิน − ชดเชย จึงบวกค่ากลางความคลาดเข้าไปตรงๆ (เร็วไป 35 → ลด 35)
+    var fix = Math.round(set.offset + mid);
+    $('fixOffset').hidden = Math.abs(mid) < 10;
+    $('fixOffset').textContent = 'ปรับชดเชยให้ (' + set.offset + ' → ' + fix + ' ms)';
+    $('fixOffset').onclick = function () {
+      set.offset = fix; save(SET_KEY, set); $('offset').value = fix;
+      this.textContent = 'ตั้งชดเชยเป็น ' + fix + ' ms แล้ว'; this.disabled = true;
+    };
+    $('fixOffset').disabled = false;
+    $('endBox').showModal();
+    cardBlob = null; if (cardUrl) URL.revokeObjectURL(cardUrl); cardUrl = null; $('cardImg').removeAttribute('src');   // ไม่ให้บันทึกได้รูปรอบก่อนระหว่างวาดใหม่
+    card();
+  }
+
+  // ── การ์ดผลงาน (รูปแชร์ลงโซเชียล) ──
+  var LEVEL_NAME = { easy: 'ง่าย', normal: 'ปกติ', hard: 'ยาก', expert: 'ยากสุด' }, cardBlob = null, cardUrl = null;
+  $('player').value = set.player || '';
+  $('player').oninput = function () { set.player = this.value.trim(); save(SET_KEY, set); clearTimeout(this.wait); this.wait = setTimeout(card, 250); };
+  function card() {
+    if (!result) return;
+    var s = result.sum;
+    RimCard.draw(document.createElement('canvas'), {
+      player: set.player, song: song, bpm: result.bpm, rank: result.diff.rank, diff: result.diff.value, level: LEVEL_NAME[result.set.level] || result.set.level, free: result.set.free, full: result.set.full, look: result.set.look,
+      score: s.score, stars: s.stars, acc: s.acc, maxCombo: s.maxCombo, perfect: s.perfect, great: s.great, ok: s.ok, miss: s.miss,
+      fx: result.zones.length ? s.fx : null, fever: result.set.full ? s.fever : null,
+      date: new Date(result.at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+    }).then(function (cv) {
+      cv.toBlob(function (b) {
+        cardBlob = b; if (cardUrl) URL.revokeObjectURL(cardUrl); cardUrl = URL.createObjectURL(b); $('cardImg').src = cardUrl;
+        var f = cardFile();
+        $('cardShare').hidden = !(navigator.canShare && navigator.canShare({ files: [f] }));
+      }, 'image/png');
+    });
+  }
+  function cardFile() { return new File([cardBlob], 'rim-' + result.sum.score + '.png', { type: 'image/png' }); }
+  $('cardSave').onclick = function () {
+    if (!cardUrl) return;
+    var a = document.createElement('a'); a.href = cardUrl; a.download = 'rim-' + result.sum.score + '.png'; a.click();
+  };
+  $('cardShare').onclick = function () { if (cardBlob) navigator.share({ files: [cardFile()], text: 'RIM · Rhythm Is Mine · DJ LAB SIAM' }).catch(function () { /* ผู้เล่นกดยกเลิก */ }); };
+  $('play').onclick = function () { playKey(true); this.blur(); };
+  $('again').onclick = function () { $('endBox').close(); start(); lockMouse(); };
+  $('endClose').onclick = function () { $('endBox').close(); };
+  $('copy').onclick = function () {
+    var b = this;
+    navigator.clipboard.writeText(JSON.stringify(result)).then(function () { b.textContent = 'คัดลอกแล้ว'; }, function () { b.textContent = 'คัดลอกไม่ได้'; });
+    setTimeout(function () { b.textContent = 'คัดลอกผล'; }, 1500);
+  };
+
+  // ── คีย์บอร์ด ──
+  addEventListener('keydown', function (e) {
+    if (anyDialog()) return;
+    if (e.code === 'Space' && e.target !== document.body && e.target.closest && e.target.closest('#menu')) return;   // Tab มาที่ปุ่มในเมนู: Space = กดปุ่ม (Enter ยังเป็น PLAY เสมอ)
+    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) { input = 'key'; faderUp = true; fader(true, e.timeStamp); } }
+    else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+      e.preventDefault();
+      var left = e.code === 'ArrowLeft', cur = run ? run.lane : idleLane;
+      var l = cur === null ? (left ? Math.floor(R.CENTER) : Math.ceil(R.CENTER))   // จากตรงกลาง กดครั้งแรก = เลนกลางฝั่งนั้น
+        : Math.max(0, Math.min(R.LANES - 1, cur + (left ? -1 : 1)));
+      pos = l; setLane(l, e.timeStamp);
+    }
+    else if (e.code === 'KeyF' && !e.repeat) { input = 'key'; fx(!fxUp, e.timeStamp); }
+    else if ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) { e.preventDefault(); playKey(true); }   // Enter = ปุ่ม PLAY (เจ้าของ 14 พ.ย.)
+  });
+  addEventListener('keyup', function (e) { if (e.code === 'Space') { faderUp = false; fader(false, e.timeStamp); } });
+  // เมาส์ส่ายซ้าย–ขวา = จาน (เจ้าของ 14 พ.ย.) · ระหว่างเล่นล็อกเมาส์ไว้ในเกม (ซ่อนลูกศร ส่ายได้ไม่ติดขอบจอ) · Esc = ปล่อย
+  // ต่อจานเครื่องอยู่ + เล่นอยู่ + ไม่ได้ล็อก = ไม่นับเมาส์ (ชนเมาส์โดนไม่ทำให้ตัวรับย้ายเลน) · ไม่มีเครื่อง = เมาส์ใช้ได้เสมอ แม้เบราว์เซอร์ไม่ให้ล็อก
+  addEventListener('mousemove', function (e) {
+    if (anyDialog() || !e.movementX || (run && midi && gear.jog && !document.pointerLockElement)) return;
+    pos = R.slide(pos, e.movementX, set.mousePx); input = 'key';
+    setLane(R.laneOf(run ? run.lane : idleLane, pos, set.free), e.timeStamp);
+  });
+  function lockMouse() { var p = $('cv').requestPointerLock && $('cv').requestPointerLock(); if (p && p.catch) p.catch(function () { /* เบราว์เซอร์ไม่ให้ล็อก: ส่ายได้จนสุดขอบจอ */ }); }
+  // ปุ่ม PLAY / Enter / ปุ่มเริ่มบนจอ: เริ่ม · กดซ้ำระหว่างเล่น = หยุด · lock = ล็อกเมาส์ (เฉพาะที่ผู้เล่นกดเอง เบราว์เซอร์ไม่ให้ล็อกจาก MIDI)
+  function playKey(lock) {
+    if (run) { stop(); return; }
+    if ($('play').disabled) return;
+    start(); if (lock) lockMouse();
+  }
+  // ล้อเมาส์ / ทัชแพด = หมุน dry/wet
+  addEventListener('wheel', function (e) { if (anyDialog()) return; e.preventDefault(); spin(e.timeStamp); }, { passive: false });
+
+  // ── ตั้งค่า ──
+  ['perLane', 'mousePx', 'offset', 'lead', 'travel', 'cutin', 'catchW', 'catchA'].forEach(function (k) {
+    $(k).value = set[k];
+    $(k).onchange = function () { var v = parseFloat(this.value); if (isFinite(v)) { set[k] = v; save(SET_KEY, set); faderNote(); } };
+  });
+  // Cut-in: เปิดเมื่อเลื่อนพ้นฝั่งปิดเกิน cutin mm (ต้องรู้ระยะเฟดเดอร์ทั้งหมดก่อน — ผู้เล่นวัดเอง ไม่เดาตามรุ่น)
+  function cutFrac() { return set.travel > 0 && set.cutin > 0 ? Math.min(1, set.cutin / set.travel) : null; }
+  function faderNote(v) {
+    var f = gear.fader, cut = cutFrac(), now = '';
+    if (f && v !== undefined) now = 'ตอนนี้ ' + (set.travel > 0 ? R.faderMm(f, v, set.travel).toFixed(1) + ' mm' : Math.round(R.faderMm(f, v, 100)) + '%') + ' จากฝั่งปิด · ' + (faderUp ? 'เปิด' : 'ปิด') + ' · ';
+    $('faderNow').textContent = now + (cut ? 'เปิดที่ ' + set.cutin + ' mm · ปิดเมื่อกลับต่ำกว่า ' + (set.cutin / 2).toFixed(1) + ' mm · ละเอียดสุดราว ' + (set.travel / Math.abs(f ? f.open - f.closed : 127)).toFixed(2) + ' mm/ขั้น'
+      : 'ใส่ระยะเฟดเดอร์ (วัดสุดซ้าย–ขวาด้วยไม้บรรทัด) + cut-in · ยังไม่ใส่ = เปิดที่ 20% ของระยะ');
+  }
+  faderNote();
+  // ── ความยาก: แผนที่โน้ตมีครบ 3 ระดับตั้งแต่อ่านเพลง เปลี่ยนแล้วใช้ตอนกดเริ่มครั้งถัดไป ──
+  function notes() { return C.remap(chart.levels[set.level], span()); }
+  function span() { return set.full ? null : chart.range; }   // null = เล่นเต็มเพลง
+  // FX Zone ทุกระดับเหมือนกัน · โซนที่ถูกตัดท้ายช่วงเล่นจนสั้นกว่า 2 ห้อง ไม่ใช้
+  function zones() { return C.remap(chart.zones, span()).filter(function (z) { return z.len >= 8 * chart.beatLen - 1e-6; }); }
+  function mmss(s) { s = Math.round(s); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+  function info() {
+    if (!chart) return;
+    var n = notes(), holds = n.filter(function (x) { return x.len; }).length, d = songDiff();
+    var rg = span(), part = rg ? ' · เล่นช่วง ' + mmss(rg[0]) + '–' + mmss(rg[1]) + ' จาก ' + mmss(buf.duration) : ' · เต็มเพลง ' + mmss(buf.duration);
+    $('menu').setAttribute('data-ready', '');   // เมนู: ขึ้นระดับ/ความยาว/ปุ่มเริ่ม
+    $('info').textContent = song + ' · Rank ' + d.rank + ' (' + d.value.toFixed(2) + ') · ' + chart.bpm + ' BPM' + part + ' · โน้ต ' + n.length + ' (ท่อ ' + holds + ') · FX ' + zones().length + ' โซน';
+  }
+  // ความยากเพลง (rank D–S) จากการวิเคราะห์แบบย่อเสมอ: เพลงเดียวกันได้ค่าเดียวทั้งเล่นย่อ/เต็ม (ใช้เทียบเพลงต่อเพลง) · เก็บไว้กับเพลงที่เปิด
+  function songDiff() {
+    if (!source.diff) source.diff = chart.full ? C.analyze(source.x, source.sr, source.stems, false).diff : chart.diff;
+    return source.diff;
+  }
+  $('level').value = set.level;
+  $('level').onchange = function () { set.level = this.value; save(SET_KEY, set); info(); this.blur(); };
+
+  $('flip').checked = set.flip;   // หมุนจานแล้วตัวรับไปผิดทาง กดสลับได้เลย ไม่ต้องต่อเครื่องใหม่
+  $('flip').onchange = function () { set.flip = this.checked; save(SET_KEY, set); };
+  $('look').value = set.look; $('sfx').value = set.sfx;
+  $('look').onchange = function () { set.look = this.value; save(SET_KEY, set); look.setStyle(set.look); };
+  $('sfx').onchange = function () { set.sfx = this.value; save(SET_KEY, set); audio(); sfx('hit'); };   // เลือกแล้วได้ยินตัวอย่างทันที
+  $('free').checked = set.free;
+  $('free').onchange = function () { set.free = this.checked; save(SET_KEY, set); };
+  $('full').value = set.full ? 'full' : 'short';   // เมนู: ย่อ / เต็มเพลง (เดิมเป็นช่องติ๊กในตั้งค่า)
+  $('full').onchange = function () { set.full = this.value === 'full'; save(SET_KEY, set); if (source && !run) build(); this.blur(); };   // กำลังเล่นอยู่ = ใช้ตอนเริ่มครั้งถัดไป
+  $('setOpen').onclick = function () { $('setBox').showModal(); };
+  $('howOpen').onclick = function () { $('howBox').showModal(); };
+  $('howClose').onclick = function () { $('howBox').close(); };
+  $('stopBtn').onclick = function () { stop(); this.blur(); };
+  // ปิดหน้าต่างใดๆ แล้วไม่ให้ปุ่มที่เปิดมันค้างโฟกัส (Space = เฟดเดอร์ ไม่ใช่กดปุ่มนั้นซ้ำ)
+  Array.prototype.forEach.call(document.querySelectorAll('dialog'), function (d) { d.addEventListener('close', function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }); });
+  // Leader Board (board.js · ข้อมูลตัวอย่างจนกว่า rim-scores ขึ้น) · เปิดที่ Board ของเพลงที่เลือกอยู่ ไม่มีเพลง = S
+  $('setClose').onclick = function () { $('setBox').close(); };
+
+  // ── เครื่อง MIDI: เรียนรู้จากการหมุน/เลื่อนจริง ไม่ผูกเลขรุ่นใด (จาน → ทิศ → เฟดเดอร์) ──
+  var midi = null, step = 'idle', heard = [], cand = null, dirEvs = [], fcand = null, fval = null, fxHeard = [];
+  function inputs() { var out = []; midi.inputs.forEach(function (i) { if (i.state === 'connected') out.push(i); }); return out; }
+  function say(text, go) { $('midiMsg').textContent = text; $('midiGo').hidden = !go; if (go) $('midiGo').textContent = go; $('midiFx').hidden = true; $('midiPlay').hidden = true; }
+  // ข้อความของจาน/เฟดเดอร์/FX ที่เรียนแล้ว ไม่ใช้เป็นผู้สมัครตอนเรียนปุ่มถัดไป
+  function known(m) {
+    return (m[0] === gear.jog.status && gear.jog.ccs.indexOf(m[1]) >= 0) || (m[0] === gear.fader.status && m[1] === gear.fader.cc) ||
+      !!(gear.fx && R.fxMsg(gear.fx, [m[0], m[1], gear.fx.mode === 'toggle' ? gear.fx.press : gear.fx.on]) !== null);   // ปุ่ม FX (ไม่สนค่า)
+  }
+  // ขั้น 4–5 ไม่บังคับ: บางรุ่นไม่ส่ง MIDI ของ FX ตอนไม่เปิดโปรแกรมดีเจ (ยังไม่ได้วัด) → ปิดหน้าต่างแล้วใช้คีย์ F + ล้อเมาส์แทน
+  function fxBegin() { step = 'fxon'; fxHeard = []; say('ขั้น 4/5 (ข้ามได้ — กดปิด): เปิด FX บนเครื่อง แล้วกด "เปิดแล้ว"', 'เปิดแล้ว'); }
+  function listen() {
+    inputs().forEach(function (i) {
+      i.onmidimessage = onMidi;
+      if (i.connection !== 'open') i.open().then(null, function () { say('เปิดเครื่องไม่ได้ ปิด rekordbox หรือ Serato ก่อน'); });
+    });
+  }
+  function ready() { return !!(midi && gear.jog && gear.fader) && inputs().some(function (i) { return i.name === gear.jog.name; }); }
+  function status() { $('midiOpen').textContent = ready() ? 'ต่อแล้ว' : 'ต่อเครื่อง'; }
+  function begin() { step = 'scratch'; heard = []; say('ขั้น 1/5: สแครชจานฝั่งที่จะเล่น ไปกลับสักครู่'); }
+  function midiStep() {
+    if (!midi || !$('midiBox').open) return;
+    listen();
+    if (!inputs().length) { step = 'idle'; say('ยังไม่เจอเครื่อง เสียบสาย USB แล้วรอสักครู่'); return; }
+    if (step !== 'idle') return;
+    if (ready()) { say('พร้อมเล่นกับ ' + gear.jog.name + ' · FX: ' + (gear.fx ? 'ปุ่มบนเครื่อง' : 'คีย์ F') + ' · dry/wet: ' + (gear.knob ? 'ปุ่มบนเครื่อง' : 'ล้อเมาส์') + ' · เริ่มเกม: ' + (gear.play ? 'ปุ่ม PLAY' : 'ปุ่มเริ่มบนจอ'), 'ตั้งค่าใหม่'); $('midiFx').hidden = false; $('midiPlay').hidden = false; }
+    else begin();
+  }
+  function onMidi(e) {
+    var m = [e.data[0], e.data[1], e.data[2]], name = e.target.name;
+    if (step === 'scratch') {
+      heard.push(m.concat(name));
+      if (heard.length % 20 === 0) {
+        var found = R.learnJog(heard.filter(function (x) { return x[3] === name; }));
+        if (found) { cand = found; cand.name = name; dirEvs = [[e.timeStamp, 0]]; step = 'dir'; say('ขั้น 2/5: ปล่อยมือจากจานสักครู่ แล้วหมุนตามเข็มนาฬิกาช้าๆ สักครึ่งรอบ'); }
+        else if (heard.length >= 800) { heard = []; say('ยังไม่เจอจาน ลองสแครชอีกครั้ง'); }
+      }
+      return;
+    }
+    if (step === 'dir') {
+      if (name !== cand.name) return;
+      var d = R.jogTicks(cand, m);
+      if (d) dirEvs.push([e.timeStamp, d]);
+      var dir = R.jogDir(dirEvs);   // นับหลังจานนิ่งก่อน สแครชที่ค้างจากขั้น 1 จึงไม่ทำให้ทิศกลับด้าน
+      if (dir) { cand.sign = dir; heard = []; step = 'fader'; say('ขั้น 3/5: เลื่อนเฟดเดอร์ที่จะใช้ (เช่น crossfader) ไปสุดซ้าย–ขวา 2–3 รอบ'); }
+      return;
+    }
+    if (step === 'fader') {
+      if (name !== cand.name) return;
+      heard.push(m);
+      if (heard.length % 10 === 0) {
+        var f = R.learnFader(heard, function (g) { return g.status === cand.status && cand.ccs.indexOf(g.cc) >= 0; });
+        if (f) {
+          fcand = f; fval = null; step = 'closed';
+          heard.forEach(function (x) { if (x[0] === f.status && x[1] === f.cc) fval = x[2]; });
+          say('ค้างเฟดเดอร์ไว้สุดฝั่งที่ "ปิดเสียง" แล้วกดเสร็จ', 'เสร็จ');
+        }
+      }
+      return;
+    }
+    if (step === 'closed') { if (m[0] === fcand.status && m[1] === fcand.cc) fval = m[2]; return; }
+    if (step === 'fxon' || step === 'fxoff') { if (name === gear.jog.name) fxHeard.push(m); return; }
+    if (step === 'knob') {
+      if (name !== gear.jog.name) return;
+      heard.push(m);
+      var k = heard.length % 8 === 0 && R.learnKnob(heard, known);
+      if (k) { gear.knob = k; save(GEAR_KEY, gear); step = 'idle'; midiStep(); }
+      return;
+    }
+    if (step === 'play') {
+      if (name !== gear.jog.name) return;
+      heard.push(m);
+      var b = R.learnButton(heard, known);
+      if (b) { gear.play = b; save(GEAR_KEY, gear); step = 'idle'; midiStep(); }
+      return;
+    }
+    // เล่นจริง
+    if (!gear.jog || name !== gear.jog.name) return;
+    if (gear.play && R.pressed(gear.play, m)) {   // PLAY = เริ่ม / กดซ้ำระหว่างเล่น = หยุด (เหมือนปุ่มเริ่มบนจอ) · หน้าจบเพลง = เล่นอีก
+      if (run) stop();
+      else if (!$('play').disabled) { ['endBox', 'setBox', 'midiBox', 'howBox'].forEach(function (d) { if ($(d).open) $(d).close(); }); start(); }
+      return;
+    }
+    var ticks = R.jogTicks(gear.jog, m);
+    if (ticks) {
+      pos = R.slide(pos, (set.flip ? -1 : 1) * gear.jog.sign * ticks, set.perLane); input = 'midi';
+      setLane(R.laneOf(run ? run.lane : idleLane, pos, set.free), e.timeStamp);
+      return;
+    }
+    if (gear.fader && m[0] === gear.fader.status && m[1] === gear.fader.cc) {
+      if (run) faderRaw.push([Math.round(songAt(e.timeStamp) * 1000), m[2]]);
+      faderUp = R.faderOpen(gear.fader, faderUp, m[2], cutFrac()); input = 'midi';
+      if ($('setBox').open) faderNote(m[2]);   // หน้าตั้งค่าเปิดอยู่: โชว์ตำแหน่งจริงให้ตั้ง cut-in
+      fader(faderUp, e.timeStamp);
+      return;
+    }
+    var fm = gear.fx ? R.fxMsg(gear.fx, m) : null;
+    if (fm !== null) { input = 'midi'; fx(fm === 'toggle' ? !fxUp : fm, e.timeStamp); return; }
+    if (gear.knob && m[0] === gear.knob.status && m[1] === gear.knob.cc) { input = 'midi'; spin(e.timeStamp); }
+  }
+  if (navigator.requestMIDIAccess) $('midiOpen').hidden = false;
+  $('midiOpen').onclick = function () {
+    audio(); $('setBox').close(); $('midiBox').showModal();
+    if (midi) { midiStep(); return; }
+    say('กำลังเปิด MIDI กดอนุญาตถ้าเบราว์เซอร์ถาม');
+    navigator.requestMIDIAccess({ sysex: false }).then(function (access) {
+      midi = access;
+      midi.onstatechange = function () { listen(); midiStep(); status(); };
+      listen(); midiStep(); status();
+    }, function () { say('หน้านี้เปิด MIDI ไม่ได้ ลองเปิดด้วย Chrome หรือ Edge'); });
+  };
+  $('midiFx').onclick = fxBegin;
+  $('midiPlay').onclick = function () { step = 'play'; heard = []; say('ตั้งปุ่ม PLAY: กด PLAY บนเครื่อง 2 ครั้ง (อย่าแตะจาน)'); };
+  $('midiGo').onclick = function () {
+    if (step === 'fxon') {
+      if (!fxHeard.length) { say('ยังไม่ได้รับข้อความจากเครื่อง ลองเปิด FX อีกครั้ง · เครื่องไม่ส่ง = กดปิด แล้วใช้คีย์ F', 'เปิดแล้ว'); return; }
+      step = 'fxoff'; heard = fxHeard; fxHeard = []; say('ปิด FX บนเครื่อง แล้วกด "ปิดแล้ว"', 'ปิดแล้ว'); return;
+    }
+    if (step === 'fxoff') {
+      var f = R.learnFx(heard, fxHeard, known);
+      if (!f) { fxBegin(); say('ไม่เจอปุ่มเดียวกันทั้งตอนเปิดและปิด ลองใหม่: เปิด FX แล้วกด "เปิดแล้ว"', 'เปิดแล้ว'); return; }
+      gear.fx = f; save(GEAR_KEY, gear); step = 'knob'; heard = [];
+      say('ขั้น 5/5 (ข้ามได้ — กดปิด): หมุนปุ่ม dry/wet (ปุ่มที่จะใช้หมุนในโซน FX) ไปมาสักครู่');
+      return;
+    }
+    if (step !== 'closed') { gear = {}; begin(); return; }   // ตั้งค่าใหม่
+    if (fval === null || Math.abs(fval - (fval - fcand.lo > fcand.hi - fval ? fcand.lo : fcand.hi)) < 64) {
+      say('ยังไม่สุดฝั่ง เลื่อนเฟดเดอร์ไปสุดฝั่งที่ปิดเสียง แล้วกดเสร็จ', 'เสร็จ'); return;
+    }
+    gear = { v: 2, jog: { name: cand.name, status: cand.status, ccs: cand.ccs, kind: cand.kind, sign: cand.sign }, fader: R.faderCal(fcand, fval) };
+    save(GEAR_KEY, gear); status();
+    if (!set.travel && knownTravel(cand.name)) { set.travel = knownTravel(cand.name); save(SET_KEY, set); $('travel').value = set.travel; faderNote(); }
+    fxBegin();   // จาน + เฟดเดอร์บันทึกแล้ว ปิดหน้าต่างตอนนี้ก็เล่นได้
+  };
+  $('midiClose').onclick = function () { $('midiBox').close(); };
+  $('midiBox').addEventListener('close', function () { step = 'idle'; });
+
+  // ── วาด: ภาพทั้งหมดอยู่ใน look.js (Art · เลือกแบบในตั้งค่า) · ส่งสถานะให้ทุกเฟรม · look.js ไม่ตัดสินอะไร ──
+  var look = RimLook.create($('cv')), header = document.querySelector('header');
+  function resize() { look.resize(header.getBoundingClientRect().bottom + 10); }
+  addEventListener('resize', resize); resize();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(header);   // แถบบนขึ้นบรรทัดใหม่ = HUD เลื่อนลงตาม
+  if (document.fonts) document.fonts.ready.then(resize, function () { /* ใช้ฟอนต์สำรอง */ });
+  look.setStyle(set.look);
+  function draw(t) {
+    look.draw({ t: t, run: run, lead: set.lead, lane: run ? run.lane : idleLane, pos: pos, free: set.free, catchW: set.catchW, catchA: set.catchA / 100, open: run ? run.open : faderUp, fxUp: fxUp, spinAt: spinAt, count: count, playLen: playLen, feverFrom: R.FEVER.from,
+      idle: null });   // ข้อความตอนยังไม่เริ่มย้ายไปอยู่ในเมนูแล้ว
+  }
+
+  function frame() {
+    requestAnimationFrame(frame);
+    var t = 0;
+    if (run) {
+      t = songAt(performance.now());
+      // เดินกติกาตามหลัง 30 ms เผื่อข้อความ MIDI/ปุ่มที่มาถึงช้ากว่าเวลาจริงของมัน
+      if (t - 0.03 > lastT) { lastT = t - 0.03; R.tick(run, lastT); }
+      run.notes.forEach(function (n) {   // จบท่อครบ = เสียงใสเบา (ตอนที่กติกาตัดสินว่าจบ)
+        if (n.len && n.state === 'done' && !ended[n.i]) { ended[n.i] = 1; if (n.res !== 'miss' && n.frac >= 0.9) sfx('hold'); }
+      });
+      if (t > playLen + 1) { finish(); t = 0; }
+    }
+    draw(t);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
