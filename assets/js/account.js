@@ -177,6 +177,8 @@
     });
   }
   function paint() {
+    var mw = me.is_member === false;   // only a clear false hides the member warning; a missing flag (older function) keeps it shown
+    $('acc-mw').hidden = mw; $('acc-mw2').hidden = mw;
     var ps = (me.providers || []).map(function (p) { return PNAME[p] || ''; }).filter(Boolean);
     $('p-prov').textContent = ps.length ? ps.join(' · ') : '—';
     $('b-link-line').hidden = (me.providers || []).indexOf('line') >= 0;
