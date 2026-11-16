@@ -273,6 +273,7 @@ if "home" in SRC:
     if _gm:
         _t = re.sub(r"<[^>]+>", " ", _gm.group(0))
         ok(_gm.group(0).count('class="hgm-c"') == 1 and "เล่นเกม Signal Flow" in _t and "hgm-m" not in _gm.group(0), "home: #gamemember must hold exactly the one Signal Flow card")
+        ok("<svg" not in _gm.group(0) and 'src="/assets/img/game-signal-flow-960.webp"' in _gm.group(0) and "game-signal-flow-640.webp 640w" in _gm.group(0) and "game-signal-flow-1280.webp 1280w" in _gm.group(0) and 'width="1280" height="720"' in _gm.group(0) and 'loading="lazy"' in _gm.group(0) and 'alt="ภาพจากเกม Signal Flow' in _gm.group(0) and "ภาพจากตัวเกม · โมเดลจำลองตามสเปก ไม่ใช่รูปสินค้าจริง" in _gm.group(0), "home: the game card must use the real Signal Flow cover (srcset, size attributes, Thai alt, lazy, no SVG) with the 'simulated model, not the real product' caption")
         ok(not any(p in _t for p in ("ได้ครบ Phase 3", "ขึ้นกระดานคะแนน", "เลือกอวาตาร์ประจำบัญชี")) and "สิทธิ์และประโยชน์สมาชิก" not in _t, "home: member perks must not be listed in #gamemember")
         ok(not re.search(r"ส่วนลด|แต้ม|คูปอง|ระดับ|Silver|Gold|ตัวอย่าง|แบบร่าง", _t), "home: game section carries a forbidden word")
         ok(hs.index('id="invite"') < hs.index('id="practice"') < hs.index('id="shop3d"') < hs.index('id="gamemember"') < hs.index('id="podcast"'), "home: order must be demo invite -> practice -> shop3d -> game -> podcast")

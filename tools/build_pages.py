@@ -1151,7 +1151,8 @@ HOME_CSS = r"""
 .hgm{display:grid;gap:18px}
 .hgm-c{display:grid;align-content:start;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-lg);overflow:hidden}
 .hgm-c .hgm-v{aspect-ratio:16/9;background:#0F0F0F}
-.hgm-c .hgm-v svg{display:block;width:100%;height:100%}
+.hgm-v{position:relative}
+.hgm-v .cap{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);width:fit-content;font:600 12px/1.4 var(--font-family-body);color:#fff;background:rgba(15,15,15,.72);padding:3px 10px;border-radius:8px}
 .hgm-c .in{display:grid;gap:12px;padding:24px;align-content:start}
 .hgm-c h2{font-size:26px}
 .hgm-c p{color:var(--text-secondary)}
@@ -1378,7 +1379,7 @@ def home_page():
         f'<div class="h3d-s" id="h3d-s"><img src="/assets/img/pc-ddj-flx4.webp" width="640" height="384" alt="Pioneer DJ DDJ-FLX4" loading="lazy" decoding="async">'
         f'<button type="button" class="btn sec" id="h3d-go">ลองหมุน 3D</button></div></div></section>'
         f'<section class="hsec" id="gamemember"><div class="hgm">'
-        f'<article class="hgm-c" aria-labelledby="hgm-g"><div class="hgm-v">{game_cover_signal()}</div><div class="in"><span class="tag">เกม</span><h2 id="hgm-g">เล่นเกม Signal Flow</h2>'
+        f'<article class="hgm-c" aria-labelledby="hgm-g"><div class="hgm-v">{game_cover_img("signal-flow", "ภาพจากเกม Signal Flow: โต๊ะดีเจที่ต่อสายสัญญาณครบ มีเครื่องเล่นดีเจ มิกเซอร์ เครื่องเล่นแผ่นเสียง และลำโพง", sizes="(min-width:1200px) 640px, (min-width:960px) 54vw, 100vw")}<span class="cap">ภาพจากตัวเกม · โมเดลจำลองตามสเปก ไม่ใช่รูปสินค้าจริง</span></div><div class="in"><span class="tag">เกม</span><h2 id="hgm-g">เล่นเกม Signal Flow</h2>'
         f'<p>ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง เปิดให้เล่นแล้ว</p>'
         f'<ul><li>Phase 1–2 เล่นฟรีทุกคน</li><li>Phase 3 (14 ด่าน) เฉพาะสมาชิก</li><li>Phase 4 และเกมอื่น ยังไม่เปิดให้เล่น</li></ul>'
         f'<div class="acts"><a class="btn pri" href="/game/">ไปที่หน้าเกม</a></div></div></article>'
@@ -2035,21 +2036,6 @@ a.pb:hover{background:var(--lab-paper);box-shadow:0 6px 14px rgba(15,15,15,.12)}
 """
 
 GAME_RED = "#BD2026"
-GAME_CABLE = "M70 250H190Q220 250 220 220V150Q220 120 250 120H330Q360 120 360 150V210Q360 240 390 240H450Q480 240 480 210V130Q480 100 510 100H570"
-
-
-def game_cover_signal():
-    # own artwork: a signal cable running through patch points (brand red / black / white, line style). No product renders, no third-party logos.
-    return ('<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ภาพปก Signal Flow: สายสัญญาณวิ่งผ่านจุดต่อไปยังปลายทาง">'
-            '<rect width="640" height="360" fill="#0F0F0F"/>'
-            '<g stroke="#262626" stroke-width="1"><path d="M0 45h640M0 90h640M0 135h640M0 180h640M0 225h640M0 270h640M0 315h640"/><path d="M80 0v360M160 0v360M240 0v360M320 0v360M400 0v360M480 0v360M560 0v360"/></g>'
-            f'<path d="{GAME_CABLE}" fill="none" stroke="{GAME_RED}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
-            f'<path d="{GAME_CABLE}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2 14" stroke-linecap="round"/>'
-            '<g fill="#0F0F0F" stroke="#fff" stroke-width="3"><circle cx="220" cy="185" r="11"/><circle cx="360" cy="180" r="11"/><circle cx="480" cy="170" r="11"/></g>'
-            '<g stroke="#fff" stroke-width="3" fill="#0F0F0F"><rect x="30" y="228" width="44" height="44" rx="8"/><rect x="566" y="78" width="44" height="44" rx="8"/></g>'
-            f'<g fill="{GAME_RED}"><circle cx="52" cy="250" r="9"/><circle cx="588" cy="100" r="9"/></g>'
-            '<text x="40" y="70" fill="#fff" font-family="Prompt,sans-serif" font-weight="800" font-size="38" letter-spacing="2">SIGNAL FLOW</text>'
-            '<text x="42" y="98" fill="#bbb" font-family="Prompt,sans-serif" font-weight="600" font-size="15" letter-spacing="3">ต่อสายให้ถึงปลายทาง</text></svg>')
 
 
 def _svg(label, inner):
@@ -2076,11 +2062,11 @@ def game_cover_request():
                 '<g fill="none" stroke="#555" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"><path d="M130 120L200 190M320 106V190M510 124L440 190"/></g>')
 
 
-def game_cover_img(slug, alt, first=False):
+def game_cover_img(slug, alt, first=False, sizes="(min-width:1200px) 480px, (min-width:760px) 42vw, 100vw"):
     # real cover from the game itself (Content Creator, 16 Nov 69; brand logos on the equipment already blurred): 3 widths, 16:9, scene only (the card carries the name and text as HTML)
     w = (640, 960, 1280)
     return (f'<img src="/assets/img/game-{slug}-960.webp" srcset="' + ", ".join(f"/assets/img/game-{slug}-{x}.webp {x}w" for x in w) + '" '
-            f'sizes="(min-width:1200px) 480px, (min-width:760px) 42vw, 100vw" width="1280" height="720" alt="{alt}"'
+            f'sizes="{sizes}" width="1280" height="720" alt="{alt}"'
             + (' fetchpriority="high"' if first else ' loading="lazy" decoding="async"') + '>')
 
 
