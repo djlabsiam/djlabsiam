@@ -1,7 +1,7 @@
 /* /game/ —
    1) the main button: reads only the player's own progress to say "start" or "continue" — the SAME rules as the game and /member/ (assets/js/sfprogress.js:
       the highest open Phase that is not finished, at the game's first open level). This page does not ask the account for results (that needs a token), so only this browser's stats count. Nothing is sent or written.
-   2) the Leader Board: asks the Edge Function "game-scores" (action "board", public: no token, no member data is sent). Rows hold only nickname + numbers. Written with textContent.
+   2) the Leader Board: asks the Edge Function "game-scores" (action "board_public", public: no token, no member data is sent; the board holds every player who set a nickname, general user or member). Rows hold only nickname + numbers. Written with textContent.
       If the function does not answer, the "coming soon" card stays and nothing else on the page changes. */
 (function () {
   var go = document.getElementById('gh-go'), sub = document.getElementById('gh-sub'), SP = window.sfProgress;
@@ -27,7 +27,7 @@
   var shown = false;
 
   function ask(phase) {
-    var b = { action: 'board', game: 'signal-flow' };
+    var b = { action: 'board_public', game: 'signal-flow' };
     if (phase) b.phase = phase;
     var c = new AbortController(), t = setTimeout(function () { c.abort(); }, 15000);
     return fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY }, body: JSON.stringify(b), signal: c.signal })

@@ -2153,11 +2153,11 @@ def game_page():
             '</div></section>'
             f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
             '<div class="lbcard" id="lbsoon"><span class="chip2">เร็วๆ นี้</span>'
-            '<p>กระดานอันดับกำลังจะมา ทุกคนเปิดดูอันดับได้ เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น · อันดับรวมทั้งเกม และแยกตาม Phase</p></div>'
+            '<p>กระดานอันดับกำลังจะมา ทุกคนเปิดดูอันดับได้ ผู้เล่นที่สมัครบัญชีและตั้งชื่อเล่นเท่านั้นที่ขึ้นกระดาน · อันดับรวมทั้งเกม และแยกตาม Phase</p></div>'
             f'<div id="lb" hidden><div class="tabs2" role="tablist" aria-label="เลือกอันดับ">{lb_tabs}</div>'
             '<div style="overflow-x:auto"><table class="lb" aria-live="polite"><caption class="sub" id="lbcap"></caption>'
             '<thead><tr><th>อันดับ</th><th>ชื่อเล่น</th><th>ด่านที่ผ่าน</th><th>คะแนนรวม</th><th>เวลารวม</th></tr></thead><tbody id="lbody"></tbody></table></div>'
-            '<p class="sub">ทุกคนดูอันดับได้ · เฉพาะสมาชิกที่เข้าร่วมกระดานเท่านั้นที่มีชื่อขึ้น ตั้งชื่อเล่นที่หน้าสมาชิก · กระดานนี้เพื่อความสนุก</p></div>'
+            '<p class="sub">ทุกคนดูอันดับได้ · ผู้เล่นที่สมัครบัญชีและตั้งชื่อเล่นเท่านั้นที่ขึ้นกระดาน (ตั้งชื่อเล่นที่หน้าบัญชีของฉันหรือหน้าสมาชิก) · กระดานนี้เพื่อความสนุก</p></div>'
             '</section></div>')
     with io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb") as fh:
         ver = hashlib.md5(fh.read()).hexdigest()[:8]
