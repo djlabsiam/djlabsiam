@@ -2137,7 +2137,7 @@ def game_page():
     # Leader Board table frame, kept hidden until the data function exists (no rows, no sample data): game tab → total score → Phase 1–4
     lb_tabs = ('<button type="button" role="tab" aria-selected="true" data-p="0">คะแนนรวมทั้งเกม</button>'
                + "".join(f'<button type="button" role="tab" aria-selected="false" data-p="{n}"{" disabled" if k == "off" else ""}>Phase {n}{" (เร็วๆ นี้)" if k == "off" else ""}</button>' for n, _, _, k in GAME_PHASES))
-    body = ('<section class="hero"><h1>เกม</h1><p class="lede">เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี · ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น</p></section>'
+    body = ('<section class="hero"><h1>เกม</h1><p class="lede">เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี · ด่านพิเศษสำหรับสมาชิก · ดูอันดับได้ทุกคน</p></section>'
             '<div class="gh">'
             '<section aria-labelledby="gl"><h2 id="gl" class="vh">รายชื่อเกม</h2><div class="games">'
             f'<article class="gc" aria-labelledby="sf"><div class="cv">{game_cover_img("signal-flow", "ภาพจากเกม Signal Flow: โต๊ะดีเจที่ต่อสายสัญญาณครบ มีเครื่องเล่นดีเจ มิกเซอร์ เครื่องเล่นแผ่นเสียง และลำโพง", first=True)}<span class="cap">ภาพจากตัวเกม · โมเดลจำลองตามสเปก ไม่ใช่รูปสินค้าจริง</span></div><div class="in">'
@@ -2162,7 +2162,7 @@ def game_page():
     with io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb") as fh:
         ver = hashlib.md5(fh.read()).hexdigest()[:8]
     return shell("/game/", "เกม DJ ทดสอบทักษะ เล่นฟรี — DJ LAB SIAM",
-                 "เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี ด่านพิเศษและการจัดอันดับสำหรับสมาชิก DJ LAB SIAM สยามสแควร์", body, active="game", css_extra=GAME_CSS,
+                 "เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี ด่านพิเศษสำหรับสมาชิก DJ LAB SIAM สยามสแควร์ ดูอันดับได้ทุกคน", body, active="game", css_extra=GAME_CSS,
                  script=sf_script_tag() + f'<script src="/assets/js/gamehub.js?v={ver}" defer></script>\n')
 
 
