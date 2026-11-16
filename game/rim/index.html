@@ -16,7 +16,6 @@
 @font-face{font-family:"Chakra Petch";font-style:italic;font-weight:700;font-display:swap;src:url(fonts/chakra-700i.woff2) format("woff2")}
 @font-face{font-family:"Unbounded";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/unbounded-600.woff2) format("woff2")}
 @font-face{font-family:"Unbounded";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/unbounded-800.woff2) format("woff2")}
-.mRow{grid-template-columns:repeat(2,1fr)}
 .mBox .back{display:block;width:max-content;min-height:44px;margin:14px auto 0;padding:0 12px;line-height:44px;color:rgba(255,255,255,.7);font-size:13px;text-decoration:underline;text-underline-offset:3px}
 :root { --red: #BD2026; --ink: #010101; --paper: #FFFFFF; --font: "Mitr", "Noto Sans Thai", system-ui, sans-serif; }
 * { box-sizing: border-box; }
@@ -75,6 +74,70 @@ dialog p { margin: 6px 0; }
 .cardHead { margin-top: 18px; font-size: 16px; }
 dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0; }
 #cardImg { display: block; width: 100%; aspect-ratio: 4 / 5; margin-top: 8px; background: #111; border: 2px solid var(--ink); }
+/* ── Leader Board ในเกม (board.js) · พื้นเข้มตามแบบภาพที่เลือก · ไม่ใช้กรอบขาวแบบหน้าตั้งค่า ── */
+#boardBox { --acc: #63e6ff; --acc2: #ff3da6; --bg1: #1a0838; --bg2: #3a1066; --hot: #ff2b3c;
+  width: min(760px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 0; display: none; flex-direction: column; overflow: hidden;
+  color: #fff; border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent); border-radius: 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 24px 80px rgba(0,0,0,.6), 0 0 60px color-mix(in srgb, var(--acc) 22%, transparent);
+  background: radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--acc2) 30%, transparent), transparent 60%), linear-gradient(170deg, var(--bg1), var(--bg2)); }
+#boardBox[open] { display: flex; }
+#boardBox[data-look="studio"] { --acc: #f2f2f2; --acc2: #BD2026; --bg1: #050505; --bg2: #141414; }
+#boardBox[data-look="laser"] { --acc: #ffd36b; --acc2: #7b5cff; --bg1: #07030a; --bg2: #1c0610; }
+#boardBox::backdrop { background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.bHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px 6px; }
+.bHead h2 { margin: 0; font: italic 800 clamp(24px, 6vw, 38px)/1 Unbounded, var(--font); letter-spacing: .02em; text-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
+.bHead p { margin: 6px 0 0; font: 700 12px "Chakra Petch", var(--font); letter-spacing: .3em; color: var(--acc); text-transform: uppercase; }
+#boardBox button { font: 700 14px "Chakra Petch", var(--font); color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); box-shadow: none; border-radius: 999px; cursor: pointer; }
+#boardBox button:hover { background: rgba(255,255,255,.14); }
+.bClose { width: 40px; height: 40px; padding: 0; flex: none; }
+.bTabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 22px 4px; }
+#boardBox .bTab { min-width: 46px; height: 40px; padding: 0 14px; font: 800 17px Unbounded, var(--font); }
+#boardBox .bTab.wide { font: 700 13px "Chakra Petch", var(--font); letter-spacing: .08em; }
+#boardBox .bTab[aria-pressed="true"] { background: var(--hot); border-color: var(--hot); box-shadow: 0 0 18px color-mix(in srgb, var(--hot) 60%, transparent); }
+.bSample { margin: 8px 22px 0; padding: 6px 12px; border-radius: 8px; font-size: 12px; background: rgba(255,211,107,.12); color: #ffd36b; border: 1px dashed rgba(255,211,107,.5); }
+.bSub { margin: 8px 22px 0; font-size: 12px; color: rgba(255,255,255,.65); }
+.bBody { overflow-y: auto; padding: 12px 22px 8px; flex: 1; min-height: 0; }
+.bFoot { margin: 0; padding: 10px 22px 16px; font-size: 11px; color: rgba(255,255,255,.5); border-top: 1px solid rgba(255,255,255,.08); }
+.bEmpty { text-align: center; padding: 40px 0; color: rgba(255,255,255,.6); }
+.bPodium { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; }
+.bPod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 26px 8px 12px; text-align: center; border-radius: 14px; min-width: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.14); }
+.bPod.p1 { padding-top: 34px; border-color: var(--hot); background: linear-gradient(180deg, color-mix(in srgb, var(--hot) 35%, transparent), rgba(255,255,255,.03)); box-shadow: 0 0 30px color-mix(in srgb, var(--hot) 35%, transparent); }
+.bPod.empty { visibility: hidden; }
+.bMedal { position: absolute; top: -16px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 800 16px Unbounded, var(--font); background: #fff; color: #111; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+.p1 .bMedal { width: 42px; height: 42px; top: -20px; font-size: 20px; background: var(--hot); color: #fff; }
+.bPod .bNick { font: 700 15px var(--font); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bPod .bScore { font: italic 800 clamp(16px, 3.6vw, 22px) "Chakra Petch", var(--font); color: var(--acc); }
+.p1 .bScore { color: #fff; text-shadow: 0 0 14px var(--hot); }
+.bMeta, .bSong { font-size: 11px; color: rgba(255,255,255,.7); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bList { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bRow { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06); }
+.bRow:hover { background: rgba(255,255,255,.09); }
+.bRow.hi { border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
+.bPos { font: italic 800 18px "Chakra Petch", var(--font); color: rgba(255,255,255,.55); text-align: center; }
+.bWho { display: flex; flex-direction: column; min-width: 0; }
+.bWho b { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bWho small { font-size: 11px; color: rgba(255,255,255,.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bLv { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); white-space: nowrap; }
+.bLv.lv4 { border-color: var(--hot); color: #fff; background: color-mix(in srgb, var(--hot) 30%, transparent); }
+.bLv.lv3 { border-color: var(--acc); color: var(--acc); }
+.bMiss { font: 600 12px "Chakra Petch", var(--font); color: rgba(255,255,255,.6); white-space: nowrap; }
+.bMiss b { color: #fff; font-size: 14px; }
+.bRow .bScore { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); text-align: right; min-width: 82px; }
+.chart .bRow { grid-template-columns: 40px minmax(0, 1fr) auto auto minmax(0, 190px); }
+.bRank { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font: 800 15px Unbounded, var(--font); background: rgba(255,255,255,.12); }
+.bRank.rS { background: var(--hot); box-shadow: 0 0 14px color-mix(in srgb, var(--hot) 60%, transparent); }
+.bRank.rA { background: color-mix(in srgb, var(--hot) 55%, #222); }
+.bDiff { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); }
+.bTop { display: flex; flex-direction: column; font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bTop small { font-size: 10px; color: rgba(255,255,255,.5); }
+@media (max-width: 560px) {
+  .bHead, .bTabs { padding-left: 14px; padding-right: 14px; } .bBody { padding: 10px 14px 8px; } .bSample, .bSub { margin-left: 14px; margin-right: 14px; } .bFoot { padding: 10px 14px 14px; }
+  .bRow { grid-template-columns: 32px minmax(0, 1fr) auto; row-gap: 4px; column-gap: 10px; }
+  .bRow .bLv, .bRow .bMiss { grid-row: 2; } .bRow .bLv { grid-column: 2; justify-self: start; } .bRow .bMiss { grid-column: 3; }
+  .bRow .bScore { grid-row: 1; grid-column: 3; min-width: 0; }
+  .chart .bRow { grid-template-columns: 32px minmax(0, 1fr) auto auto; } .chart .bTop { grid-column: 2 / -1; }
+  .bPod .bMeta, .bPod .bSong { display: none; }
+}
 </style>
 </head>
 <body>
@@ -102,6 +165,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
       <button id="play" type="button" class="mGo" disabled>เริ่ม <small>Enter</small></button>
       <label class="file mMain"><span class="mHome">เลือกเพลง</span><span class="mReady">เปลี่ยนเพลง</span><input id="file" type="file" accept="audio/*" multiple hidden></label>
       <div class="mRow">
+        <button id="boardOpen" type="button">อันดับ</button>
         <button id="howOpen" type="button">วิธีเล่น</button>
         <button id="setOpen" type="button">ตั้งค่า</button>
       </div>
@@ -174,6 +238,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   <p id="endMore" class="note"></p>
   <div class="row"><button id="fixOffset" type="button" hidden></button></div>
   <div class="row"><button id="again" type="button" class="go">เล่นอีก</button><button id="copy" type="button">คัดลอกผล</button><button id="endClose" type="button">กลับเมนู</button></div>
+  <p id="endRank" class="note" aria-live="polite" hidden></p>
+  <div class="row"><button id="endBoard" type="button">ดูอันดับ Board ของเพลงนี้</button></div>
   <h2 class="cardHead">การ์ดผลงาน</h2>
   <label>ชื่อผู้เล่น <input id="player" type="text" maxlength="20" placeholder="ใส่ชื่อบนการ์ด"></label>
   <img id="cardImg" alt="การ์ดสรุปผลสำหรับแชร์">
@@ -184,8 +250,11 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 <script src="rules.js"></script>
 <script src="chart.js"></script>
 <script src="look.js"></script>
+<dialog id="boardBox" aria-labelledby="boardTitle"></dialog>
 
 <script src="card.js"></script>
+<script>window.RIM_WEB={"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/rim-scores","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","account":"/account/","login":"/member/"};</script>
+<script src="board.js"></script>
 <script>
 (function () {
   var R = RimRules, C = RimChart, $ = function (id) { return document.getElementById(id); };
@@ -353,6 +422,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if (document.pointerLockElement) document.exitPointerLock();   // จบ/หยุด: คืนลูกศรเมาส์ให้กดหน้าจบเพลง
   }
   function finish() {
+    var playedMs = Math.round((ctx.currentTime - startAt) * 1000);   // เวลาเล่นตามนาฬิกาเสียง (rim-scores ตรวจกับความยาวเพลง · ห้ามใช้ Date.now)
     run.feverAt = null;   // Fever ที่นัดไว้แต่เพลงจบก่อน ไม่นับ (ผู้ตรวจ 14 พ.ย.)
     R.tick(run, 1e9);
     var s = R.summary(run), r2 = function (v) { return Math.round(v * 1000) / 1000; };
@@ -388,8 +458,35 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     };
     $('fixOffset').disabled = false;
     $('endBox').showModal();
+    boardLine(playedMs);
     cardBlob = null; if (cardUrl) URL.revokeObjectURL(cardUrl); cardUrl = null; $('cardImg').removeAttribute('src');   // ไม่ให้บันทึกได้รูปรอบก่อนระหว่างวาดใหม่
     card();
+  }
+
+  // ── Leader Board ฉบับเว็บ (board.js · RimBoard.web): เล่นเต็มเพลงจบ → ล็อกอินอยู่ + มีชื่อเล่น = ส่งผลให้ rim-scores · ไม่ล็อกอิน = ลิงก์เข้าสู่ระบบ (ไม่เรียกอะไร)
+  //   เปิดในเครื่อง (ไม่มี RimBoard.web) = ไม่มีบรรทัดนี้ · ส่งไม่สำเร็จ = บอกสั้นๆ เล่นต่อได้ปกติ
+  function boardLine(playedMs) {
+    var el = $('endRank'), W = RimBoard.web, mine = result;
+    var put = function (h) { if (result !== mine) return; el.innerHTML = h; el.hidden = !h; };
+    put('');
+    if (!W) return;
+    if (!result.set.full) { put('Leader Board นับเฉพาะโหมดเต็มเพลง'); return; }
+    var sh = shortChart(), r3 = function (v) { return Math.round(v * 1000) / 1000; };
+    var payload = { level: result.set.level, full: true, title: song, print: result.print, span: sh.range ? sh.range[1] : source.x.length / source.sr,
+      diffNotes: C.remap(sh.levels.hard, sh.range).map(function (n) { return [r3(n.t), n.lane, r3(n.len)]; }),
+      notes: result.notes, zones: result.zones, fevers: result.fevers, sum: { score: result.sum.score, fx: result.sum.fx }, timeMs: playedMs };
+    put('กำลังส่งคะแนน…');
+    RimBoard.submit(payload).then(function (x) {
+      // หน้าที่พาไป: สมาชิก → /member/ · บัญชีเว็บหรือยังไม่ล็อกอิน → /account/ แล้วกดกลับมาเกมนี้
+      var go = '<a href="' + (x.kind === 'member' ? W.login : W.account + '?return=' + encodeURIComponent(location.pathname)) + '">';
+      var j = x.j || {}, rk = j.song && /^[SABCD]$/.test(j.song.rank) ? j.song.rank : '';
+      put(x.code === 'stored' ? (j.board_rank && rk ? 'อันดับ <b>#' + (+j.board_rank) + '</b> ' + (x.kind === 'member' ? 'ใน Board ' : 'บนกระดานรวม Board ') + rk : 'บันทึกผลขึ้น Leader Board แล้ว') + (j.best ? ' · สถิติใหม่' : '')
+        : x.code === 'guest' ? 'อยากขึ้น Leader Board? ' + go + 'เข้าสู่ระบบ</a> แล้วเล่นเต็มเพลงอีกครั้ง'
+        : x.code === 'nickname' ? go + 'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board'
+        : x.code === 'not_user' ? 'ยังไม่ได้ยอมรับนโยบายความเป็นส่วนตัว · ' + go + 'ไปที่บัญชีของฉัน</a> เพื่อขึ้น Leader Board'
+        : x.code === 'login' ? 'การเข้าสู่ระบบหมดอายุ · ' + go + 'เข้าสู่ระบบ</a> แล้วเล่นเต็มเพลงอีกครั้ง'
+        : 'ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');
+    }, function () { put('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ'); });
   }
 
   // ── การ์ดผลงาน (รูปแชร์ลงโซเชียล) ──
@@ -489,8 +586,12 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   }
   // ความยากเพลง (rank D–S) จากการวิเคราะห์แบบย่อเสมอ: เพลงเดียวกันได้ค่าเดียวทั้งเล่นย่อ/เต็ม (ใช้เทียบเพลงต่อเพลง) · เก็บไว้กับเพลงที่เปิด
   function songDiff() {
-    if (!source.diff) source.diff = chart.full ? C.analyze(source.x, source.sr, source.stems, false).diff : chart.diff;
+    if (!source.diff) source.diff = shortChart().diff;
     return source.diff;
+  }
+  function shortChart() {   // การวิเคราะห์แบบย่อของเพลงนี้ (ความยาก + diffNotes ที่ส่งให้ rim-scores) · คิดครั้งเดียวต่อไฟล์
+    if (!source.short) source.short = chart.full ? C.analyze(source.x, source.sr, source.stems, false) : chart;
+    return source.short;
   }
   $('level').value = set.level;
   $('level').onchange = function () { set.level = this.value; save(SET_KEY, set); info(); this.blur(); };
@@ -510,6 +611,9 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   $('stopBtn').onclick = function () { stop(); this.blur(); };
   // ปิดหน้าต่างใดๆ แล้วไม่ให้ปุ่มที่เปิดมันค้างโฟกัส (Space = เฟดเดอร์ ไม่ใช่กดปุ่มนั้นซ้ำ)
   Array.prototype.forEach.call(document.querySelectorAll('dialog'), function (d) { d.addEventListener('close', function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }); });
+  // Leader Board (board.js · ในเครื่อง = ข้อมูลตัวอย่าง · บนเว็บ = rim-scores) · เปิดที่ Board ของเพลงที่เลือกอยู่ ไม่มีเพลง = S
+  $('boardOpen').onclick = function () { RimBoard.show($('boardBox'), set.look, chart ? songDiff().rank : 'S'); this.blur(); };
+  $('endBoard').onclick = function () { $('endBox').close(); RimBoard.show($('boardBox'), set.look, result ? result.diff.rank : 'S'); };
   $('setClose').onclick = function () { $('setBox').close(); };
 
   // ── เครื่อง MIDI: เรียนรู้จากการหมุน/เลื่อนจริง ไม่ผูกเลขรุ่นใด (จาน → ทิศ → เฟดเดอร์) ──
@@ -592,7 +696,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if (!gear.jog || name !== gear.jog.name) return;
     if (gear.play && R.pressed(gear.play, m)) {   // PLAY = เริ่ม / กดซ้ำระหว่างเล่น = หยุด (เหมือนปุ่มเริ่มบนจอ) · หน้าจบเพลง = เล่นอีก
       if (run) stop();
-      else if (!$('play').disabled) { ['endBox', 'setBox', 'midiBox', 'howBox'].forEach(function (d) { if ($(d).open) $(d).close(); }); start(); }
+      else if (!$('play').disabled) { ['endBox', 'setBox', 'midiBox', 'howBox', 'boardBox'].forEach(function (d) { if ($(d).open) $(d).close(); }); start(); }
       return;
     }
     var ticks = R.jogTicks(gear.jog, m);
