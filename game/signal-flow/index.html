@@ -411,6 +411,9 @@ function sfStart(){
       not_member:['Phase '+PH+' สำหรับสมาชิก DJ LAB SIAM','บัญชีนี้ยังไม่ได้เป็นสมาชิก · สมัครสมาชิกได้ที่ร้าน หรือทักทีมงานทาง LINE @djlabsiam'],
       soon:['Phase '+PH+' เร็วๆ นี้','กำลังเตรียมด่านสำหรับสมาชิก · ระหว่างนี้เล่น Phase 1–2 ได้ฟรี'],
       error:['ตรวจสิทธิ์สมาชิกไม่สำเร็จ','เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้งในอีกสักครู่']}[LOCK.reason]||[];
+    // ล็อกอินด้วยบัญชีเว็บ (/account/): ต่ออายุ/อัปเกรดเป็นสมาชิกที่หน้าบัญชี
+    var ACC=LOCK.to==='account'&&['login','expired','not_member'].indexOf(LOCK.reason)>=0;
+    if(ACC)LT=[LT[0],LOCK.reason==='not_member'?'ด่านนี้สำหรับสมาชิกร้าน — ถ้าคุณเป็นสมาชิกแล้ว อัปเกรดบัญชีได้ที่หน้าบัญชี':'การเข้าสู่ระบบหมดอายุ · กดปุ่มเพื่อต่ออายุที่หน้าบัญชี แล้วกด "กลับไปเล่นเกม"'];
     var QP=1;while(QP+1<PH&&sfPhaseOpen(QP+1))QP++;   // Phase ที่ยังเล่นไม่ครบ (สำหรับ prev)
     if(LOCK.reason==='prev')LT=['Phase '+PH+' ยังล็อก','ผ่าน Phase '+QP+' ให้ครบ '+SF_PN[QP]+' ด่านก่อน แล้ว Phase นี้จะเปิดเอง'];
     document.getElementById('lockTag').textContent=LOCK.reason==='prev'?'ยังล็อก':'สมาชิกเท่านั้น';
@@ -421,9 +424,10 @@ function sfStart(){
     document.getElementById('loading').hidden=true; document.getElementById('advice').hidden=true;
     document.getElementById('lockTitle').textContent=LT[0]; document.getElementById('lockBody').textContent=LT[1];
     var lb=document.getElementById('lockLogin'); lb.hidden=LOCK.reason==='soon';
-    lb.textContent=LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':LOCK.reason==='prev'?'เล่นต่อ Phase '+QP:'เข้าสู่ระบบสมาชิก';
+    lb.textContent=ACC?'หน้าบัญชี':LOCK.reason==='error'?'ลองใหม่':LOCK.reason==='not_member'?'หน้าสมาชิก':LOCK.reason==='prev'?'เล่นต่อ Phase '+QP:'เข้าสู่ระบบสมาชิก';
     lb.addEventListener('click',function(){if(LOCK.reason==='error')location.reload();
       else if(LOCK.reason==='prev')location.search=lvUrl(QP,sfFirstOpen(QP));
+      else if(ACC)location.href=SF_MEMBERS.account+'?return='+encodeURIComponent(location.pathname+'?phase='+PH);   // ผ่าน allowlist ของ /account/ (web.test.mjs)
       else location.href=SF_MEMBERS.login+'?next='+encodeURIComponent(location.pathname+'?phase='+PH);});   // หน้าสมาชิกพากลับได้เฉพาะ /game/signal-flow/
     document.getElementById('lockFree').addEventListener('click',function(){location.search=lvUrl(1,1);});
     document.getElementById('lock').hidden=false; return;
@@ -1370,17 +1374,22 @@ function sfSubmitResult(status,j){
   if(status===403&&code==='members_only')return 'members_only';
   return 'fail';
 }
+// ด่าน Phase สมาชิก (game-levels ตัดสินสมาชิกจาก uid → บัญชีเว็บที่อัปเกรดเป็นสมาชิกแล้วเปิดได้ด้วย token ของ /account/)
+//   → เหตุผลของการ์ดล็อก · status = HTTP ของ game-levels ที่ไม่ใช่ 200 (ไม่มี token = ไม่เรียก)
+function sfLevelsLock(S,status){
+  if(!S.token)return S.kind?'expired':'login';
+  return status===401?'login':status===403?'not_member':status===404?'soon':'error';
+}
 /* </sf-web> */
-// ฉบับเว็บ djlabsiam.com (build-web.mjs ใส่ SF_MEMBERS): ด่าน Phase สมาชิกไม่อยู่บนเว็บ — ดึงจาก Edge Function game-levels ด้วย session ของหน้าสมาชิก (/member/)
+// ฉบับเว็บ djlabsiam.com (build-web.mjs ใส่ SF_MEMBERS): ด่าน Phase สมาชิกไม่อยู่บนเว็บ — ดึงจาก Edge Function game-levels ด้วย session ที่ sfPickSession เลือก
 // Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลยถ้าไม่ได้ล็อกอิน · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
 (function(){
   var M=window.SF_MEMBERS, ph=parseInt(new URLSearchParams(location.search).get('phase'),10)||1;
   if(!M){sfStart();return;}
-  // session ของหน้าสมาชิก (assets/js/member.js) ใช้กับด่าน Phase สมาชิก · ใกล้หมดอายุ = ส่งไป /member/?next= ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
+  // session: สมาชิก (assets/js/member.js) ก่อน → บัญชีเว็บทั่วไป (assets/js/account.js) · ใช้ทั้ง Leader Board และด่าน Phase สมาชิก
+  //   ใกล้หมดอายุ = ส่งไปหน้านั้น (/member/?next= หรือ /account/?return=) ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
   var rd=function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
-  var s=rd('djl-member-session'), tok=s&&s.access_token, exp=s&&s.expires_at;
-  // Leader Board: สมาชิก หรือบัญชีเว็บทั่วไป (assets/js/account.js) ตาม sfPickSession
-  var S=window.SF_SESSION=sfPickSession(s,M.scores?rd('djl-account-session'):null,Date.now()/1000);
+  var S=window.SF_SESSION=sfPickSession(rd('djl-member-session'),M.scores?rd('djl-account-session'):null,Date.now()/1000);
   // Leader Board + ความคืบหน้าบนบัญชี: ล็อกอินอยู่ = ถาม game-scores (me) ครั้งเดียวต่อหน้า · ไม่ล็อกอิน = ไม่เรียกอะไรเลย
   //   ไม่ใช่ทั้งสมาชิกและบัญชีเว็บ / ล้ม / ช้าเกิน 4 วินาที = SF_ME null (ใช้ความคืบหน้าในเครื่องอย่างเดียว ไม่ส่งคะแนน)
   var me=!(M.scores&&S.token)?Promise.resolve(null):Promise.race([
@@ -1393,11 +1402,11 @@ function sfSubmitResult(status,j){
   if(M.soon.indexOf(ph)>=0){window.SF_LOCK={reason:'soon'};sfStart();return;}
   if(!sfPhaseOpen(ph)){window.SF_LOCK={reason:'prev'};sfStart();return;}   // ยังไม่ผ่าน Phase ก่อนหน้า = ไม่ต้องดึงด่าน
   document.getElementById('loading').textContent='กำลังตรวจสิทธิ์สมาชิก…';
-  (!tok?Promise.resolve('login'):exp&&exp-Date.now()/1000<=60?Promise.resolve('expired'):fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({phase:ph})})
+  (!S.token?Promise.resolve(sfLevelsLock(S)):fetch(M.fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+S.token},body:JSON.stringify({phase:ph})})
       .then(function(r){return r.json().catch(function(){return null;}).then(function(j){
         if(r.ok&&j&&j.ok===true&&typeof j.js==='string'){new Function(j.js)();return null;}
-        return r.status===401?'login':r.status===403?'not_member':r.status===404?'soon':'error';});}))
-  .catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason};sfStart();});
+        return sfLevelsLock(S,r.ok?0:r.status);});}))
+  .catch(function(){return 'error';}).then(function(reason){if(reason)window.SF_LOCK={reason:reason,to:S.kind};sfStart();});
   });
 })();
 </script>
