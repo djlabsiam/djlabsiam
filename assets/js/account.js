@@ -31,6 +31,7 @@
   /* ---- views ---- */
   function show(name) {
     VIEWS.forEach(function (v) { var e = $('v-' + v); if (e) e.hidden = v !== name; });
+    if (name !== 'profile') upReset();   // member code / phone / code never outlive the profile view
     var h = document.querySelector('#v-' + name + ' h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
     window.scrollTo(0, 0);
   }
@@ -179,6 +180,7 @@
   function paint() {
     var mw = me.is_member === false;   // only a clear false hides the member warning; a missing flag (older function) keeps it shown
     $('acc-mw').hidden = mw; $('acc-mw2').hidden = mw;
+    $('up-yes').hidden = me.is_member !== true; $('up-no').hidden = me.is_member !== false;   // the upgrade only appears on a clear false (an older function that sends no flag shows neither)
     var ps = (me.providers || []).map(function (p) { return PNAME[p] || ''; }).filter(Boolean);
     $('p-prov').textContent = ps.length ? ps.join(' · ') : '—';
     $('b-link-line').hidden = (me.providers || []).indexOf('line') >= 0;
@@ -251,6 +253,55 @@
   $('b-delyes').addEventListener('click', function () {
     boardAct($('b-delyes'), { action: 'delete' }, function (j) { return 'ลบคะแนนและชื่อเล่นทั้งหมดแล้ว' + (typeof j.scores === 'number' ? ' (' + j.scores + ' รายการ)' : ''); });
   });
+
+  /* ---- upgrade to shop member: member-auth "request_otp" then web-auth "upgrade". Member code, phone and the 6-digit code live only in these fields and in `up`: never storage, never a URL, never logged ---- */
+  var MEMBER_FN = FN.replace(/web-auth$/, 'member-auth'), up = null;
+  function upReset() {
+    up = null; ['up-code', 'up-phone', 'up-otp'].forEach(function (id) { $(id).value = ''; });
+    $('up-form').hidden = true; $('f-up1').hidden = false; $('f-up2').hidden = true; $('b-up-open').hidden = false; say('m-up', '');
+  }
+  var UP_SENT = 'ถ้าข้อมูลตรงกับทะเบียน ร้านจะส่งรหัส 6 หลักไปที่อีเมลที่ร้านเก็บไว้ของสมาชิก';
+  function upAsk(btn, who, after) {   // the answer is the same whether or not the member exists, so we never say "sent to ..." or show an address
+    busy(btn, true, 'กำลังขอรหัส…'); say('m-up', '');
+    call({ action: 'request_otp', member_code: who.code, phone: who.phone }, null, MEMBER_FN).then(function (x) {
+      busy(btn, false);
+      if (x.j && x.j.ok === true) { after(); say('m-up', UP_SENT, true); return; }
+      say('m-up', errOf(x).message);
+    });
+  }
+  $('b-up-open').addEventListener('click', function () { $('b-up-open').hidden = true; $('up-form').hidden = false; $('up-code').focus(); });
+  $('b-up-cancel').addEventListener('click', function () { upReset(); $('b-up-open').focus(); });
+  $('b-up-cancel2').addEventListener('click', function () { upReset(); $('b-up-open').focus(); });
+  $('f-up1').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var who = { code: $('up-code').value.trim(), phone: $('up-phone').value.trim() };
+    if (!who.code || !who.phone) { say('m-up', 'กรุณากรอกรหัสสมาชิกและเบอร์โทร'); return; }
+    upAsk($('b-up1'), who, function () { up = who; $('up-code').value = ''; $('up-phone').value = ''; $('f-up1').hidden = true; $('f-up2').hidden = false; $('up-otp').value = ''; $('up-otp').focus(); });
+  });
+  $('b-up-resend').addEventListener('click', function () { if (up) upAsk($('b-up-resend'), up, function () { $('up-otp').value = ''; $('up-otp').focus(); }); });
+  $('f-up2').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var otp = $('up-otp').value.trim(), btn = $('b-up2');
+    if (!up || !/^[0-9]{6}$/.test(otp)) { say('m-up', 'กรุณากรอกรหัสยืนยัน 6 หลัก'); return; }
+    busy(btn, true, 'กำลังยืนยัน…'); say('m-up', '');
+    fresh().then(function (tok) {
+      if (!tok) { toLogin('กรุณาเข้าสู่ระบบอีกครั้ง'); return; }
+      return call({ action: 'upgrade', member_code: up.code, phone: up.phone, otp: otp }, tok).then(function (x) {
+        busy(btn, false);
+        if (x.j && x.j.ok === true && x.j.status === 'upgraded') {
+          var d = x.j.game && x.j.game.scores_dropped;
+          upReset(); openProfile('เป็นสมาชิกร้านแล้ว' + (d > 0 ? ' · คะแนน ' + d + ' ด่านที่คุณซ่อนไว้ไม่ถูกย้ายเข้าสมาชิก' : '')); return;
+        }
+        if (guard(x)) return;
+        var e = errOf(x);
+        if (e.code === 'already_member') { upReset(); openProfile(e.message); return; }
+        if (e.code === 'terms_withdrawn') { say('m-up', e.message + ' แล้วกลับมากดยืนยันอีกครั้ง'); $('k1').focus(); return; }
+        if (e.code === 'invalid_otp') { $('up-otp').value = ''; $('up-otp').focus(); }
+        say('m-up', e.message);
+      });
+    });
+  });
+  /* ---- end upgrade ---- */
 
   /* ---- delete the whole account (two steps) ---- */
   $('b-acc-del').addEventListener('click', function () { $('acc-cf').hidden = false; $('acc-cft').tabIndex = -1; $('acc-cft').focus(); });
