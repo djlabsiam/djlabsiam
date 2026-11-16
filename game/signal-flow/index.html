@@ -199,7 +199,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 </head>
 <body>
 <!-- แถบบนของฉบับเว็บ djlabsiam.com (build-web.mjs แทรกหลัง <body> · ฉบับในเครื่อง/Artifact ไม่มี)
-     สีและหน้าตาตามหัวเว็บ (พื้นขาว โลโก้หมึก ปุ่มสมาชิกดำ) · สูง 44px · ไม่เรียกอะไรออกไป (สถานะสมาชิกอ่านจาก localStorage ของหน้าสมาชิก)
+     สีและหน้าตาตามหัวเว็บ (พื้นขาว โลโก้หมึก ปุ่มสมาชิกดำ) · สูง 44px · ไม่เรียกอะไรออกไป (สถานะอ่านจาก localStorage ของหน้าสมาชิก /member/ หรือหน้าบัญชี /account/)
      ลิงก์ "เกมทั้งหมด" อยู่ระหว่าง games ⋯ /games — ใส่เฉพาะเมื่อ build ด้วย --games (หน้า /game/ ขึ้นจริงแล้วเท่านั้น) -->
 <style>
 .sitebar{display:flex;align-items:center;gap:4px 14px;height:44px;margin:-10px -16px 8px;padding:0 16px;background:#fff;color:#1A1A1A;border-bottom:3px solid #BE2329;font-family:var(--f-body)}
@@ -223,9 +223,11 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
   <a class="sb-mem" id="sbMem" href="/member/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0117 0z"/></svg><span id="sbMemTxt">เข้าสู่ระบบ</span><i aria-hidden="true"></i></a>
 </nav>
 <script>
-(function(){ // มี session ที่ยังไม่หมดอายุ = ล็อกอินอยู่ (อ่านอย่างเดียว · คีย์เดียวกับ assets/js/member.js)
-  var s=null;try{s=JSON.parse(localStorage.getItem('djl-member-session')||'null');}catch(e){}
-  if(s&&s.access_token&&(!s.expires_at||s.expires_at>Date.now()/1000)){document.getElementById('sbMem').className+=' in';document.getElementById('sbMemTxt').textContent='สมาชิก';}
+(function(){ // มี session ที่ยังไม่หมดอายุ = ล็อกอินอยู่ (อ่านอย่างเดียว · สมาชิก: คีย์ของ assets/js/member.js · บัญชีเว็บทั่วไป: คีย์ของ assets/js/account.js)
+  var rd=function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+  var ok=function(s){return !!(s&&s.access_token&&(!s.expires_at||s.expires_at>Date.now()/1000));}, b=document.getElementById('sbMem');
+  if(ok(rd('djl-member-session'))){b.className+=' in';document.getElementById('sbMemTxt').textContent='สมาชิก';}
+  else if(ok(rd('djl-account-session'))){b.className+=' in';document.getElementById('sbMemTxt').textContent='บัญชี';b.href='/account/?return='+encodeURIComponent(location.pathname+location.search);}
 })();
 </script>
 <div class="wrap">
@@ -344,7 +346,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:no
 <script src="vendor/GLTFLoader.js"></script>
 <script src="vendor/RoomEnvironment.js"></script>
 <!-- ?v= กันเบราว์เซอร์ใช้ไฟล์เก่าที่จำไว้ · แก้ไฟล์ข้อมูล/กติกาแล้วเพิ่มเลขนี้ -->
-<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/","scores":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-scores","board":"/game/#leaderboard"};</script>
+<script>window.SF_MEMBERS={"phases":[3,4],"soon":[4],"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-levels","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","login":"/member/","scores":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/game-scores","board":"/game/#leaderboard","account":"/account/"};</script>
 <script src="rules.js?v=55"></script>
 <script src="level1.js?v=55"></script>
 <script src="level2.js?v=55"></script>
@@ -1019,23 +1021,30 @@ function sfStart(){
     try{localStorage.setItem(BEST_KEY,JSON.stringify(b));}catch(e){}
     document.getElementById('rBest').innerHTML='สถิติดีที่สุด: เวลา '+fmt(b.time,true)+(newT?' <em>ใหม่!</em>':'')+' · คะแนน '+b.score+(newS?' <em>ใหม่!</em>':'');
   }
-  // Leader Board (ฉบับเว็บ): สมาชิกที่ตั้งชื่อเล่นแล้ว → ส่ง MOVES ให้ game-scores คิดคะแนน · ล็อกอินแต่ยังไม่มีชื่อ → ชวนตั้งชื่อ
-  //   ไม่ล็อกอิน / ไม่ใช่สมาชิก / ตรวจ me ไม่ได้ (SF_ME = null) → ไม่ส่งอะไร · ส่งไม่สำเร็จก็เล่นต่อได้ปกติ
+  // Leader Board (ฉบับเว็บ): ล็อกอินอยู่ (สมาชิก หรือบัญชีเว็บ /account/) + มีชื่อเล่น → ส่ง MOVES ให้ game-scores คิดคะแนน · ยังไม่มีชื่อ → ชวนตั้งชื่อ
+  //   ไม่ล็อกอิน / หมดอายุ → ลิงก์ไปเข้าสู่ระบบ (ไม่เรียกอะไรออกไป · ผลรอบนี้ไม่ถูกเก็บ ต้องผ่านด่านอีกครั้ง) · ตรวจ me ไม่ได้ (SF_ME = null) → ไม่ส่ง
+  //   ส่งไม่สำเร็จก็เล่นต่อได้ปกติ
   function lbLine(h){var p=document.getElementById('rRank');p.innerHTML=h;p.hidden=!h;}
   function lbSubmit(ms){
-    var M=window.SF_MEMBERS, me=window.SF_ME, tok=window.SF_TOKEN;
-    if(!M||!M.scores||!me||!tok)return;
-    var join='<a href="'+M.login+'?next='+encodeURIComponent(location.pathname+lvUrl(L.phase,L.number))+'">';
-    if(!me.nickname){lbLine(join+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board');return;}
+    var M=window.SF_MEMBERS, me=window.SF_ME, S=window.SF_SESSION;
+    if(!M||!M.scores||!S)return;
+    // หน้าที่พาไป (เข้าสู่ระบบ/ต่ออายุ/ตั้งชื่อเล่น) แล้วกดกลับมาด่านนี้: สมาชิก → /member/?next= · บัญชีเว็บหรือยังไม่ล็อกอิน → /account/?return=
+    var go='<a href="'+(S.kind==='member'?M.login+'?next=':M.account+'?return=')+encodeURIComponent(location.pathname+lvUrl(L.phase,L.number))+'">';
+    if(!S.token){lbLine(S.kind?'การเข้าสู่ระบบหมดอายุ · '+go+'เข้าสู่ระบบ</a> แล้วผ่านด่านอีกครั้งเพื่อขึ้น Leader Board':'อยากขึ้น Leader Board? '+go+'เข้าสู่ระบบ</a> แล้วผ่านด่านอีกครั้ง');return;}
+    if(!me)return;
+    if(!me.nickname){lbLine(go+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board');return;}
     lbLine('กำลังส่งคะแนน…');
-    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},
+    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+S.token},
       body:JSON.stringify({action:'submit',game:'signal-flow',phase:L.phase,level:L.number,moves:MOVES,timeMs:Math.round(ms)})})
       .then(function(r){return r.json().catch(function(){return null;}).then(function(j){return {s:r.status,j:j};});})
       .then(function(x){
-        if(x.s===200&&x.j&&x.j.stored)lbLine('อันดับ <b>#'+(+x.j.level_rank)+'</b> ในด่านนี้ · อันดับรวม #'+(+x.j.total_rank)+' · <a href="'+M.board+'">ดู Leader Board</a>');
-        else if(x.s===200&&x.j&&x.j.reason==='no_nickname')lbLine(join+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board');
-        else if(x.s===401)lbLine('การเข้าสู่ระบบหมดอายุ · '+join+'เข้าสู่ระบบ</a> เพื่อส่งคะแนน');
-        else lbLine('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');
+        var r=sfSubmitResult(x.s,x.j);
+        lbLine(r==='stored'?'อันดับ <b>#'+(+x.j.level_rank)+'</b> ในด่านนี้ · อันดับรวม #'+(+x.j.total_rank)+' · <a href="'+M.board+'">ดู Leader Board</a>'
+          :r==='nickname'?go+'ตั้งชื่อเล่น</a> เพื่อขึ้น Leader Board'
+          :r==='not_user'?'ยังไม่ได้ยอมรับนโยบายความเป็นส่วนตัว · '+go+'ไปที่บัญชีของฉัน</a> เพื่อขึ้น Leader Board'
+          :r==='login'?'การเข้าสู่ระบบหมดอายุ · '+go+'เข้าสู่ระบบ</a> แล้วผ่านด่านอีกครั้งเพื่อขึ้น Leader Board'
+          :r==='members_only'?'ด่านนี้ขึ้น Leader Board ได้เฉพาะสมาชิกร้าน DJ LAB SIAM'
+          :'ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');
       }).catch(function(){lbLine('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');});
   }
   // โลโก้ DJ LAB SIAM เด้งหมุนขึ้นกลางกระดาน ค้างให้เห็นแล้วจางหายเอง
@@ -1342,20 +1351,40 @@ function sfStart(){
 
   render();toast('เลือกสายจากถาด ซูมด้วยล้อเมาส์หรือถ่างนิ้ว แล้วแตะช่องต่อเพื่อเสียบ');showAdvice(0);
 }
+/* <sf-web> ฟังก์ชันล้วนของฉบับเว็บ (ไม่แตะ DOM · tools/web.test.mjs ตัดช่วงนี้ไปเทสต์) */
+// session ที่ใช้กับ Leader Board: สมาชิก (djl-member-session ของ /member/) ก่อน → บัญชีเว็บทั่วไป (djl-account-session ของ /account/) → ไม่มี
+//   อ่านอย่างเดียว ไม่ต่ออายุเอง (กันชนกับหน้านั้นที่หมุน refresh token) · เหลือ ≤ 60 วินาที = หมดอายุ → token null แต่ kind บอกว่าต้องไปต่อที่หน้าไหน
+function sfPickSession(mem,acc,now){
+  var has=function(s){return !!(s&&typeof s.access_token==='string'&&s.access_token);}, live=function(s){return has(s)&&!(s.expires_at&&s.expires_at-now<=60);};
+  if(live(mem))return {kind:'member',token:mem.access_token};
+  if(live(acc))return {kind:'account',token:acc.access_token};
+  return {kind:has(mem)?'member':has(acc)?'account':null,token:null};
+}
+// ผลส่งคะแนนของ game-scores (HTTP status + JSON) → stored | nickname | not_user | login | members_only | fail
+function sfSubmitResult(status,j){
+  var code=j&&j.error&&j.error.code;
+  if(status===200&&j&&j.stored===true)return 'stored';
+  if(status===200&&j&&j.reason==='no_nickname')return 'nickname';
+  if((status===200&&j&&j.reason==='not_user')||(status===403&&code==='not_user'))return 'not_user';
+  if(status===401)return 'login';
+  if(status===403&&code==='members_only')return 'members_only';
+  return 'fail';
+}
+/* </sf-web> */
 // ฉบับเว็บ djlabsiam.com (build-web.mjs ใส่ SF_MEMBERS): ด่าน Phase สมาชิกไม่อยู่บนเว็บ — ดึงจาก Edge Function game-levels ด้วย session ของหน้าสมาชิก (/member/)
-// Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลย · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
+// Phase ที่เปิดให้ทุกคนไม่เรียกอะไรออกไปเลยถ้าไม่ได้ล็อกอิน · ไม่มี SF_MEMBERS (เปิดในเครื่อง/Artifact) = เริ่มเกมทันทีเหมือนเดิม
 (function(){
   var M=window.SF_MEMBERS, ph=parseInt(new URLSearchParams(location.search).get('phase'),10)||1;
   if(!M){sfStart();return;}
-  // session ของหน้าสมาชิก (assets/js/member.js · คีย์เดียวกัน) — อ่านอย่างเดียว ไม่ต่ออายุเอง (กันชนกับ member.js ที่หมุน refresh token)
-  // ใกล้หมดอายุ = ส่งไป /member/?next= ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
-  var s=null;try{s=JSON.parse(localStorage.getItem('djl-member-session')||'null');}catch(e){}
-  var tok=s&&s.access_token, exp=s&&s.expires_at, live=!!tok&&!(exp&&exp-Date.now()/1000<=60);
-  window.SF_TOKEN=live?tok:null;
+  // session ของหน้าสมาชิก (assets/js/member.js) ใช้กับด่าน Phase สมาชิก · ใกล้หมดอายุ = ส่งไป /member/?next= ซึ่งต่ออายุให้แล้วมีปุ่ม "กลับไปเล่นเกม"
+  var rd=function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+  var s=rd('djl-member-session'), tok=s&&s.access_token, exp=s&&s.expires_at;
+  // Leader Board: สมาชิก หรือบัญชีเว็บทั่วไป (assets/js/account.js) ตาม sfPickSession
+  var S=window.SF_SESSION=sfPickSession(s,M.scores?rd('djl-account-session'):null,Date.now()/1000);
   // Leader Board + ความคืบหน้าบนบัญชี: ล็อกอินอยู่ = ถาม game-scores (me) ครั้งเดียวต่อหน้า · ไม่ล็อกอิน = ไม่เรียกอะไรเลย
-  //   ไม่ใช่สมาชิก / ล้ม / ช้าเกิน 4 วินาที = SF_ME null (ใช้ความคืบหน้าในเครื่องอย่างเดียว ไม่ส่งคะแนน)
-  var me=!(M.scores&&live)?Promise.resolve(null):Promise.race([
-    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+tok},body:JSON.stringify({action:'me',game:'signal-flow'})})
+  //   ไม่ใช่ทั้งสมาชิกและบัญชีเว็บ / ล้ม / ช้าเกิน 4 วินาที = SF_ME null (ใช้ความคืบหน้าในเครื่องอย่างเดียว ไม่ส่งคะแนน)
+  var me=!(M.scores&&S.token)?Promise.resolve(null):Promise.race([
+    fetch(M.scores,{method:'POST',headers:{'Content-Type':'application/json',apikey:M.key,Authorization:'Bearer '+S.token},body:JSON.stringify({action:'me',game:'signal-flow'})})
       .then(function(r){return r.ok?r.json():null;}),
     new Promise(function(done){setTimeout(function(){done(null);},4000);})]).catch(function(){return null;});
   me.then(function(j){
