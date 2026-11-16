@@ -1978,7 +1978,9 @@ GAME_CSS = """
 .gh .games{display:grid;gap:18px}
 .gh .gc{display:grid;grid-template-columns:1fr;background:#fff;border:1.5px solid #111;border-radius:var(--radius-lg,24px);overflow:hidden}
 .gh .cv{aspect-ratio:16/9;background:#0F0F0F;position:relative;overflow:hidden}
-.gh .cv svg{width:100%;height:100%;display:block}
+.gh .cv svg,.gh .cv img{width:100%;height:100%;display:block}
+.gh .cv img{object-fit:cover}
+.gh .cv .cap{position:absolute;left:8px;bottom:8px;right:8px;font:600 12px/1.4 var(--font-family-body);color:#fff;background:rgba(15,15,15,.72);padding:3px 10px;border-radius:8px;width:fit-content;max-width:calc(100% - 16px)}
 .gh .in{padding:20px;display:grid;gap:12px;align-content:center}
 .gh .gc h3{font-size:26px;margin:0}
 .gh .meta{display:flex;flex-wrap:wrap;gap:8px}
@@ -2055,23 +2057,12 @@ def game_cover_request():
                 '<g fill="none" stroke="#555" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"><path d="M130 120L200 190M320 106V190M510 124L440 190"/></g>')
 
 
-def game_cover_resonance():
-    # Resonance: a glass cracking as a sound wave peaks, a record at the base
-    return _svg("ภาพปกเกม Resonance: แก้วที่แตกร้าวเมื่อคลื่นเสียงตรงจังหวะ",
-                '<g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M270 60H370L350 160Q345 190 320 190Q295 190 290 160Z"/><path d="M320 190V250M270 250H370"/></g>'
-                f'<g fill="none" stroke="{GAME_RED}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M300 70l14 34-18 18 20 30"/><path d="M345 78l-10 26 14 16"/></g>'
-                f'<path d="M30 300Q70 240 110 300T190 300T270 300T350 300T430 300T510 300T610 300" fill="none" stroke="{GAME_RED}" stroke-width="6" stroke-linecap="round"/>'
-                '<g fill="none" stroke="#555" stroke-width="2"><path d="M60 90Q100 50 140 90T220 90"/><path d="M420 90Q460 50 500 90T580 90"/></g>')
-
-
-def game_cover_rim():
-    # Rim: a record seen from above, a small marker travelling round its edge, scratch arcs inside (own style: vinyl, no arcade tunnel)
-    return _svg("ภาพปกเกม Rim: แผ่นเสียงมองจากด้านบนกับจุดวิ่งรอบขอบแผ่น",
-                '<g fill="none" stroke="#fff" stroke-width="3"><circle cx="320" cy="180" r="140"/><circle cx="320" cy="180" r="112" stroke="#444" stroke-width="2"/><circle cx="320" cy="180" r="84" stroke="#444" stroke-width="2"/></g>'
-                f'<circle cx="320" cy="180" r="46" fill="{GAME_RED}"/><circle cx="320" cy="180" r="7" fill="#0F0F0F"/>'
-                f'<path d="M180 180A140 140 0 0 1 320 40" fill="none" stroke="{GAME_RED}" stroke-width="9" stroke-linecap="round"/>'
-                '<g fill="#fff"><circle cx="320" cy="40" r="13"/></g>'
-                '<g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M470 170q30 10 60 0"/><path d="M110 200q30 10 60 0"/></g>')
+def game_cover_img(slug, alt, first=False):
+    # real cover from the game itself (Content Creator, 16 Nov 69; brand logos on the equipment already blurred): 3 widths, 16:9, scene only (the card carries the name and text as HTML)
+    w = (640, 960, 1280)
+    return (f'<img src="/assets/img/game-{slug}-960.webp" srcset="' + ", ".join(f"/assets/img/game-{slug}-{x}.webp {x}w" for x in w) + '" '
+            f'sizes="(min-width:1200px) 480px, (min-width:760px) 42vw, 100vw" width="1280" height="720" alt="{alt}"'
+            + (' fetchpriority="high"' if first else ' loading="lazy" decoding="async"') + '>')
 
 
 def game_phase_btn(n, name, kind):
@@ -2094,7 +2085,7 @@ GAME_NEXT = [   # games announced by the owner (28 Oct): names are plan names an
 
 def game_resonance_card():
     # Resonance is open (game/resonance/, opened 12 Nov 69): 18 levels in 3 phases, all free, no account, no leader board
-    return ('<article class="gc" aria-labelledby="rs"><div class="cv">' + game_cover_resonance() + '</div><div class="in">'
+    return ('<article class="gc" aria-labelledby="rs"><div class="cv">' + game_cover_img("resonance", "ภาพปกเกม Resonance: แก้วแตกกลางฉากสีแดง ข้างแผ่นเสียง") + '</div><div class="in">'
             '<h3 id="rs">Resonance</h3>'
             '<p>สแครชให้ตรงจังหวะจนแก้วแตก 3 Phase: จับจังหวะ · เปลี่ยนจังหวะ · จังหวะเลื่อน</p>'
             '<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">3 Phase · 18 ด่าน เล่นฟรีทั้งหมด</span>'
@@ -2105,7 +2096,7 @@ def game_resonance_card():
 
 def game_rim_card():
     # RIM is open (game/rim/, 15 Nov 69): plays the visitor's own song file, analysed in their browser (nothing uploaded) · keyboard + mouse or a DJ controller, no touch · leader board waits for the web account system
-    return ('<article class="gc" aria-labelledby="rm"><div class="cv">' + game_cover_rim() + '</div><div class="in">'
+    return ('<article class="gc" aria-labelledby="rm"><div class="cv">' + game_cover_img("rim", "ภาพจากเกม RIM: โน้ตวิ่งลงทางโค้งบนขอบแผ่น พร้อมคะแนนและคำว่า PERFECT") + '</div><div class="in">'
             '<h3 id="rm">RIM</h3>'
             '<p>เลือกเพลงของคุณเอง เกมสร้างโน้ตจากเพลงให้ แล้วรับโน้ตบนขอบแผ่นให้ลงจังหวะ</p>'
             '<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">เล่นบนคอม</span><span class="chip2">ใช้เครื่อง DJ</span></div>'
@@ -2130,7 +2121,7 @@ def game_page():
     body = ('<section class="hero"><h1>เกม</h1><p class="lede">เกมทดสอบทักษะเกี่ยวกับ DJ เล่นฟรี · ด่านพิเศษและการจัดอันดับสำหรับสมาชิกเท่านั้น</p></section>'
             '<div class="gh">'
             '<section aria-labelledby="gl"><h2 id="gl" class="vh">รายชื่อเกม</h2><div class="games">'
-            f'<article class="gc" aria-labelledby="sf"><div class="cv">{game_cover_signal()}</div><div class="in">'
+            f'<article class="gc" aria-labelledby="sf"><div class="cv">{game_cover_img("signal-flow", "ภาพจากเกม Signal Flow: โต๊ะดีเจที่ต่อสายสัญญาณครบ มีเครื่องเล่นดีเจ มิกเซอร์ เครื่องเล่นแผ่นเสียง และลำโพง", first=True)}<span class="cap">ภาพจากตัวเกม · โมเดลจำลองตามสเปก ไม่ใช่รูปสินค้าจริง</span></div><div class="in">'
             '<h3 id="sf">Signal Flow</h3>'
             '<p>ต่อสายสัญญาณให้ถูกเส้นทางจากต้นทางไปยังเครื่องผสมเสียง ยิ่งเฟสสูงยิ่งซับซ้อน</p>'
             f'<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">{len(GAME_PHASES)} Phase · {total} ด่านที่เล่นได้ตอนนี้</span></div>'
