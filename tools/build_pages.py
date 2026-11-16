@@ -2104,7 +2104,7 @@ GAME_NEXT = [   # games announced by the owner (28 Oct): names are plan names an
 
 def game_resonance_card():
     # Resonance is open (game/resonance/, opened 12 Nov 69): 18 levels in 3 phases, all free, no account, no leader board
-    return ('<article class="gc" aria-labelledby="rs"><div class="cv">' + game_cover_img("resonance", "ภาพปกเกม Resonance: แก้วแตกกลางฉากสีแดง ข้างแผ่นเสียง") + '</div><div class="in">'
+    return ('<article class="gc" aria-labelledby="rs"><div class="cv">' + game_cover_img("resonance-b", "ภาพจากเกม Resonance: แก้วไวน์ร้าวกลางฉากสีแดง") + '</div><div class="in">'
             '<h3 id="rs">Resonance</h3>'
             '<p>สแครชให้ตรงจังหวะจนแก้วแตก 3 Phase: จับจังหวะ · เปลี่ยนจังหวะ · จังหวะเลื่อน</p>'
             '<div class="meta"><span class="chip2 live">เปิดให้เล่นแล้ว</span><span class="chip2">3 Phase · 18 ด่าน เล่นฟรีทั้งหมด</span>'
