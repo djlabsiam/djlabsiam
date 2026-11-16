@@ -75,70 +75,6 @@ dialog p { margin: 6px 0; }
 .cardHead { margin-top: 18px; font-size: 16px; }
 dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0; }
 #cardImg { display: block; width: 100%; aspect-ratio: 4 / 5; margin-top: 8px; background: #111; border: 2px solid var(--ink); }
-/* ── Leader Board ในเกม (board.js) · พื้นเข้มตามแบบภาพที่เลือก · ไม่ใช้กรอบขาวแบบหน้าตั้งค่า ── */
-#boardBox { --acc: #63e6ff; --acc2: #ff3da6; --bg1: #1a0838; --bg2: #3a1066; --hot: #ff2b3c;
-  width: min(760px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 0; display: none; flex-direction: column; overflow: hidden;
-  color: #fff; border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent); border-radius: 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 24px 80px rgba(0,0,0,.6), 0 0 60px color-mix(in srgb, var(--acc) 22%, transparent);
-  background: radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--acc2) 30%, transparent), transparent 60%), linear-gradient(170deg, var(--bg1), var(--bg2)); }
-#boardBox[open] { display: flex; }
-#boardBox[data-look="studio"] { --acc: #f2f2f2; --acc2: #BD2026; --bg1: #050505; --bg2: #141414; }
-#boardBox[data-look="laser"] { --acc: #ffd36b; --acc2: #7b5cff; --bg1: #07030a; --bg2: #1c0610; }
-#boardBox::backdrop { background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-.bHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px 6px; }
-.bHead h2 { margin: 0; font: italic 800 clamp(24px, 6vw, 38px)/1 Unbounded, var(--font); letter-spacing: .02em; text-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
-.bHead p { margin: 6px 0 0; font: 700 12px "Chakra Petch", var(--font); letter-spacing: .3em; color: var(--acc); text-transform: uppercase; }
-#boardBox button { font: 700 14px "Chakra Petch", var(--font); color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); box-shadow: none; border-radius: 999px; cursor: pointer; }
-#boardBox button:hover { background: rgba(255,255,255,.14); }
-.bClose { width: 40px; height: 40px; padding: 0; flex: none; }
-.bTabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 22px 4px; }
-#boardBox .bTab { min-width: 46px; height: 40px; padding: 0 14px; font: 800 17px Unbounded, var(--font); }
-#boardBox .bTab.wide { font: 700 13px "Chakra Petch", var(--font); letter-spacing: .08em; }
-#boardBox .bTab[aria-pressed="true"] { background: var(--hot); border-color: var(--hot); box-shadow: 0 0 18px color-mix(in srgb, var(--hot) 60%, transparent); }
-.bSample { margin: 8px 22px 0; padding: 6px 12px; border-radius: 8px; font-size: 12px; background: rgba(255,211,107,.12); color: #ffd36b; border: 1px dashed rgba(255,211,107,.5); }
-.bSub { margin: 8px 22px 0; font-size: 12px; color: rgba(255,255,255,.65); }
-.bBody { overflow-y: auto; padding: 12px 22px 8px; flex: 1; min-height: 0; }
-.bFoot { margin: 0; padding: 10px 22px 16px; font-size: 11px; color: rgba(255,255,255,.5); border-top: 1px solid rgba(255,255,255,.08); }
-.bEmpty { text-align: center; padding: 40px 0; color: rgba(255,255,255,.6); }
-.bPodium { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; }
-.bPod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 26px 8px 12px; text-align: center; border-radius: 14px; min-width: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.14); }
-.bPod.p1 { padding-top: 34px; border-color: var(--hot); background: linear-gradient(180deg, color-mix(in srgb, var(--hot) 35%, transparent), rgba(255,255,255,.03)); box-shadow: 0 0 30px color-mix(in srgb, var(--hot) 35%, transparent); }
-.bPod.empty { visibility: hidden; }
-.bMedal { position: absolute; top: -16px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 800 16px Unbounded, var(--font); background: #fff; color: #111; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
-.p1 .bMedal { width: 42px; height: 42px; top: -20px; font-size: 20px; background: var(--hot); color: #fff; }
-.bPod .bNick { font: 700 15px var(--font); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bPod .bScore { font: italic 800 clamp(16px, 3.6vw, 22px) "Chakra Petch", var(--font); color: var(--acc); }
-.p1 .bScore { color: #fff; text-shadow: 0 0 14px var(--hot); }
-.bMeta, .bSong { font-size: 11px; color: rgba(255,255,255,.7); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bList { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.bRow { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06); }
-.bRow:hover { background: rgba(255,255,255,.09); }
-.bRow.hi { border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
-.bPos { font: italic 800 18px "Chakra Petch", var(--font); color: rgba(255,255,255,.55); text-align: center; }
-.bWho { display: flex; flex-direction: column; min-width: 0; }
-.bWho b { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bWho small { font-size: 11px; color: rgba(255,255,255,.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bLv { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); white-space: nowrap; }
-.bLv.lv4 { border-color: var(--hot); color: #fff; background: color-mix(in srgb, var(--hot) 30%, transparent); }
-.bLv.lv3 { border-color: var(--acc); color: var(--acc); }
-.bMiss { font: 600 12px "Chakra Petch", var(--font); color: rgba(255,255,255,.6); white-space: nowrap; }
-.bMiss b { color: #fff; font-size: 14px; }
-.bRow .bScore { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); text-align: right; min-width: 82px; }
-.chart .bRow { grid-template-columns: 40px minmax(0, 1fr) auto auto minmax(0, 190px); }
-.bRank { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font: 800 15px Unbounded, var(--font); background: rgba(255,255,255,.12); }
-.bRank.rS { background: var(--hot); box-shadow: 0 0 14px color-mix(in srgb, var(--hot) 60%, transparent); }
-.bRank.rA { background: color-mix(in srgb, var(--hot) 55%, #222); }
-.bDiff { font: italic 800 17px "Chakra Petch", var(--font); color: var(--acc); }
-.bTop { display: flex; flex-direction: column; font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bTop small { font-size: 10px; color: rgba(255,255,255,.5); }
-@media (max-width: 560px) {
-  .bHead, .bTabs { padding-left: 14px; padding-right: 14px; } .bBody { padding: 10px 14px 8px; } .bSample, .bSub { margin-left: 14px; margin-right: 14px; } .bFoot { padding: 10px 14px 14px; }
-  .bRow { grid-template-columns: 32px minmax(0, 1fr) auto; row-gap: 4px; column-gap: 10px; }
-  .bRow .bLv, .bRow .bMiss { grid-row: 2; } .bRow .bLv { grid-column: 2; justify-self: start; } .bRow .bMiss { grid-column: 3; }
-  .bRow .bScore { grid-row: 1; grid-column: 3; min-width: 0; }
-  .chart .bRow { grid-template-columns: 32px minmax(0, 1fr) auto auto; } .chart .bTop { grid-column: 2 / -1; }
-  .bPod .bMeta, .bPod .bSong { display: none; }
-}
 </style>
 </head>
 <body>
@@ -574,7 +510,6 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   $('stopBtn').onclick = function () { stop(); this.blur(); };
   // ปิดหน้าต่างใดๆ แล้วไม่ให้ปุ่มที่เปิดมันค้างโฟกัส (Space = เฟดเดอร์ ไม่ใช่กดปุ่มนั้นซ้ำ)
   Array.prototype.forEach.call(document.querySelectorAll('dialog'), function (d) { d.addEventListener('close', function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }); });
-  // Leader Board (board.js · ข้อมูลตัวอย่างจนกว่า rim-scores ขึ้น) · เปิดที่ Board ของเพลงที่เลือกอยู่ ไม่มีเพลง = S
   $('setClose').onclick = function () { $('setBox').close(); };
 
   // ── เครื่อง MIDI: เรียนรู้จากการหมุน/เลื่อนจริง ไม่ผูกเลขรุ่นใด (จาน → ทิศ → เฟดเดอร์) ──
