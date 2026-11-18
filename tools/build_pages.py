@@ -2032,6 +2032,8 @@ a.pb:hover{background:var(--lab-paper);box-shadow:0 6px 14px rgba(15,15,15,.12)}
 .gh .lb{width:100%;border-collapse:collapse;font-size:16px}
 .gh .lb th,.gh .lb td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--lab-line)}
 .gh .lb th{font-size:13px;color:var(--text-muted);font-weight:700}
+.gh #lb h3,.gh #lbrim h3{font:700 18px var(--font-family-display);margin:18px 0 10px}
+@media(max-width:600px){.gh .lb th,.gh .lb td{padding:10px 6px}.gh .lb td{font-size:14px}.gh #rimbody td small{font-weight:400;font-size:12px;color:var(--text-muted)}}
 @media(min-width:760px){.gh .gc{grid-template-columns:minmax(260px,42%) 1fr}.gh .cv{aspect-ratio:auto;min-height:250px}.gh .in{padding:26px 30px}}
 """
 
@@ -2137,13 +2139,18 @@ def game_page():
             + game_rim_card()
             + "".join(game_soon_card(k, *g) for k, g in enumerate(GAME_NEXT)) +
             '</div></section>'
-            f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
+            f'<section id="leaderboard" aria-labelledby="lbh" data-fn="{E(games_fn)}" data-rim="{E(games_fn.replace("game-scores", "rim-scores"))}" data-key="{E(key)}"><h2 id="lbh">Leader Board</h2>'
             '<div class="lbcard" id="lbsoon"><span class="chip2">เร็วๆ นี้</span>'
             '<p>กระดานอันดับกำลังจะมา ทุกคนเปิดดูอันดับได้ ผู้เล่นที่สมัครบัญชีและตั้งชื่อเล่นเท่านั้นที่ขึ้นกระดาน · อันดับรวมทั้งเกม และแยกตาม Phase</p></div>'
-            f'<div id="lb" hidden><div class="tabs2" role="tablist" aria-label="เลือกอันดับ">{lb_tabs}</div>'
+            f'<div id="lb" hidden><h3>Signal Flow · 10 อันดับแรก</h3><div class="tabs2" role="tablist" aria-label="เลือกอันดับ">{lb_tabs}</div>'
             '<div style="overflow-x:auto"><table class="lb" aria-live="polite"><caption class="sub" id="lbcap"></caption>'
             '<thead><tr><th>อันดับ</th><th>ชื่อเล่น</th><th>ด่านที่ผ่าน</th><th>คะแนนรวม</th><th>เวลารวม</th></tr></thead><tbody id="lbody"></tbody></table></div>'
             '<p class="sub">ทุกคนดูอันดับได้ · ผู้เล่นที่สมัครบัญชีและตั้งชื่อเล่นเท่านั้นที่ขึ้นกระดาน (ตั้งชื่อเล่นที่หน้าบัญชีของฉันหรือหน้าสมาชิก) · กระดานนี้เพื่อความสนุก</p></div>'
+            '<div id="lbrim" hidden><h3>RIM · 10 อันดับแรก ตามระดับความยากของเพลง</h3><div class="tabs2" role="tablist" aria-label="เลือกระดับเพลง RIM">'
+            + "".join(f'<button type="button" role="tab" aria-selected="false" data-r="{k}">Rank {k}</button>' for k in "SABCD") +
+            '</div><div style="overflow-x:auto"><table class="lb" aria-live="polite"><caption class="sub" id="rimcap"></caption>'
+            '<thead><tr><th>อันดับ</th><th>ผู้เล่น · เพลง</th><th>ระดับ</th><th>MISS</th><th>คะแนน</th></tr></thead><tbody id="rimbody"></tbody></table></div>'
+            '<p class="sub">แสดงเฉพาะชื่อเล่นกับผลเล่น ดูกระดานเต็มได้ในหน้าเกม RIM · Resonance ยังไม่มีกระดานคะแนน</p></div>'
             '</section></div>')
     with io.open(os.path.join(SITE, "assets", "js", "gamehub.js"), "rb") as fh:
         ver = hashlib.md5(fh.read()).hexdigest()[:8]
