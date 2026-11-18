@@ -233,7 +233,15 @@
     }
 
     // ── คำเด้ง: สร้างจากสิ่งที่เปลี่ยนใน run ──
-    function pop(kind, text, lane, col) { pops.push({ kind: kind, text: text, lane: lane, at: clock, col: col }); }
+    function bannerY() { return Math.max(safeTop + 150, H * 0.3); }   // แถบหนาขึ้น: เดิม +120 / 0.27 ทับแถวเกจ FEVER ของ HUD บนจอแคบ
+    function pop(kind, text, lane, col) {
+      pops.push({ kind: kind, text: text, lane: lane, at: clock, col: col });
+      if (kind === 'big' && !reduce) for (var i = 0; i < 28; i++) {   // แถบประกาศ: ประกายแตกออกจากแถบ
+        var side = i % 2 ? 1 : -1;
+        parts.push({ x: W / 2 + side * Math.random() * W * 0.45, y: bannerY() + (Math.random() - 0.5) * 40, vx: side * (120 + Math.random() * 380), vy: -120 - Math.random() * 320, life: 0, max: 0.45 + Math.random() * 0.35, s: 2.5 + Math.random() * 2, c: i % 3 ? HOT : '#fff' });
+      }
+    }
+    function popLife(q) { return q.kind === 'judge' || q.kind === 'hold' ? 0.55 : q.kind === 'big' ? 1.3 : 1.1; }
     function watch(run) {
       run.notes.forEach(function (n) {
         if (n.res && !shown[n.i]) {
@@ -276,9 +284,9 @@
       g.fillStyle = fill; g.fillText(s, x, y);
     }
     function drawPops() {
-      pops = pops.filter(function (q) { return clock - q.at < (q.kind === 'judge' || q.kind === 'hold' ? 0.55 : 1.1); });
+      pops = pops.filter(function (q) { return clock - q.at < popLife(q); });
       pops.forEach(function (q) {
-        var age = clock - q.at, life = q.kind === 'judge' || q.kind === 'hold' ? 0.55 : 1.1, k = age / life, c1 = 1.70158, e = Math.min(1, age / 0.16);
+        var age = clock - q.at, life = popLife(q), k = age / life, c1 = 1.70158, e = Math.min(1, age / 0.16);
         var sc = 1 + (c1 + 1) * Math.pow(e - 1, 3) + c1 * Math.pow(e - 1, 2);
         g.globalAlpha = Math.max(0, k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3);
         if (q.kind === 'judge' || q.kind === 'hold') {
@@ -286,10 +294,24 @@
           var col = q.col ? st.judge[q.col] : st.judge[q.text] || ['#fff', 'rgba(0,0,0,.4)'];
           text(q.text, at[0], at[1], st.font(s), col[0], col[1], 'center', 'middle', 4);
           if (st.still && q.text === 'PERFECT') { g.fillStyle = RED; g.fillRect(at[0] - s * 1.6, at[1] + s * 0.7, s * 3.2 * Math.min(1, age * 6), 2); }
+        } else if (q.kind === 'big') {   // แถบประกาศ FX ZONE / COMBO / FEVER — เจ้าของ 18 พ.ย. ขอใหญ่ขึ้น + กระแทกกว่าเดิม: พุ่งเข้าจากซ้าย ค้าง แล้วพุ่งออกขวา
+          var base = Math.min(W * 0.11, 92), bh = base * 1.05, din = reduce ? 1 : Math.min(1, age / 0.12), dout = reduce ? 0 : Math.max(0, (k - 0.78) / 0.22);
+          var dx = -(1 - din) * (1 - din) * W * 1.2 + dout * dout * W * 1.2, sz = base * sc, a0;
+          if (!reduce) g.globalAlpha = 1;   // ออกด้วยการพุ่ง ไม่จางหาย
+          if (!reduce && age < 0.18) { g.fillStyle = 'rgba(255,255,255,' + 0.25 * (1 - age / 0.18) + ')'; g.fillRect(0, 0, W, H); }   // แฟลชตอนเข้า
+          g.save(); g.translate(W / 2 + dx, bannerY()); g.rotate(-0.08); g.transform(1, 0, -0.25, 1, 0, 0);   // เฉียงแบบแถบความเร็ว
+          g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(-W * 0.75, -bh / 2 + 10, W * 1.5, bh);   // เงา
+          g.fillStyle = 'rgba(255,43,60,.94)'; g.fillRect(-W * 0.75, -bh / 2, W * 1.5, bh);
+          g.fillStyle = '#fff'; g.fillRect(-W * 0.75, -bh / 2 - 7, W * 1.5, 4); g.fillRect(-W * 0.75, bh / 2 + 3, W * 1.5, 4);   // ขอบขาวบน-ล่าง
+          if (!reduce && age < 0.35) {   // เงาสีแยกตอนกระแทก
+            var o = (1 - age / 0.35) * 9; a0 = g.globalAlpha; g.globalAlpha = a0 * 0.75;
+            text(q.text, -o, 0, st.font(sz), '#63e6ff', null, 'center', 'middle'); text(q.text, o, 0, st.font(sz), '#ffd400', null, 'center', 'middle'); g.globalAlpha = a0;
+          }
+          text(q.text, 0, 0, st.font(sz), '#fff', 'rgba(0,0,0,.55)', 'center', 'middle', 8);
+          g.restore();
         } else {
-          var cy = Math.max(safeTop + 120, H * 0.27), size = Math.min(W * 0.075, 58) * sc * (q.kind === 'mult' ? 0.55 : 1), slide = q.text === 'FX ZONE' ? (1 - e) * W * 0.4 : 0;
-          if (q.kind === 'big' && !reduce) { g.fillStyle = 'rgba(255,43,60,.85)'; g.save(); g.translate(W / 2, cy); g.rotate(-0.08); g.fillRect(-W * 0.6 * e, -size * 0.42, W * 1.2 * e, size * 0.84); g.restore(); }
-          text(q.text, W / 2 - slide, cy + (q.kind === 'mult' ? size * 1.4 : 0), st.font(size), q.col ? st.judge.dim[0] : '#fff', 'rgba(0,0,0,.35)', 'center', 'middle', 5);
+          var size = Math.min(W * 0.11, 92) * 0.5 * sc;
+          text(q.text, W / 2, bannerY() + Math.min(W * 0.11, 92) * 0.55 + size, st.font(size), q.col ? st.judge.dim[0] : '#fff', 'rgba(0,0,0,.35)', 'center', 'middle', 5);
         }
       });
       g.globalAlpha = 1;
@@ -357,7 +379,7 @@
       gShow = run.fever ? lv : gShow + (lv - gShow) * Math.min(1, dt * 10);
       if (!run.fever && run.gauge > lastGauge + 1e-9 && !reduce) [0, LANES].forEach(function (e) {
         var q = pt(e - 0.5, run.gauge);
-        for (var i = 0; i < 6; i++) parts.push({ x: q[0], y: q[1], vx: (Math.random() - 0.5) * 160, vy: -40 - Math.random() * 140, life: 0, max: 0.3 + Math.random() * 0.2, s: 2, c: i % 2 ? '#fff' : HOT });
+        for (var i = 0; i < 10; i++) parts.push({ x: q[0], y: q[1], vx: (Math.random() - 0.5) * 220, vy: -60 - Math.random() * 180, life: 0, max: 0.35 + Math.random() * 0.25, s: 2.5, c: i % 2 ? '#fff' : HOT });
       });
       lastGauge = run.gauge;
       if (run.fevers.length > lastFevers) shockAt = clock;
@@ -384,9 +406,10 @@
       g.globalCompositeOperation = 'lighter';
       [0, LANES].forEach(function (e) {
         var a = pt(e - 0.5, 0), b = pt(e - 0.5, z1);
-        g.fillStyle = 'rgba(255,43,60,' + (hot ? 0.22 + 0.25 * k : 0.16) + ')'; taper(a, b, hot ? 22 : 14, (hot ? 22 : 14) * wf + 2);   // แสงฟุ้ง
-        g.fillStyle = 'rgba(255,43,60,.55)'; taper(a, b, 8, 8 * wf + 1);
-        g.fillStyle = hot && k > 0.55 ? '#ffffff' : HOT; taper(a, b, 3.5, 3.5 * wf + 0.8);   // แกน
+        // แรงขึ้นอีกนิด (เจ้าของ 18 พ.ย.): ฟุ้ง 14/22 → 18/30 · ชั้นกลาง 8 → 11 · แกน 3.5 → 5
+        g.fillStyle = 'rgba(255,43,60,' + (hot ? 0.28 + 0.3 * k : 0.2) + ')'; taper(a, b, hot ? 30 : 18, (hot ? 30 : 18) * wf + 2);   // แสงฟุ้ง
+        g.fillStyle = 'rgba(255,43,60,.65)'; taper(a, b, 11, 11 * wf + 1);
+        g.fillStyle = hot && k > 0.55 ? '#ffffff' : HOT; taper(a, b, 5, 5 * wf + 1);   // แกน
         [0.25, 0.5, 0.75].forEach(function (m) {   // ขีดบอกระดับ
           if (m > z1 || fever) return;
           var q = pt(e - 0.5, m), w = 10 * (1 - uOf(m)) + 3; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(q[0] - w / 2, q[1] - 1, w, 2);
@@ -408,10 +431,10 @@
       if (k >= 0 && k < 1) {
         for (var i = 0; i < 3; i++) {
           var kk = k - i * 0.12; if (kk <= 0) continue;
-          g.strokeStyle = 'rgba(255,' + (i ? 43 : 200) + ',' + (i ? 60 : 210) + ',' + 0.9 * (1 - kk) + ')'; g.lineWidth = 16 * (1 - kk) + 2;
-          g.beginPath(); g.arc(L.cx, L.cy, L.R * (1 + kk * 0.85), Math.PI, 0); g.stroke();
+          g.strokeStyle = 'rgba(255,' + (i ? 43 : 200) + ',' + (i ? 60 : 210) + ',' + 0.95 * (1 - kk) + ')'; g.lineWidth = 24 * (1 - kk) + 2;
+          g.beginPath(); g.arc(L.cx, L.cy, L.R * (1 + kk * 1.05), Math.PI, 0); g.stroke();
         }
-        g.fillStyle = 'rgba(255,255,255,' + 0.3 * Math.pow(1 - k, 3) + ')'; g.fillRect(0, 0, W, H);
+        g.fillStyle = 'rgba(255,255,255,' + 0.42 * Math.pow(1 - k, 3) + ')'; g.fillRect(0, 0, W, H);
       }
       if (ke >= 0 && ke < 1) { g.fillStyle = 'rgba(255,43,60,' + 0.22 * (1 - ke) + ')'; g.fillRect(0, 0, W, H); }
       g.globalCompositeOperation = 'source-over';
@@ -443,7 +466,7 @@
       lead = s.lead; t = run ? s.t : clock;
       if (run && s.count) { beat0 = s.count.beat0; blen = s.count.len; } else { beat0 = 0; blen = 0.5; }
       var aimNow = Math.max(-0.4, Math.min(LANES - 0.6, s.pos)), prev = dpos === null ? aimNow : dpos;
-      dpos = prev + (aimNow - prev) * Math.min(1, dt * 30);
+      dpos = s.raw ? aimNow : prev + (aimNow - prev) * Math.min(1, dt * 30);   // raw = จาน Timecode (ข้อมูลละเอียดทุก ~3 ms ไม่ต้องหน่วงให้นุ่ม)
       theta += dt * (s.fxUp ? 1.2 : 3.49) + (dpos - prev) * 1.1;   // 33⅓ รอบ/นาที + สแครชตามจานจริง
       sway = reduce || st.still ? 0 : Math.sin(clock * 0.45) * W * 0.015 + (dpos - 1.5) * W * 0.006;
       if (run) { watch(run); feverFx(run, dt); }
@@ -453,7 +476,7 @@
       if (run && run.active && run.active.state === 'hold' && !reduce && Math.random() < dt * 40) { var hp = rim(dpos); parts.push({ x: hp[0], y: hp[1], vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 160, life: 0, max: 0.4, s: 2, c: HOT }); }
       bump = Math.max(0, bump - dt * 3); comboBump = Math.max(0, comboBump - dt * 6);
 
-      var shake = reduce ? 0 : bump * bump * 6;
+      var shake = reduce ? 0 : bump * bump * 10;
       g.save(); if (shake) g.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
       st.bg(); drawHighway();
       if (run) { drawZones(run, s.fxUp, s.spinAt); drawFeverRails(run); drawNotes(run); if (run.fever) drawFever(run.fever); }

@@ -64,6 +64,7 @@ dialog input[type=number] { width: 90px; font: inherit; padding: 2px 6px; }
 dialog p { margin: 6px 0; }
 .note { font-size: 12px; color: #555; }
 .row { display: flex; gap: 8px; margin-top: 12px; }
+#tcRow[hidden], #tcDegRow[hidden], #tcLeadRow[hidden] { display: none; }   /* .row / dialog label ตั้ง display: flex ทับ hidden */
 .row button { flex: 1; }
 .go { background: var(--red); color: var(--paper); }
 .counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; margin: 10px 0; }
@@ -213,6 +214,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   <label>Cut-in (mm) <input id="cutin" type="number" min="0" max="100" step="0.1"></label>
   <p class="note" id="faderNow"></p>
   <label>หมุนจานกี่ขีดต่อ 1 เลน <input id="perLane" type="number" min="5" max="400" step="5"></label>
+  <label id="tcDegRow" hidden>จาน Timecode: หมุนกี่องศาต่อ 1 เลน <input id="tcDeg" type="number" min="5" max="180" step="5"></label>
+  <label id="tcLeadRow" hidden>จาน Timecode: ทำนายตัวรับล่วงหน้า (ms · 0 = ปิด) <input id="tcLead" type="number" min="0" max="60" step="5"></label>
   <label>เมาส์: ส่ายกี่ px ต่อ 1 เลน <input id="mousePx" type="number" min="10" max="400" step="5"></label>
   <p class="note">น้อย = ตัวรับไวขึ้น · มาก = ช้าลง</p>
   <label>ชดเชยความหน่วง (ms) <input id="offset" type="number" min="-300" max="300" step="5"></label>
@@ -227,7 +230,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 <dialog id="midiBox" aria-labelledby="midiTitle">
   <h2 id="midiTitle">ต่อเครื่อง</h2>
   <p id="midiMsg" aria-live="polite"></p>
-  <div class="row"><button id="midiGo" type="button" class="go" hidden></button><button id="midiFx" type="button" hidden>ตั้ง FX</button><button id="midiPlay" type="button" hidden>ตั้งปุ่ม PLAY</button><button id="midiClose" type="button">ปิด</button></div>
+  <div class="row" id="tcRow" hidden><select id="tcDev" aria-label="ช่องเสียงของมิกเซอร์"></select><select id="tcPair" aria-label="คู่ช่องของจาน" hidden><option value="0,1">ช่อง 1+2</option></select><button id="tcGo" type="button" class="go">ฟัง</button></div>
+  <div class="row"><button id="midiGo" type="button" class="go" hidden></button><button id="midiFx" type="button" hidden>ตั้ง FX</button><button id="midiPlay" type="button" hidden>ตั้งปุ่ม PLAY</button><button id="midiTc" type="button" hidden>ใช้จาน Timecode</button><button id="midiClose" type="button">ปิด</button></div>
 </dialog>
 
 <dialog id="endBox" aria-labelledby="endTitle">
@@ -255,6 +259,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 <script src="card.js"></script>
 <script>window.RIM_WEB={"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/rim-scores","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","account":"/account/","login":"/member/"};</script>
 <script src="board.js"></script>
+<script src="timecode.js"></script>
 <script>
 (function () {
   var R = RimRules, C = RimChart, $ = function (id) { return document.getElementById(id); };
@@ -262,7 +267,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   var SET_KEY = 'rim-settings', GEAR_KEY = 'rim-gear';
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v ? Object.assign(d, v) : d; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ครั้งหน้าใช้ค่าเริ่มต้น */ } }
-  var set = load(SET_KEY, { player: '', perLane: 60, offset: 0, lead: 1.6, flip: false, free: false, full: false, look: 'neon', sfx: 'soft', level: 'normal', travel: 0, cutin: 0, catchW: 9, catchA: 100, mousePx: 60 });   // travel/cutin 0 = ยังไม่ตั้ง
+  var set = load(SET_KEY, { player: '', perLane: 60, offset: 0, lead: 1.6, flip: false, free: false, full: false, look: 'neon', sfx: 'soft', level: 'normal', travel: 0, cutin: 0, catchW: 9, catchA: 100, mousePx: 60, tcDeg: 30, tcLead: 8 });   // travel/cutin 0 = ยังไม่ตั้ง · tcDeg = องศาต่อเลนของจาน timecode (ผมตั้ง ยังไม่ยืนยัน) · tcLead = ทำนายตัวรับล่วงหน้า ms (เจ้าของลองรอบ 3 18 พ.ย.: 5–10 พอดี)
   var gear = load(GEAR_KEY, {});   // { v, jog, fader, fx?, knob? } จากการเรียนรู้ (fx/knob ไม่บังคับ ไม่มีใช้คีย์ F + ล้อเมาส์)
   if (gear.v !== 2) gear = {};      // ทิศจานที่เรียนรู้ด้วยวิธีเดิม (ก่อน 13 พ.ย.) อาจกลับด้าน ให้เรียนรู้ใหม่
   // ระยะเฟดเดอร์ (mm) ของรุ่นที่วัดแล้ว · MIDI บอกแค่ขั้น 0–127 ไม่บอกความยาวจริง · เติมให้เมื่อผู้เล่นยังไม่ได้ใส่เอง
@@ -558,7 +563,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   addEventListener('wheel', function (e) { if (anyDialog()) return; e.preventDefault(); spin(e.timeStamp); }, { passive: false });
 
   // ── ตั้งค่า ──
-  ['perLane', 'mousePx', 'offset', 'lead', 'travel', 'cutin', 'catchW', 'catchA'].forEach(function (k) {
+  $('tcDegRow').hidden = $('tcLeadRow').hidden = !gear.tc;   // ช่องของจาน Timecode เฉพาะเมื่อต่อไว้
+  ['perLane', 'tcDeg', 'tcLead', 'mousePx', 'offset', 'lead', 'travel', 'cutin', 'catchW', 'catchA'].forEach(function (k) {
     $(k).value = set[k];
     $(k).onchange = function () { var v = parseFloat(this.value); if (isFinite(v)) { set[k] = v; save(SET_KEY, set); faderNote(); } };
   });
@@ -634,16 +640,77 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     });
   }
   function ready() { return !!(midi && gear.jog && gear.fader) && inputs().some(function (i) { return i.name === gear.jog.name; }); }
-  function status() { $('midiOpen').textContent = ready() ? 'ต่อแล้ว' : 'ต่อเครื่อง'; }
-  function begin() { step = 'scratch'; heard = []; say('ขั้น 1/5: สแครชจานฝั่งที่จะเล่น ไปกลับสักครู่'); }
+  function status() { $('midiOpen').textContent = ready() ? 'ต่อแล้ว' : 'ต่อเครื่อง'; $('tcDegRow').hidden = $('tcLeadRow').hidden = !gear.tc; }
+  function begin() { tcClose(); step = 'scratch'; heard = []; say('ขั้น 1/5: สแครชจานฝั่งที่จะเล่น ไปกลับสักครู่'); }
   function midiStep() {
     if (!midi || !$('midiBox').open) return;
     listen();
+    $('midiTc').hidden = !(window.RimTC && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);   // ไม่มี timecode.js / เบราว์เซอร์ไม่ให้ใช้ช่องเสียง = ไม่มีปุ่มนี้
     if (!inputs().length) { step = 'idle'; say('ยังไม่เจอเครื่อง เสียบสาย USB แล้วรอสักครู่'); return; }
     if (step !== 'idle') return;
-    if (ready()) { say('พร้อมเล่นกับ ' + gear.jog.name + ' · FX: ' + (gear.fx ? 'ปุ่มบนเครื่อง' : 'คีย์ F') + ' · dry/wet: ' + (gear.knob ? 'ปุ่มบนเครื่อง' : 'ล้อเมาส์') + ' · เริ่มเกม: ' + (gear.play ? 'ปุ่ม PLAY' : 'ปุ่มเริ่มบนจอ'), 'ตั้งค่าใหม่'); $('midiFx').hidden = false; $('midiPlay').hidden = false; }
+    if (ready()) {
+      if (gear.tc && !tc && window.RimTC) tcOpen(gear.tc).then(midiStep, function () { say('เปิดช่องเสียงของจาน Timecode ไม่ได้ · กด "ใช้จาน Timecode" แล้วเลือกใหม่'); });
+      say('พร้อมเล่นกับ ' + (gear.tc ? 'จาน Timecode (' + gear.tc.label + (tc ? '' : ' · กำลังเปิด…') + ') + ' : '') + gear.jog.name + ' · FX: ' + (gear.fx ? 'ปุ่มบนเครื่อง' : 'คีย์ F') + ' · dry/wet: ' + (gear.knob ? 'ปุ่มบนเครื่อง' : 'ล้อเมาส์') + ' · เริ่มเกม: ' + (gear.play ? 'ปุ่ม PLAY' : 'ปุ่มเริ่มบนจอ'), 'ตั้งค่าใหม่'); $('midiFx').hidden = false; $('midiPlay').hidden = false;
+    }
     else begin();
   }
+  // ── จาน Timecode (timecode.js · เจ้าของสั่ง 18 พ.ย. · ขึ้นเว็บตามคำสั่งเจ้าของ 18 พ.ย.): จานจากช่องเสียงของมิกเซอร์ · เฟดเดอร์/FX/PLAY จาก MIDI ของมิกเซอร์
+  //   Chrome ให้แค่ 2 ช่องแรกของอุปกรณ์ → ใช้ได้เฉพาะจานซ้าย (DJM-S9 ช่อง 1+2) · gear.jog = เครื่อง MIDI ของมิกเซอร์ (ไม่มี CC จาน: status −1)
+  var tc = null, tcAcc = 0, tcPick = null;
+  function tcClose() { if (tc) { tc.stop(); tc = null; } }
+  // AudioContext แยกของจาน (48 kHz = อัตราของมิกเซอร์ ไม่ต้องแปลงอัตรา · หน่วงต่ำสุดที่เครื่องให้) ไม่ใช้ตัวเดียวกับเสียงเพลง
+  var tcCtx = null;
+  function tcOpen(o) {
+    tcClose();
+    if (!tcCtx) { try { tcCtx = new AudioContext({ sampleRate: 48000, latencyHint: 0 }); } catch (e) { tcCtx = new AudioContext({ latencyHint: 0 }); } }
+    if (tcCtx.state === 'suspended') tcCtx.resume();
+    return RimTC.open(tcCtx, { label: o.label, pair: o.pair, onMove: tcMove }).then(function (h) { tc = h; return h; });
+  }
+  function tcMove(cyc, ms) {
+    if (step === 'tcdir') {   // เรียนทิศ: หมุนเดินหน้าช้าๆ สะสมเกิน ~80° ทางเดียว
+      tcAcc += cyc;
+      if (Math.abs(tcAcc) > RimTC.PER_REV * 80 / 360) {
+        tcPick.sign = tcAcc > 0 ? 1 : -1; step = 'fader'; heard = [];
+        cand = { name: null, status: -1, ccs: [], kind: 'tc', sign: 1 };
+        say('Timecode ขั้น 3/3: เลื่อน crossfader ไปสุดซ้าย–ขวา 2–3 รอบ');
+      }
+      return;
+    }
+    if (!gear.tc || step !== 'idle') return;
+    var deg = (set.flip ? -1 : 1) * gear.tc.sign * RimTC.degrees(cyc), gap = ms - tcAt;
+    tcVel = gap > 0 && gap < 30 ? 0.6 * tcVel + 0.4 * (deg / set.tcDeg) / gap : 0;   // เลนต่อ ms (นุ่มเล็กน้อย) · ข้อมูลขาดนาน = เริ่มนับใหม่
+    tcAt = ms;
+    pos = R.slide(pos, deg, set.tcDeg); input = 'midi';
+    setLane(R.laneOf(run ? run.lane : idleLane, pos, set.free), ms);
+  }
+  // ตำแหน่งที่วาดบนจอ: จาน Timecode = ทำนายไปข้างหน้า set.tcLead ms ด้วยความเร็วจาน (ชดเชยความหน่วงของเบราว์เซอร์ที่เห็นด้วยตา)
+  //   เฉพาะภาพ · การตัดสินโน้ตยังใช้ตำแหน่งจริง (pos) · ไม่มีข้อมูลเกิน 15 ms = จานหยุด/เข็มยก ไม่ทำนาย · กลับทิศเร็วอาจเลยไปนิดแล้วดีดกลับ
+  var tcVel = 0, tcAt = 0;
+  function tcShowPos() {
+    if (!(gear.tc && tc) || !(set.tcLead > 0)) return pos;
+    var since = Math.max(0, performance.now() - tcAt);
+    if (since > 15) return pos;
+    return Math.max(-0.35, Math.min(R.LANES - 0.65, pos + tcVel * (since + set.tcLead)));
+  }
+  $('midiTc').onclick = function () {
+    tcClose(); step = 'tcdev'; say('Timecode ขั้น 1/3: กำลังค้นหาช่องเสียง (กดอนุญาตถ้าเบราว์เซอร์ถาม · เสียงใช้ในเครื่องนี้เท่านั้น ไม่ส่งออก)');
+    var FILE = location.protocol === 'file:' ? ' · ⚠ เปิดไฟล์ตรงอยู่: หน่วงเพิ่มและไม่เห็นชื่ออุปกรณ์ — เปิดผ่าน python3 -m http.server 8774 แทน' : '';
+    RimTC.list().then(function (l) {
+      $('tcDev').innerHTML = '';
+      l.forEach(function (d, i) { var o = document.createElement('option'); o.value = d.label; o.textContent = d.label || 'อุปกรณ์ที่ ' + (i + 1) + ' (ไม่รู้ชื่อ)'; $('tcDev').appendChild(o); });
+      var g = l.filter(function (d) { return /DJM|Pioneer|AlphaTheta|Rane/i.test(d.label) && !/Aggregate/i.test(d.label); })[0];
+      if (g) $('tcDev').value = g.label;
+      $('tcRow').hidden = false;
+      say((l.length ? 'Timecode ขั้น 1/3: เลือกช่องเสียงของมิกเซอร์ (ใช้จานซ้าย · ปิด Serato ก่อน) แล้วกด "ฟัง"' : 'ไม่เจอช่องเสียงขาเข้า') + FILE);
+    }, function () { say('ไม่ได้สิทธิ์ใช้ช่องเสียง · กดอนุญาตที่แถบที่อยู่ของเบราว์เซอร์'); });
+  };
+  $('tcGo').onclick = function () {
+    tcPick = { label: $('tcDev').value, pair: $('tcPair').value.split(',').map(Number), sign: 1 };
+    tcOpen(tcPick).then(function (h) {
+      $('tcRow').hidden = true; step = 'tcdir'; tcAcc = 0;
+      say('Timecode ขั้น 2/3: วางเข็ม แล้วหมุนจานไปข้างหน้าช้าๆ สักครึ่งรอบ' + (h.mode === 'script' ? ' (โหมดสำรอง หน่วงเพิ่ม ~20 ms — เปิดเกมผ่าน serve.py จะดีกว่า)' : ''));
+    }, function (e) { say('เปิดช่องเสียงไม่ได้ (' + (e && e.name || 'error') + ') · ปิด Serato แล้วลองใหม่'); });
+  };
   function onMidi(e) {
     var m = [e.data[0], e.data[1], e.data[2]], name = e.target.name;
     if (step === 'scratch') {
@@ -664,13 +731,13 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
       return;
     }
     if (step === 'fader') {
-      if (name !== cand.name) return;
-      heard.push(m);
+      if (cand.name && name !== cand.name) return;   // จาน Timecode: ยังไม่รู้ว่าเฟดเดอร์มาจากเครื่อง MIDI ไหน → ฟังทุกเครื่อง
+      heard.push(m.concat(name));
       if (heard.length % 10 === 0) {
         var f = R.learnFader(heard, function (g) { return g.status === cand.status && cand.ccs.indexOf(g.cc) >= 0; });
         if (f) {
           fcand = f; fval = null; step = 'closed';
-          heard.forEach(function (x) { if (x[0] === f.status && x[1] === f.cc) fval = x[2]; });
+          heard.forEach(function (x) { if (x[0] === f.status && x[1] === f.cc) { fval = x[2]; if (!cand.name) cand.name = x[3]; } });
           say('ค้างเฟดเดอร์ไว้สุดฝั่งที่ "ปิดเสียง" แล้วกดเสร็จ', 'เสร็จ');
         }
       }
@@ -746,6 +813,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
       say('ยังไม่สุดฝั่ง เลื่อนเฟดเดอร์ไปสุดฝั่งที่ปิดเสียง แล้วกดเสร็จ', 'เสร็จ'); return;
     }
     gear = { v: 2, jog: { name: cand.name, status: cand.status, ccs: cand.ccs, kind: cand.kind, sign: cand.sign }, fader: R.faderCal(fcand, fval) };
+    if (cand.kind === 'tc') gear.tc = tcPick;   // จานจากช่องเสียง · เครื่อง MIDI = มิกเซอร์ (เฟดเดอร์ / FX / PLAY)
     save(GEAR_KEY, gear); status();
     if (!set.travel && knownTravel(cand.name)) { set.travel = knownTravel(cand.name); save(SET_KEY, set); $('travel').value = set.travel; faderNote(); }
     fxBegin();   // จาน + เฟดเดอร์บันทึกแล้ว ปิดหน้าต่างตอนนี้ก็เล่นได้
@@ -761,7 +829,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   if (document.fonts) document.fonts.ready.then(resize, function () { /* ใช้ฟอนต์สำรอง */ });
   look.setStyle(set.look);
   function draw(t) {
-    look.draw({ t: t, run: run, lead: set.lead, lane: run ? run.lane : idleLane, pos: pos, free: set.free, catchW: set.catchW, catchA: set.catchA / 100, open: run ? run.open : faderUp, fxUp: fxUp, spinAt: spinAt, count: count, playLen: playLen, feverFrom: R.FEVER.from,
+    look.draw({ t: t, run: run, lead: set.lead, lane: run ? run.lane : idleLane, pos: tcShowPos(), raw: !!(gear.tc && tc), free: set.free, catchW: set.catchW, catchA: set.catchA / 100, open: run ? run.open : faderUp, fxUp: fxUp, spinAt: spinAt, count: count, playLen: playLen, feverFrom: R.FEVER.from,
       idle: null });   // ข้อความตอนยังไม่เริ่มย้ายไปอยู่ในเมนูแล้ว
   }
 
