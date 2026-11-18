@@ -58,7 +58,7 @@
   //   · ไม่เหลือตัวอักษร/ตัวเลข = '-' (rim-scores บังคับ title ≥ 1 ตัว · rim_title_clean('-') = null = ไม่เก็บชื่อ) (board.test.mjs เทียบกับ SQL จริงบน PGlite)
   function cleanTitle(name) {
     var v = String(name || '').replace(/\.(mp3|wav|wave|flac|m4a|aac|ogg|oga|opus|aif|aiff|wma|webm|mp4)$/i, '');
-    v = v.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/[­᠎​-‏‪-‮⁠-⁩﻿]/g, '');
+    v = v.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/[\u00ad\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '');
     v = v.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, ' ').replace(/\+?[0-9]([ .-]?[0-9]){8,}/g, ' ');
     v = Array.from(v.replace(/\s+/g, ' ').trim()).slice(0, 80).join('').trim();
     return /[A-Za-z0-9ก-๙]/.test(v) ? v : '-';
