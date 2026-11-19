@@ -477,6 +477,20 @@ for k, s in SRC.items():
     if k in ("home-next",):
         continue
     ok(s.count('<script src="/assets/js/popup.js?v=' + pv + '" defer></script>') == 1, f"{k}: popup script must be on the page exactly once with the current version {pv}")
+# ---- header member button (assets/js/hdr.js): signed-out = no network; label from the Leader Board nickname / member code; same public address + key as book/index.html ----
+hj = read(os.path.join(SITE, "assets", "js", "hdr.js"))
+ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function|srcdoc", hj) and "textContent" in hj, "hdr.js must write only with textContent (no innerHTML/eval/document.write)")
+ok("if (!k) { cacheSet(null); return; }" in hj and "localStorage.getItem(STORES[k])" in hj and hj.index("if (!k) { cacheSet(null); return; }") < hj.index("fresh(k).then"), "hdr.js: a signed-out visitor (no token in localStorage) must return before any network call")
+ok("'/functions/v1/game-scores'" in hj and "'/functions/v1/member-auth'" in hj and "action: 'me'" in hj and "sessionStorage" in hj and "HREF = { m: '/member/', a: '/account/' }" in hj, "hdr.js: nickname from game-scores me, member code from member-auth me, cached in sessionStorage, button goes to /member/ or /account/ by account type")
+ok(not re.search(r"full_name|phone|email|web_member_me|\.name", hj), "hdr.js must never read a real name, phone or e-mail")
+_mj, _aj = read(os.path.join(SITE, "assets", "js", "member.js")), read(os.path.join(SITE, "assets", "js", "account.js"))
+ok(_mj.count("window.djlHdr.reset()") == 1 and _aj.count("window.djlHdr.reset()") == 1 and "djlHdr.set('m', { nick: nick })" in _mj and "djlHdr.set('m', { code:" in _mj and "djlHdr.set('a', { nick: nick })" in _aj, "member.js / account.js must report nickname/code to the header and reset it when the session is cleared (logout / expiry)")
+hv = hashlib.md5(io.open(os.path.join(SITE, "assets", "js", "hdr.js"), "rb").read()).hexdigest()[:8]
+ok(bool(bk_api and bk_key), "hdr guard: cannot read the database address from book/index.html")
+for k, s in SRC.items():
+    if k in ("home-next",):
+        continue
+    ok(s.count('<script src="/assets/js/hdr.js?v=' + hv + '" data-api="' + bk_api.group(1) + '" data-key="' + bk_key.group(1) + '" defer></script>') == 1 and 'class="btn mem sm' in s and '<span class="mn">สมาชิก</span>' in s, f"{k}: header member button must have the label span and hdr.js once with the current version {hv} and the book/index.html address + key")
 pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
 ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 6 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}

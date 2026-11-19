@@ -15,7 +15,7 @@
   /* ---- storage (always inside try: private windows can refuse) ---- */
   function load() { try { var s = JSON.parse(localStorage.getItem(STORE) || 'null'); return s && s.access_token && s.refresh_token ? s : null; } catch (e) { return null; } }
   function save(s) { try { localStorage.setItem(STORE, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at || 0 })); } catch (e) { } }
-  function clear() { try { localStorage.removeItem(STORE); } catch (e) { } }
+  function clear() { try { localStorage.removeItem(STORE); } catch (e) { } if (window.djlHdr) window.djlHdr.reset(); }   // header button goes back to "สมาชิก"
   function flowGet() { try { var f = JSON.parse(sessionStorage.getItem(FLOW) || 'null'); return f && typeof f === 'object' ? f : null; } catch (e) { return null; } }
   function flowSet(f) { try { sessionStorage.setItem(FLOW, JSON.stringify(f)); return true; } catch (e) { return false; } }
   function flowDrop() { try { sessionStorage.removeItem(FLOW); } catch (e) { } }
@@ -219,6 +219,7 @@
   function boardMsg(t, ok) { say('m-board', t, ok); }
   function paintBoard(j) {
     var nick = typeof j.nickname === 'string' ? j.nickname : '', n = j.levels && j.levels.length ? j.levels.length : 0;
+    if (window.djlHdr) window.djlHdr.set('a', { nick: nick });   // header button: Leader Board nickname, else "บัญชีของฉัน"
     $('bd-state').textContent = nick ? 'ชื่อเล่นบนกระดาน: ' + nick + (n ? ' · ผ่านแล้ว ' + n + ' ด่าน' : ' · ยังไม่มีคะแนน') : 'ยังไม่ได้ตั้งชื่อเล่น ตั้งชื่อเล่นเพื่อให้คะแนนของคุณขึ้นกระดาน (ไม่มีชื่อเล่น = ร้านไม่เก็บคะแนน)';
     var b = $('b-nick'); b.dataset.label = nick ? 'บันทึกชื่อเล่นใหม่' : 'ตั้งชื่อเล่น'; b.textContent = b.dataset.label;
     if (document.activeElement !== $('n-nick')) $('n-nick').value = nick;

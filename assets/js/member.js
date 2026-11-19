@@ -27,7 +27,7 @@
   /* ---- storage (always inside try: private windows can refuse) ---- */
   function load() { try { var s = JSON.parse(localStorage.getItem(STORE) || 'null'); return s && s.access_token && s.refresh_token ? s : null; } catch (e) { return null; } }
   function save(s) { try { localStorage.setItem(STORE, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at || 0 })); } catch (e) { } }
-  function clear() { try { localStorage.removeItem(STORE); } catch (e) { } }
+  function clear() { try { localStorage.removeItem(STORE); } catch (e) { } if (window.djlHdr) window.djlHdr.reset(); }   // header button goes back to "สมาชิก"
   function flag(v) { try { if (v) sessionStorage.setItem(PENDING, '1'); else sessionStorage.removeItem(PENDING); } catch (e) { } }
   function flagged() { try { return sessionStorage.getItem(PENDING) === '1'; } catch (e) { return false; } }
 
@@ -93,6 +93,7 @@
         if (!me.j || me.j.ok !== true) { var e = errOf(me); if (e.code === 'unauthorized' || e.code === 'not_member') { clear(); show('login'); say('m-login', 'กรุณาเข้าสู่ระบบอีกครั้ง'); } else { $('p-name').textContent = 'สมาชิก DJ LAB SIAM'; show('profile'); say('m-profile', e.message); } return; }
         $('p-name').textContent = row && row.full_name ? row.full_name : 'สมาชิก DJ LAB SIAM';
         $('p-code').textContent = me.j.member.code;
+        if (window.djlHdr) window.djlHdr.set('m', { code: String(me.j.member.code) });   // header button: member code until a nickname is known
         paintAvatar(me.j.member.avatar);
         var linked = !!me.j.member.line_linked;
         $('p-line').textContent = linked ? 'ผูก LINE แล้ว' : 'ยังไม่ได้ผูก LINE';
@@ -115,6 +116,7 @@
   function boardMsg(text, ok) { say('m-board', text, ok); }
   function paintBoard(me) {
     var nick = typeof me.nickname === 'string' ? me.nickname : '', n = me.levels && me.levels.length ? me.levels.length : 0, t = me.total, st = $('bd-state');
+    if (window.djlHdr) window.djlHdr.set('m', { nick: nick });   // header button: Leader Board nickname
     if (nick && t) st.textContent = 'ชื่อเล่นบนกระดาน: ' + nick + ' · อันดับ ' + t.rank + ' · ผ่าน ' + t.passed + ' ด่าน · คะแนนรวม ' + t.score + ' · เวลารวม ' + ms(t.time_ms);
     else if (nick) st.textContent = 'ชื่อเล่นบนกระดาน: ' + nick + ' · ยังไม่มีคะแนนที่ขึ้นกระดาน เล่นเกมเพื่อเริ่มสะสมคะแนน';
     else if (n) st.textContent = 'ตอนนี้คุณไม่ได้ขึ้นกระดาน (คะแนนเดิม ' + n + ' ด่านยังเก็บไว้) ตั้งชื่อเล่นเพื่อกลับขึ้นกระดาน';

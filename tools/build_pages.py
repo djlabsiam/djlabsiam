@@ -246,7 +246,8 @@ img{display:block;max-width:100%;height:auto}
 .btn.mem:hover{background:#333;border-color:#333}
 .btn.mem.on{background:#fff;color:#0F0F0F}
 .btn.mem svg{width:18px;height:18px;flex:none}
-@media (max-width:959px){.top{gap:8px;padding:10px 12px}.logo img{width:96px;height:32px}.top>.btn.sm{padding:4px 12px;font-size:14px}.top .lw{display:none}.mnav>summary{padding:0 14px}}
+.btn.mem .mn{display:block;max-width:11em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:959px){.top{gap:8px;padding:10px 12px}.logo img{width:96px;height:32px}.top>.btn.sm{padding:4px 12px;font-size:14px}.top .lw{display:none}.mnav>summary{padding:0 14px}.btn.mem .mn{max-width:5.6em}}
 .xf{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:transparent;pointer-events:none}
 .xf i{position:absolute;top:-6px;left:0;width:22px;height:15px;margin-left:-11px;border-radius:3px;background:var(--brand-base);box-shadow:0 2px 0 var(--brand-press),0 4px 8px rgba(0,0,0,.2)}
 .xf i::after{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:2px;margin-left:-1px;background:#fff;opacity:.85}
@@ -475,6 +476,14 @@ PIXEL_ROW = '<div data-pixel-row hidden><button type="button" data-pixel-toggle>
 PIXEL_SCRIPT = '<script src="/assets/js/meta-pixel.js" defer></script>\n'
 
 
+def hdr_tag():
+    """header member button (assets/js/hdr.js): version = hash of the file; the public database address + anon key come from book/index.html like the sign-in pages"""
+    with io.open(os.path.join(SITE, "assets", "js", "hdr.js"), "rb") as fh:
+        v = hashlib.md5(fh.read()).hexdigest()[:8]
+    api, key = book_backend()
+    return f'<script src="/assets/js/hdr.js?v={v}" data-api="{E(api)}" data-key="{E(key)}" defer></script>\n'
+
+
 def popup_tag():
     """slide pop-up (assets/js/popup.js): version = hash of its js+css (the promotions address + public anon key sit inside popup.js; check_pages compares them with book/index.html)"""
     h = hashlib.md5()
@@ -513,7 +522,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
            f'width="126" height="42" alt="DJ LAB SIAM — หน้าแรก"></a>'
            f'<nav class="tnav" aria-label="เมนูหลัก">{li}</nav>'
            f'<a class="btn pri sm" href="{LINE_ADD}" rel="noopener"><span class="dot"></span><span class="lw">ติดต่อ </span>LINE</a>'
-           f'<a class="btn mem sm{" on" if active == "member" else ""}" href="/member/"{" aria-current=page" if active == "member" else ""}>{PERSON}สมาชิก</a>'
+           f'<a class="btn mem sm{" on" if active == "member" else ""}" href="/member/"{" aria-current=page" if active == "member" else ""}>{PERSON}<span class="mn">สมาชิก</span></a>'
            f'<details class="mnav"><summary>เมนู</summary><nav aria-label="เมนูหลักบนมือถือ">{li}</nav></details>'
            f'<span class="xf" aria-hidden="true"><i></i></span></header>')
     foot = ('<footer class="foot"><div class="foot-in">'
@@ -540,7 +549,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{"" if bare else PIXEL_SCRIPT}'
-            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{"" if bare else popup_tag()}{script}</body>\n</html>\n')
+            f'{fader}<script src="/assets/js/decor.js" defer></script>\n{hdr_tag()}{"" if bare else popup_tag()}{script}</body>\n</html>\n')
 
 
 # ───────── /courses/ ─────────
