@@ -296,6 +296,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 <script src="board.js"></script>
 <script src="timecode.js"></script>
 <script src="tutorial.js"></script>
+<script src="tags.js"></script>
 <script>
 (function () {
   var R = RimRules, C = RimChart, $ = function (id) { return document.getElementById(id); };
@@ -311,7 +312,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function anyDialog() { return !!document.querySelector('dialog[open]'); }
 
   // ── เสียง + นาฬิกา: เวลาเพลงคือเวลาที่หูได้ยิน (นาฬิกาเสียงหักความหน่วงลำโพงแล้ว) ──────────
-  var ctx = null, buf = null, chart = null, song = '', src = null, startAt = 0;
+  var ctx = null, buf = null, chart = null, song = '', songSrc = 'file', src = null, startAt = 0;   // songSrc: ชื่อเพลงมาจาก tag ในไฟล์ หรือชื่อไฟล์ (tags.js)
   var run = null, lastT = -1e9, pos = R.CENTER, faderUp = false, input = 'key', result = null, ended = {}, faderRaw = [];   // ended = ท่อที่เล่นเสียงจบไปแล้ว
   var fxUp = false, spinAt = -1e9, fxRaw = [];  // FX เปิดอยู่ไหม · เวลาที่หมุน dry/wet ล่าสุด (ms) ไว้โชว์ว่ากำลังหมุน · fxRaw = ทุกครั้งที่กด FX
   var idleLane = null;              // เลนของตัวรับตอนยังไม่เริ่ม (ลองคุมได้ ไม่นับคะแนน)
@@ -452,8 +453,9 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     $('play').disabled = true; $('info').textContent = 'กำลังอ่านเพลง…';
     // ถอดเสียงที่ 44.1 kHz เสมอ (ไม่ใช่อัตราของการ์ดเสียงเครื่องนั้น): แผนที่โน้ต ความยากเพลง และลายนิ้วมือ ต้องได้ค่าเดียวกันทุกเครื่อง
     //   (วัด 14 พ.ย.: ไฟล์เดียวกันถอดที่ 22 / 44.1 / 48 kHz ได้ความยาก 6.29 / 5.69 / 6.05 · บังคับ 44.1 แล้ว 5.69 / 5.70)
-    var dec = new OfflineAudioContext(1, 1, 44100);
-    Promise.all(list.map(function (f) { return f.arrayBuffer().then(function (ab) { return dec.decodeAudioData(ab); }); })).then(function (bs) {
+    var dec = new OfflineAudioContext(1, 1, 44100), tag = null;
+    // ชื่อเพลงจาก tag (เจ้าของ 20 พ.ย.): อ่านจากไบต์ชุดเดียวกับที่ถอดเสียง ก่อน decodeAudioData (ซึ่งยึด buffer ไป) · STEM ใช้ชื่อแบบเดิม
+    Promise.all(list.map(function (f) { return f.arrayBuffer().then(function (ab) { if (!stem) tag = RimTags.pick(new Uint8Array(ab), f.name); return dec.decodeAudioData(ab); }); })).then(function (bs) {
       $('info').textContent = 'กำลังสร้างแผนที่โน้ต…';
       setTimeout(function () {   // ให้ข้อความขึ้นก่อนเริ่มคำนวณ
         var len = Math.min.apply(null, bs.map(function (b) { return b.length; }));
@@ -472,7 +474,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
           x = new Float32Array(len);
           mono.forEach(function (m) { for (var i = 0; i < len; i++) x[i] += m[i]; });
         }
-        buf = b; song = stem ? parts.drums.name.replace(STEM_RE, '') + ' (STEM)' : fs[0].name;
+        buf = b; song = stem ? parts.drums.name.replace(STEM_RE, '') + ' (STEM)' : tag.name; songSrc = stem ? 'file' : tag.src;
         source = { x: x, sr: b.sampleRate, stems: stem ? { drums: mono[0], bass: mono[1], other: mono[2], vocals: mono[3] } : undefined };
         build();
       }, 30);
@@ -569,7 +571,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if (!W) return;
     if (!result.set.full) { put('Leader Board นับเฉพาะโหมดเต็มเพลง'); return; }
     var sh = shortChart(), r3 = function (v) { return Math.round(v * 1000) / 1000; };
-    var payload = { level: result.set.level, full: true, title: song, print: result.print, span: sh.range ? sh.range[1] : source.x.length / source.sr,
+    var payload = { level: result.set.level, full: true, title: song, titleSrc: songSrc, print: result.print, span: sh.range ? sh.range[1] : source.x.length / source.sr,
       diffNotes: C.remap(sh.levels.hard, sh.range).map(function (n) { return [r3(n.t), n.lane, r3(n.len)]; }),
       notes: result.notes, zones: result.zones, fevers: result.fevers, sum: { score: result.sum.score, fx: result.sum.fx }, timeMs: playedMs };
     put('กำลังส่งคะแนน…');
