@@ -300,9 +300,11 @@
           if (!reduce) g.globalAlpha = 1;   // ออกด้วยการพุ่ง ไม่จางหาย
           if (!reduce && age < 0.18) { g.fillStyle = 'rgba(255,255,255,' + 0.25 * (1 - age / 0.18) + ')'; g.fillRect(0, 0, W, H); }   // แฟลชตอนเข้า
           g.save(); g.translate(W / 2 + dx, bannerY()); g.rotate(-0.08); g.transform(1, 0, -0.25, 1, 0, 0);   // เฉียงแบบแถบความเร็ว
-          g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(-W * 0.75, -bh / 2 + 10, W * 1.5, bh);   // เงา
-          g.fillStyle = 'rgba(255,43,60,.94)'; g.fillRect(-W * 0.75, -bh / 2, W * 1.5, bh);
-          g.fillStyle = '#fff'; g.fillRect(-W * 0.75, -bh / 2 - 7, W * 1.5, 4); g.fillRect(-W * 0.75, bh / 2 + 3, W * 1.5, 4);   // ขอบขาวบน-ล่าง
+          // แดงโปร่ง (เจ้าของ 19 พ.ย.: แถบทึบบังโน้ตที่กำลังวิ่งเข้ามา) · ตอนกระแทกเข้มกว่าเล็กน้อย แล้วจางเหลือ .32 ให้เห็นโน้ตผ่านแถบ
+          var ba = reduce ? 0.32 : 0.32 + 0.3 * Math.max(0, 1 - age / 0.3);
+          g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(-W * 0.75, -bh / 2 + 10, W * 1.5, bh);   // เงา
+          g.fillStyle = 'rgba(255,43,60,' + ba + ')'; g.fillRect(-W * 0.75, -bh / 2, W * 1.5, bh);
+          g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(-W * 0.75, -bh / 2 - 7, W * 1.5, 4); g.fillRect(-W * 0.75, bh / 2 + 3, W * 1.5, 4);   // ขอบขาวบน-ล่าง
           if (!reduce && age < 0.35) {   // เงาสีแยกตอนกระแทก
             var o = (1 - age / 0.35) * 9; a0 = g.globalAlpha; g.globalAlpha = a0 * 0.75;
             text(q.text, -o, 0, st.font(sz), '#63e6ff', null, 'center', 'middle'); text(q.text, o, 0, st.font(sz), '#ffd400', null, 'center', 'middle'); g.globalAlpha = a0;
