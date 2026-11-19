@@ -83,6 +83,8 @@ dialog p { margin: 6px 0; }
 #midiBox .row:not(#tcRow) { flex-wrap: wrap; }   /* หน้าต่างต่อเครื่องมีได้ถึง 7 ปุ่ม: ขึ้นบรรทัดใหม่ได้ ตัวหนังสือไม่แตกกลางคำ */
 #midiBox .row:not(#tcRow) button { flex: 1 1 auto; white-space: nowrap; }
 #midiMsg { overflow-wrap: anywhere; }
+#nameRow[hidden] { display: none; }
+#nameRow button { flex: none; }
 .go { background: var(--red); color: var(--paper); }
 .counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; margin: 10px 0; }
 .counts b { display: block; font-size: 20px; }
@@ -278,6 +280,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   <div class="row"><button id="fixOffset" type="button" hidden></button></div>
   <div class="row"><button id="again" type="button" class="go">เล่นอีก</button><button id="copy" type="button">คัดลอกผล</button><button id="endClose" type="button">กลับเมนู</button></div>
   <p id="endRank" class="note" aria-live="polite" hidden></p>
+  <div class="row" id="nameRow" hidden><input id="songName" type="text" maxlength="80" aria-label="ชื่อเพลงบน Leader Board" placeholder="ศิลปิน – ชื่อเพลง"><button id="nameSave" type="button">แก้ชื่อเพลง</button></div>
+  <p id="nameMsg" class="note" aria-live="polite" hidden></p>
   <div class="row"><button id="endBoard" type="button">ดูอันดับ Board ของเพลงนี้</button></div>
   <h2 class="cardHead">การ์ดผลงาน</h2>
   <label>ชื่อผู้เล่น <input id="player" type="text" maxlength="20" placeholder="ใส่ชื่อบนการ์ด"></label>
@@ -567,7 +571,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function boardLine(playedMs) {
     var el = $('endRank'), W = RimBoard.web, mine = result;
     var put = function (h) { if (result !== mine) return; el.innerHTML = h; el.hidden = !h; };
-    put('');
+    put(''); nameBox(null, mine);
     if (!W) return;
     if (!result.set.full) { put('Leader Board นับเฉพาะโหมดเต็มเพลง'); return; }
     var sh = shortChart(), r3 = function (v) { return Math.round(v * 1000) / 1000; };
@@ -585,7 +589,28 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
         : x.code === 'not_user' ? 'ยังไม่ได้ยอมรับนโยบายความเป็นส่วนตัว · ' + go + 'ไปที่บัญชีของฉัน</a> เพื่อขึ้น Leader Board'
         : x.code === 'login' ? 'การเข้าสู่ระบบหมดอายุ · ' + go + 'เข้าสู่ระบบ</a> แล้วเล่นเต็มเพลงอีกครั้ง'
         : 'ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ');
+      if (x.code === 'stored' && j.song && j.song.editable === true && Number.isInteger(j.song.id)) nameBox(j.song, mine);
     }, function () { put('ส่งคะแนนขึ้น Leader Board ไม่สำเร็จ'); });
+  }
+  // แก้ชื่อเพลงบน Leader Board (085): ขึ้นเมื่อเซิร์ฟเวอร์บอกว่าแก้ได้ (ยังไม่มีชื่อ · ชื่อเป็นของเรา · ชื่อเดิมมาจากชื่อไฟล์) · ส่งคะแนนรอบใหม่ = ซ่อน
+  function nameBox(s, mine) {
+    var row = $('nameRow'), msg = $('nameMsg'), inp = $('songName'), b = $('nameSave');
+    if (result !== mine) return;
+    row.hidden = !s; msg.hidden = true;
+    if (!s) return;
+    inp.value = s.title === 'เพลงไม่ระบุชื่อ' ? '' : s.title; b.disabled = false;
+    inp.onkeydown = function (e) { if (e.key === 'Enter') b.click(); };
+    b.onclick = function () {
+      var v = inp.value.trim();
+      if (!v || b.disabled) return;
+      b.disabled = true; msg.hidden = false; msg.textContent = 'กำลังบันทึก…';
+      RimBoard.rename(s.id, v).then(function (x) {
+        if (result !== mine) return;
+        b.disabled = false;
+        if (x.code === 'saved') inp.value = x.title;
+        msg.textContent = { saved: 'บันทึกชื่อแล้ว', taken: 'เพลงนี้มีคนตั้งชื่อแล้ว', bad_title: 'ใช้ชื่อนี้ไม่ได้', rate: 'แก้บ่อยเกินไป รอสักครู่', login: 'การเข้าสู่ระบบหมดอายุ' }[x.code] || 'บันทึกชื่อไม่สำเร็จ';
+      });
+    };
   }
 
   // ── การ์ดผลงาน (รูปแชร์ลงโซเชียล) ──

@@ -54,13 +54,13 @@
   }
   // ชื่อไฟล์เพลง → ชื่อที่ส่งขึ้นเซิร์ฟเวอร์ (ลดข้อมูลที่ออกจากเครื่อง · เซิร์ฟเวอร์ rim_title_clean ยังเป็นผู้ตัดสิน + กรองคำ)
   //   ขั้นตอน/ลำดับเดียวกับ rim_title_clean (084): ตัดนามสกุลไฟล์เสียง · อักขระควบคุม → ช่องว่าง · ตัดอักขระล่องหน/สลับทิศ · อีเมล → ช่องว่าง
-  //   · เลข ≥ 9 หลัก (คั่นได้ทีละ 1 ตัว - . ช่องว่าง) → ช่องว่าง · ยุบช่องว่าง · ยาวไม่เกิน 80 ตัว (เซิร์ฟเวอร์ตรวจคำต้องห้ามก่อนตัดเหลือ 40 — ส่ง 40 จะหลบคำท้ายชื่อได้)
+  //   · เลข ≥ 9 หลัก (คั่นได้ทีละ 1 ตัว - . ช่องว่าง) → ช่องว่าง · ยุบช่องว่าง · ยาวไม่เกิน 160 ตัว (เซิร์ฟเวอร์ตรวจคำต้องห้ามก่อนตัดเหลือ 80 + "…" (085) — ส่ง 80 จะหลบคำท้ายชื่อได้)
   //   · ไม่เหลือตัวอักษร/ตัวเลข = '-' (rim-scores บังคับ title ≥ 1 ตัว · rim_title_clean('-') = null = ไม่เก็บชื่อ) (board.test.mjs เทียบกับ SQL จริงบน PGlite)
   function cleanTitle(name) {
     var v = String(name || '').replace(/\.(mp3|wav|wave|flac|m4a|aac|ogg|oga|opus|aif|aiff|wma|webm|mp4)$/i, '');
     v = v.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/[\u00ad\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '');
     v = v.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, ' ').replace(/\+?[0-9]([ .-]?[0-9]){8,}/g, ' ');
-    v = Array.from(v.replace(/\s+/g, ' ').trim()).slice(0, 80).join('').trim();
+    v = Array.from(v.replace(/\s+/g, ' ').trim()).slice(0, 160).join('').trim();
     return /[A-Za-z0-9ก-๙]/.test(v) ? v : '-';
   }
   // ส่งผลรอบเต็มเพลง → Promise<{ code, kind, j }> · ไม่ล็อกอิน/หมดอายุ = ไม่เรียกอะไร · ถาม me ก่อน: ไม่มีชื่อเล่น = ไม่ส่งผลเล่นออกไป
@@ -71,6 +71,17 @@
       if (m.s !== 200 || !m.j || m.j.ok !== true) return { code: m.s === 401 ? 'login' : 'fail', kind: S.kind };
       if (!m.j.nickname) return { code: 'nickname', kind: S.kind };
       return call(Object.assign({ action: 'submit' }, payload, { title: cleanTitle(payload.title) }), S.token).then(function (x) { return { code: submitResult(x.s, x.j), kind: S.kind, j: x.j }; });
+    });
+  }
+  // แก้ชื่อเพลงบนหน้าจบ (action title · 085) → Promise<{ code: saved | taken | bad_title | rate | login | fail, title? }> · ชื่อผ่าน cleanTitle เหมือนชื่อไฟล์
+  function rename(song, title) {
+    var S = session();
+    if (!WEB || !S.token) return Promise.resolve({ code: 'login' });
+    return call({ action: 'title', song: song, title: cleanTitle(title) }, S.token).then(function (x) {
+      var j = x.j || {};
+      if (x.s === 200 && j.stored === true && typeof j.title === 'string') return { code: 'saved', title: j.title };
+      if (x.s === 200 && (j.reason === 'taken' || j.reason === 'bad_title')) return { code: j.reason };
+      return { code: x.s === 429 ? 'rate' : x.s === 401 ? 'login' : 'fail' };
     });
   }
 
@@ -167,5 +178,5 @@
     }, function () { sub.textContent = 'โหลดอันดับไม่ได้ ลองใหม่อีกครั้ง'; body.innerHTML = ''; });
   }
 
-  return { show: show, RANKS: RANKS, sampleBoard: sampleBoard, sampleChart: sampleChart, web: WEB, submit: submit, pickSession: pickSession, submitResult: submitResult, cleanTitle: cleanTitle };
+  return { show: show, RANKS: RANKS, sampleBoard: sampleBoard, sampleChart: sampleChart, web: WEB, submit: submit, rename: rename, pickSession: pickSession, submitResult: submitResult, cleanTitle: cleanTitle };
 });
