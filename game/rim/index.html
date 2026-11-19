@@ -80,6 +80,9 @@ dialog p { margin: 6px 0; }
 .row { display: flex; gap: 8px; margin-top: 12px; }
 #tcRow[hidden], #tcDegRow[hidden], #tcLeadRow[hidden] { display: none; }   /* .row / dialog label ตั้ง display: flex ทับ hidden */
 .row button { flex: 1; }
+#midiBox .row:not(#tcRow) { flex-wrap: wrap; }   /* หน้าต่างต่อเครื่องมีได้ถึง 7 ปุ่ม: ขึ้นบรรทัดใหม่ได้ ตัวหนังสือไม่แตกกลางคำ */
+#midiBox .row:not(#tcRow) button { flex: 1 1 auto; white-space: nowrap; }
+#midiMsg { overflow-wrap: anywhere; }
 .go { background: var(--red); color: var(--paper); }
 .counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; margin: 10px 0; }
 .counts b { display: block; font-size: 20px; }
