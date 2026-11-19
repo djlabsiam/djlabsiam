@@ -84,6 +84,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 #boardBox[open] { display: flex; }
 #boardBox[data-look="studio"] { --acc: #f2f2f2; --acc2: #BD2026; --bg1: #050505; --bg2: #141414; }
 #boardBox[data-look="laser"] { --acc: #ffd36b; --acc2: #7b5cff; --bg1: #07030a; --bg2: #1c0610; }
+#boardBox[data-look="djlab"] { --acc: #ffffff; --acc2: #BD2026; --bg1: #010101; --bg2: #240306; }
 #boardBox::backdrop { background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .bHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px 6px; }
 .bHead h2 { margin: 0; font: italic 800 clamp(24px, 6vw, 38px)/1 Unbounded, var(--font); letter-spacing: .02em; text-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
@@ -207,7 +208,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   <h2 id="setTitle">ตั้งค่า</h2>
   <div class="row"><button id="midiOpen" type="button" hidden>ต่อเครื่อง</button></div>
   <!-- คำอธิบายใต้แต่ละค่า (เจ้าของขอ 19 พ.ย.): ทำอะไร · เปลี่ยนแล้วเป็นอย่างไร -->
-  <label>แบบภาพ <select id="look"><option value="neon">Neon Drive</option><option value="studio">Blackout Studio</option><option value="laser">Laser Club</option></select></label>
+  <label>แบบภาพ <select id="look"><option value="neon">Neon Drive</option><option value="studio">Blackout Studio</option><option value="laser">Laser Club</option><option value="djlab">DJ LAB SIAM</option></select></label>
   <p class="note help">สีและบรรยากาศของสนาม · ไม่มีผลกับการตัดสิน</p>
   <label>เสียงตอนโดนโน้ต <select id="sfx"><option value="off">ปิด</option><option value="soft">เบา</option><option value="normal">ปกติ</option></select></label>
   <p class="note help">เสียงดังตอนกดจริง ไม่ใช่ตอนที่โน้ตควรโดน · ใช้หูฟังบลูทูธ (หน่วง) แนะนำให้ปิด</p>

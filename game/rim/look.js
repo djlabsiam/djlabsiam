@@ -1,4 +1,4 @@
-/* Rim: ภาพในเกม (Art) — เจ้าของเลือก 14 พ.ย.: ค่าเริ่มต้น Neon Drive · เปลี่ยนเป็น Blackout Studio / Laser Club ได้ (ต้นแบบ art/concepts.html)
+/* Rim: ภาพในเกม (Art) — เจ้าของเลือก 14 พ.ย.: ค่าเริ่มต้น Neon Drive · เปลี่ยนเป็น Blackout Studio / Laser Club / DJ LAB SIAM (19 พ.ย.) ได้ (ต้นแบบ art/concepts.html)
    วาดอย่างเดียว ไม่ตัดสินอะไร: อ่านสถานะจาก rules (run) ทุกเฟรม แล้วสร้างคำเด้ง / FX จากสิ่งที่เปลี่ยนไปจากเฟรมก่อน
    รูปทรง: ขอบบนแผ่นเสียง 84° = เส้นรับโน้ต · เส้นแบ่งเลนเริ่มบนโค้งแล้ววิ่งไปจุดลับตา (เลนรับกับโค้งของตัวรับ) · โน้ตเล็กเมื่ออยู่ไกล (perspective)
    HUD ไม่มีกรอบ: คะแนน · ความแม่น · คอมโบ · ตัวคูณ · ความคืบหน้า · ตัวบอกเฟดเดอร์ · ปุ่ม dry/wet (โผล่เฉพาะในโซน FX) */
@@ -8,7 +8,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   var RED = '#BD2026', HOT = '#ff2b3c', LANES = 4, HALF = 42 * Math.PI / 180, PERS = 0.6;   // PERS = ความลึก: เดิม 2.4 โน้ตอยู่ครึ่งล่างของจอแค่ 23% ของเวลา (ไหลช้าบน แล้วพุ่งลง) · 1.2 = 31% · 0.6 = 38%
   var WORD = { perfect: 'PERFECT', great: 'GREAT', ok: 'GOOD', miss: 'MISS' };
-  var NAMES = { neon: 'Neon Drive', studio: 'Blackout Studio', laser: 'Laser Club' };
+  var NAMES = { neon: 'Neon Drive', studio: 'Blackout Studio', laser: 'Laser Club', djlab: 'DJ LAB SIAM' };
 
   function laneAt(p, t) {   // ท่อลาก: เลน (ทศนิยม) ที่เวลา t บนเส้นตรงระหว่างจุดกลับทิศ
     for (var i = 1; i < p.length; i++) if (t < p[i][0]) { var a = p[i - 1], c = p[i]; return a[1] + (c[1] - a[1]) * Math.max(0, (t - a[0]) / (c[0] - a[0])); }
@@ -95,6 +95,27 @@
       lane: function () { return 'rgba(14,16,30,.86)'; }, rail: '#ff2b3c', grid: 'rgba(255,211,107,.16)', tiles: true, glowRail: true,
       note: function (l) { return l === 1 || l === 2 ? '#ffd36b' : '#ffffff'; }, noteEdge: null, hold: 'rgba(255,211,107,.45)', zig: '#ffd36b',
       judge: { PERFECT: ['#ffffff', '#ff2b3c'], GREAT: ['#ffd36b', '#7a4a00'], GOOD: ['#ffe9b0', '#7a4a00'], MISS: ['#76768a', null], dim: ['#76768a', null] },
+    };
+    // DJ LAB SIAM (เจ้าของขอ 19 พ.ย.): สีแบรนด์ แดง #BD2026 / ดำ #010101 / ขาว #FFFFFF เท่านั้น · ฟอนต์ที่มากับหน้าอยู่แล้ว (ไม่โหลดของนอก)
+    //   พื้นดำ · แสงแดงจากปลายถนนเต้นตามบีต · แถบเฉียงแดงเลื่อนช้าๆ (ลายเส้นความเร็วแบบโลโก้) · ขอบถนนแดง · โน้ตขาวขอบแดง
+    S.djlab = {
+      font: function (s) { return '800 ' + s + 'px Unbounded, sans-serif'; }, num: function (s) { return 'italic 700 ' + s + 'px "Chakra Petch", sans-serif'; },
+      ink: '#FFFFFF', sub: 'rgba(255,255,255,.62)', disc: '#010101', groove: 'rgba(255,255,255,',
+      bg: function () {
+        g.fillStyle = '#010101'; g.fillRect(0, 0, W, H);
+        var o = pt(1.5, 1), fl = Math.pow(1 - beat(), 3), gr = g.createRadialGradient(o[0], o[1], 0, o[0], o[1], Math.max(W, H) * 0.75);
+        gr.addColorStop(0, 'rgba(189,32,38,' + (0.42 + 0.18 * fl) + ')'); gr.addColorStop(0.45, 'rgba(189,32,38,.08)'); gr.addColorStop(1, 'rgba(189,32,38,0)');
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+        g.save(); g.transform(1, 0, -0.45, 1, 0, 0);   // แถบเฉียง
+        for (var i = 0; i < 7; i++) {
+          var x = ((i * 0.19 + clock * (reduce ? 0.01 : 0.05)) % 1) * (W + H) - H * 0.2, w = 10 + (i % 3) * 16;
+          g.fillStyle = i % 3 ? 'rgba(189,32,38,.10)' : 'rgba(255,255,255,.035)'; g.fillRect(x, 0, w, H);
+        }
+        g.restore();
+      },
+      lane: function (i) { return i % 2 ? '#121212' : '#0a0a0a'; }, rail: '#BD2026', grid: 'rgba(255,255,255,.08)', glowRail: true,
+      note: function () { return '#FFFFFF'; }, noteEdge: '#BD2026', hold: 'rgba(189,32,38,.6)', zig: '#FFFFFF',
+      judge: { PERFECT: ['#FFFFFF', '#BD2026'], GREAT: ['#FFFFFF', '#010101'], GOOD: ['rgba(255,255,255,.75)', '#010101'], MISS: ['#6b6b6b', null], dim: ['#6b6b6b', null] },
     };
     function setStyle(name) { st = S[name] || S.neon; if (W) paintVinyl(); }
     setStyle('neon');

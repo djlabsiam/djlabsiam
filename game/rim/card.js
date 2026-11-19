@@ -9,7 +9,8 @@
   var BG = {
     neon: ['#1a0838', '#5b1690', '#c42c86'],
     studio: ['#050505', '#141414', '#2a0a0d'],
-    laser: ['#07030a', '#1c0610', '#5a0d1a']
+    laser: ['#07030a', '#1c0610', '#5a0d1a'],
+    djlab: ['#010101', '#1c0305', '#BD2026']
   };
   var logo = null;
   function loadLogo() {
