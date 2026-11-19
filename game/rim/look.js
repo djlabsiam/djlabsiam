@@ -184,13 +184,14 @@
           g.strokeStyle = HOT; g.lineWidth = 4 * (1 - uOf(m[0])) + 1; poly(across(m[0], -0.5, 3.5, 16)); g.stroke();
           var c = pt(1.5, m[0]); g.font = st.font(Math.max(10, 18 * (1 - uOf(m[0])))); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'bottom'; g.fillText(m[2], c[0], c[1] - 4);
         });
-        if (inside) { var c = pt(1.5, Math.min(z1, 1) * 0.5); g.font = st.font(16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(fxUp ? 'หมุน DRY/WET' : 'เปิด FX!', c[0], c[1]); }
+        // ในโซนมีโน้ตแล้ว (เจ้าของ 19 พ.ย.) → คำบอกเล็กลงและอยู่ปลายถนน ไม่ทับโน้ตที่กำลังมา
+        if (inside) { var c = pt(1.5, Math.max(0.55, Math.min(z1, 1) - 0.1)); g.font = st.font(14); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(fxUp ? 'ค้าง FX · หมุน DRY/WET' : 'เปิด FX!', c[0], c[1]); }
       });
     }
     function drawNotes(run) {
       for (var i = run.notes.length - 1; i >= 0; i--) {
         var n = run.notes[i], z0 = zOf(n.t), z1 = zOf(n.t + n.len);
-        if (z0 > 1.02 || z1 < -0.08 || n.res === 'miss' || (n.state === 'done' && !n.len) || n.state === 'click' || n.state === 'skip') continue;
+        if (z0 > 1.02 || z1 < -0.08 || n.res === 'miss' || (n.state === 'done' && !n.len) || n.state === 'click') continue;
         var held = n.state === 'hold', gone = n.state === 'done';
         if (n.len) {   // ท่อ = ริบบิ้นตามเลน · ท่อลาก = เส้นซิกแซกบาง · ค้างอยู่ = แดง · ปล่อยก่อนจบ = ส่วนที่เหลือจาง
           var from = held || gone ? 0 : Math.max(-0.06, z0), to = Math.min(1, z1), hw = n.path ? 0.1 : 0.3, lp = [], rp = [];
@@ -277,19 +278,21 @@
       });
       run.zones.forEach(function (z, i) {
         if (!zoneSeen['in' + i] && t >= z.t - 0.05) { zoneSeen['in' + i] = 1; pop('big', 'FX ZONE'); bump = 1; }
-        if (z.on !== null && !zoneSeen['on' + i]) { zoneSeen['on' + i] = 1; pop('judge', 'FX ON · ' + WORD[z.on], 1.5, z.on === 'miss' ? 'dim' : null); }
-        if (z.off !== null && !zoneSeen['off' + i]) { zoneSeen['off' + i] = 1; pop('big', 'DRY/WET ' + Math.round(z.frac * 100) + '%'); }
+        if (z.on !== null && !zoneSeen['on' + i]) { zoneSeen['on' + i] = 1; pop('judge', z.on === 'on' ? 'FX ON' : 'FX MISS', 1.5, z.on === 'on' ? null : 'dim'); }
+        if (z.off !== null && !zoneSeen['off' + i]) { zoneSeen['off' + i] = 1; if (z.off === 'early') pop('judge', 'FX OFF', 1.5, 'dim'); pop('big', 'DRY/WET ' + Math.round(z.frac * 100) + '%'); }
       });
-      // Fever: พร้อม (เกจเต็ม) → เริ่ม → คลิก/ลงจังหวะระหว่างเล่น → จบพร้อมแต้มรวม
-      var fl = run.fevers.length, fc = 0, fb = 0, lane = run.lane === null ? 1.5 : run.lane;
-      if (run.feverAt !== null && !feverSeen['r' + fl]) { feverSeen['r' + fl] = 1; pop('mult', 'FEVER READY'); }
+      // Fever: พร้อม (เกจเต็ม) → เริ่ม → คลิกโบนัสในท่อ → จบพร้อมแต้มรวม
+      var fl = run.fevers.length, fc = 0, lane = run.lane === null ? 1.5 : run.lane;
+      if (run.feverAt !== null && run.gauge >= 1 && !feverSeen['r' + fl]) {   // เกจเต็มจริง (Tutorial กำหนดเวลา Fever เองโดยไม่เติมเกจ = ไม่ขึ้น READY ตั้งแต่ต้น)
+        feverSeen['r' + fl] = 1; pop('mult', 'FEVER READY');
+      }
       run.fevers.forEach(function (f, i) {
-        fc += f.clicks; fb += f.onBeat;
+        fc += f.clicks;
         if (!feverSeen['s' + i] && t >= f.t - 0.02) { feverSeen['s' + i] = 1; pop('big', 'FEVER!'); bump = 1; }
         if (!feverSeen['e' + i] && t >= f.t + f.len) { feverSeen['e' + i] = 1; pop('big', 'FEVER +' + f.score); }
       });
-      if (fc > feverClicks) { hitFX(lane, fb > feverBeats); if (fb > feverBeats) pop('judge', 'ON BEAT', lane); }
-      feverClicks = fc; feverBeats = fb;
+      if (fc > feverClicks) { hitFX(lane, true); pop('judge', 'BONUS', lane); }
+      feverClicks = fc;
       if (run.ghosts > lastGhosts) { lastGhosts = run.ghosts; pop('judge', 'EMPTY', run.lane === null ? 1.5 : run.lane, 'dim'); }
       var c = run.combo;
       if (c > lastCombo) {
@@ -387,8 +390,8 @@
     }
     var knobVis = 0, knobAng = 0;
 
-    var feverSeen = {}, feverClicks = 0, feverBeats = 0;
-    function reset() { shown = {}; pops = []; parts = []; flashes = []; rings = []; zoneSeen = {}; score = 0; lastCombo = 0; lastGhosts = 0; bump = 0; feverSeen = {}; feverClicks = 0; feverBeats = 0;
+    var feverSeen = {}, feverClicks = 0;
+    function reset() { shown = {}; pops = []; parts = []; flashes = []; rings = []; zoneSeen = {}; score = 0; lastCombo = 0; lastGhosts = 0; bump = 0; feverSeen = {}; feverClicks = 0;
       gShow = 0; lastGauge = 0; lastFevers = 0; wasFever = false; shockAt = -9; endAt = -9; }
     function skew(x, y, w, h) { g.beginPath(); g.moveTo(x + 3, y); g.lineTo(x + w + 3, y); g.lineTo(x + w, y + h); g.lineTo(x, y + h); g.closePath(); g.fill(); }
 
@@ -462,23 +465,16 @@
       if (ke >= 0 && ke < 1) { g.fillStyle = 'rgba(255,43,60,' + 0.22 * (1 - ke) + ')'; g.fillRect(0, 0, W, H); }
       g.globalCompositeOperation = 'source-over';
     }
-    // Fever: ถนนเรืองแดงเต้นตามบีต + คำว่า FREESTYLE กับแต้มที่ได้ (ไม่มีโน้ตในช่วงนี้)
+    // Fever: ถนนเรืองแดงเต้นตามบีต + FEVER ×2 กับแต้มที่ได้ ตัวเล็กที่ปลายถนน (กติกาใหม่ 19 พ.ย.: ยังมีโน้ต ห้ามบังโน้ต)
     function drawFever(f) {
       var k = Math.pow(1 - beat(), 2), left = 1 - (t - f.t) / f.len;
       g.globalCompositeOperation = 'lighter';
       g.fillStyle = 'rgba(255,43,60,' + (0.08 + 0.14 * k) * Math.min(1, left * 6) + ')';
       poly(across(-0.06, -0.5, 3.5, 16).concat(across(1, 3.5, -0.5, 16))); g.fill();
       g.globalCompositeOperation = 'source-over';
-      var c = pt(1.5, 0.45), s = Math.min(W * 0.06, 44), beatsLeft = (f.t + f.len - t) / blen;
-      if (beatsLeft <= 4) {   // 4 บีตสุดท้าย: นับถอยหลัง ให้รู้ว่าโน้ตกำลังกลับมา (ผลจริง 14 พ.ย.: หลัง Fever จบยังคลิกต่อ 2 ครั้ง)
-        var n = Math.max(1, Math.ceil(beatsLeft - 1e-9)), ph = n - beatsLeft, sz = Math.min(W * 0.2, 140) * (1.3 - 0.3 * Math.min(1, ph * 5));
-        text('FEVER จบใน', c[0], c[1] - Math.min(W * 0.2, 140) * 0.75, st.font(15), st.sub, 'rgba(0,0,0,.5)', 'center', 'middle', 3);
-        g.globalAlpha = Math.min(1, (1 - ph) * 2.5); text(String(n), c[0], c[1], st.num(sz), '#fff', HOT, 'center', 'middle', 7); g.globalAlpha = 1;
-        return;
-      }
-      text('FREESTYLE', c[0], c[1], st.font(s * (1 + 0.06 * k)), '#fff', 'rgba(0,0,0,.4)', 'center', 'middle', 5);
-      text('+' + f.score, c[0], c[1] + s * 1.1, st.num(s * 0.8), HOT, 'rgba(0,0,0,.4)', 'center', 'middle', 4);
-      text('คลิกเฟดเดอร์ลงจังหวะ · หมุนจานเปลี่ยนเลน', c[0], c[1] + s * 1.9, st.font(13), st.sub, 'rgba(0,0,0,.5)', 'center', 'middle', 3);
+      var c = pt(1.5, 0.78), s = Math.min(W * 0.04, 28), beatsLeft = (f.t + f.len - t) / blen;
+      text(beatsLeft <= 4 ? 'FEVER จบใน ' + Math.max(1, Math.ceil(beatsLeft - 1e-9)) : 'FEVER ×2', c[0], c[1], st.font(s * (1 + 0.06 * k)), '#fff', 'rgba(0,0,0,.4)', 'center', 'middle', 5);
+      text('+' + f.score, c[0], c[1] + s * 1.05, st.num(s * 0.8), HOT, 'rgba(0,0,0,.4)', 'center', 'middle', 4);
     }
 
     // s = { t, run, lead, lane, pos, free, catchW, catchA, open, fxUp, spinAt, count, playLen, idle: [บรรทัด1, บรรทัด2] }

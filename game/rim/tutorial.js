@@ -1,11 +1,12 @@
 /* Rim: Tutorial (เจ้าของสั่ง 19 พ.ย.) — เพลงสังเคราะห์ในเบราว์เซอร์ (ไม่มีไฟล์เพลง · ไม่โหลด/อัปโหลดอะไร) + แผนที่โน้ตที่วางเอง + จุดหยุดสอน
    หน้าเกมหยุดภาพที่จุดหยุดแต่ละจุด ขึ้นกล่องคำอธิบาย ผู้เล่นกดพร้อม → นับถอยหลัง 3 จังหวะ → เล่นต่อ
-   บทเรียนตอนนี้ = พื้นฐาน (ย้ายเลน · คลิก · ท่อ · ซิกแซก) · FX Zone / Fever รอกติกาใหม่ (ก้อน B) แล้วค่อยเพิ่ม */
+   บทเรียน = ย้ายเลน · คลิก · ท่อ · ซิกแซก · รวม · FX Zone · Fever (กติกาใหม่ 19 พ.ย. · Fever กำหนดเวลาเองด้วย feverAt ไม่ต้องเติมเกจ) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.RimTutorial = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
-  var BPM = 100, B = 60 / BPM, END = 126;   // จังหวะละ 0.6 วิ · เพลงยาว END จังหวะ (~76 วิ)
+  var BPM = 100, B = 60 / BPM, END = 162;   // จังหวะละ 0.6 วิ · เพลงยาว END จังหวะ (~97 วิ)
+  var ZONE = [126, 8], FEVER_AT = 141;      // FX Zone จังหวะ 126–134 · Fever เริ่มจังหวะ 141 (ยาว 16 จังหวะตามกติกา)
 
   // โน้ต: เวลาเป็นจังหวะ · len เป็นจังหวะ · path = [[จังหวะ, เลน], ...]
   var N = [];
@@ -18,6 +19,9 @@
   zig(78, [[0, 0], [1, 1], [2, 2], [3, 1]], 3); zig(86, [[0, 3], [1, 2], [2, 1], [3, 2]], 3);                              // 4 ซิกแซก
   [[96, 1], [97, 2], [98, 1], [100, 0, 2], [104, 3], [105, 2], [106, 3], [108, 1, 2], [112, 2], [113, 2], [114, 1], [115, 0], [116, 3, 3]]   // 5 รวม
     .forEach(function (x) { if (x[2]) hold(x[0], x[1], x[2]); else click(x[0], x[1]); });
+  [[127, 1], [128, 1], [130, 2], [131, 2], [132, 1]].forEach(function (x) { click(x[0], x[1]); });                      // 6 โน้ตใน FX Zone
+  [[142, 1], [143, 2], [144, 1]].forEach(function (x) { click(x[0], x[1]); }); hold(146, 2, 4);                            // 7 Fever: ชิ้น + ท่อ (คลิกในท่อ = โบนัส)
+  [[152, 1], [153, 0], [154, 1], [155, 2]].forEach(function (x) { click(x[0], x[1]); });
 
   // จุดหยุด: 2 จังหวะก่อนโน้ตแรกของแต่ละช่วง (โน้ตที่กำลังมาค้างให้เห็นบนถนน) · ห้ามอยู่กลางท่อ
   var STOPS = [
@@ -25,7 +29,9 @@
     { b: 34, title: 'คลิกตามจังหวะ', text: 'โน้ตมาทุกจังหวะ · คลิกให้ตรงตอนแตะขอบ' },
     { b: 54, title: 'ท่อ = เปิดค้าง', text: 'เปิด crossfader (ค้าง Space) ตั้งแต่หัวท่อจนสุดท่อ' },
     { b: 76, title: 'ซิกแซก = ค้าง + หมุน', text: 'ค้างเฟดเดอร์ไว้ แล้วหมุนจานให้ตัวรับวิ่งตามเส้น' },
-    { b: 94, title: 'รวมทุกแบบ', text: 'เล่นต่อเนื่องจนจบ' },
+    { b: 94, title: 'รวมทุกแบบ', text: 'เล่นต่อเนื่องตามจังหวะ' },
+    { b: 122, title: 'FX Zone = เปิด FX ค้าง', text: 'ถึงแถบแดงให้เปิด FX ค้างไว้ (F / ปุ่ม FX) แล้วหมุน dry/wet (ล้อเมาส์ / ปุ่ม) · โน้ตในโซนยังต้องเล่น ได้ ×1.5' },
+    { b: 138, title: 'Fever = โน้ต ×2', text: 'เล่นเต็มเพลงจนเกจเต็มจะเข้า Fever · โน้ต ×2 · ท่อไม่ต้องค้าง · คลิกในท่อ = โบนัส · คลิกนอกโน้ตไม่เสียคอมโบ' },
   ];
 
   // ── เพลง: 100 BPM · กลองเตะทุกจังหวะ · สแนร์จังหวะ 2/4 · ไฮแฮตจังหวะยก · เบส Am–F–C–G ทีละห้อง ──
@@ -56,9 +62,9 @@
   }
 
   function make(ctx) {
-    return { buf: song(ctx), bpm: BPM, beatLen: B, len: END * B,
+    return { buf: song(ctx), bpm: BPM, beatLen: B, len: END * B, zones: [{ t: ZONE[0] * B, len: ZONE[1] * B }], feverAt: FEVER_AT * B,
       notes: N.map(function (x) { return Object.assign({}, x); }),
       stops: STOPS.map(function (s) { return { t: s.b * B, title: s.title, text: s.text }; }) };
   }
-  return { make: make, BPM: BPM, notes: N, stops: STOPS, END: END };
+  return { make: make, BPM: BPM, B: B, notes: N, stops: STOPS, END: END, ZONE: ZONE, FEVER_AT: FEVER_AT };
 });

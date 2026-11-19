@@ -219,8 +219,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     <li>ชิ้น = คลิกครั้งเดียว</li>
     <li>ท่อ = เปิดค้างจนสุดท่อ</li>
     <li>ซิกแซก = ค้างไว้ + หมุนตามเส้น</li>
-    <li>FX Zone = เปิด FX → หมุน dry/wet → ปิด FX</li>
-    <li>เต็มเพลง: คอมโบจนเกจเต็ม = Fever freestyle</li>
+    <li>FX Zone = เปิด FX ค้างไว้ + หมุน dry/wet · โน้ตยังต้องเล่น ได้แต้ม ×1.5</li>
+    <li>เต็มเพลง: คอมโบจนเกจเต็ม = Fever · โน้ต ×2 · ท่อไม่ต้องค้าง · คลิกในท่อ = โบนัส</li>
   </ul>
   <div class="row"><button id="howClose" type="button" class="go">เข้าใจแล้ว</button></div>
 </dialog>
@@ -362,7 +362,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function fx(on, ms) {   // ยังไม่เริ่ม: แค่โชว์สถานะ
     fxUp = on; if (!run || paused()) return;
     fxRaw.push([Math.round(songAt(ms) * 1000), on ? 1 : 0]);
-    var good = function () { return run.zones.filter(function (z) { return (on ? z.on : z.off) && (on ? z.on : z.off) !== 'miss'; }).length; }, n0 = good();
+    var good = function () { return run.zones.filter(function (z) { return on ? z.on === 'on' : z.off === 'ok'; }).length; }, n0 = good();
     (on ? R.fxOn : R.fxOff)(run, at(ms));
     if (good() > n0) sfx(on ? 'fxon' : 'fxoff');
   }
@@ -375,7 +375,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function tutStart() {
     audio(); stop();
     var d = RimTutorial.make(ctx);
-    run = R.create(d.notes, null, [], null); lastT = -1e9; ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
+    run = R.create(d.notes, null, d.zones, { beatLen: d.beatLen, feverAt: d.feverAt }); lastT = -1e9;   // Fever ของบทเรียนเริ่มตามเวลาที่กำหนด ไม่ต้องเติมเกจ ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
     pos = R.CENTER; faderUp = false; fxUp = false;
     playLen = d.len; count = { beat0: 0, len: d.beatLen, n: 0 };   // n 0 = ไม่มีนับเข้าของเกม (นับถอยหลังของ Tutorial แทน)
     tut = { d: d, i: 0, hold: null, go: null };
@@ -480,8 +480,8 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if (!chart) return;
     if (chart.full !== set.full) { chart = C.analyze(source.x, source.sr, source.stems, set.full); chart.full = set.full; }   // สลับเต็มเพลงระหว่างเล่น
     audio(); stop();
-    // Fever เฉพาะเล่นเต็มเพลง (เจ้าของ 14 พ.ย.) · เป้าลงจังหวะ = เสียงกลองในเพลง (โน้ตระดับยาก)
-    run = R.create(notes(), null, zones(), set.full ? { fever: true, beatLen: chart.beatLen, beats: chart.levels.hard.map(function (n) { return n.t; }) } : null); lastT = -1e9; ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
+    // Fever เฉพาะเล่นเต็มเพลง (เจ้าของ 14 พ.ย.) · beatLen ใช้ทุกโหมด (FX Zone ให้เวลาเปิด FX ถึง 1 จังหวะ)
+    run = R.create(notes(), null, zones(), { fever: set.full, beatLen: chart.beatLen }); lastT = -1e9; ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
     pos = R.CENTER; faderUp = false; fxUp = false;   // เริ่มเล็งตรงกลางเสมอ ยังไม่อยู่เลนไหน · FX ถือว่าปิด (กติกาเริ่มที่ปิด)
 
     // เล่นเพลงจริงช่วงเดียวต่อเนื่อง (ห้ามตัดต่อ) · เวลาเพลง 0 = ต้นช่วง
@@ -526,11 +526,11 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
       // [เวลา, เลน, ยาว, ผล, คลาด ms, ค้างได้] ต่อโน้ต ใช้ปรับค่าตั้งต้น
       notes: run.notes.map(function (n) { return [r2(n.t), n.lane, r2(n.len), n.res, n.dt === null ? null : Math.round(n.dt * 1000), n.frac === null ? null : r2(n.frac)]; }),
       ghostAt: run.ghostAt.map(r2),   // เวลาที่เปิดเปล่า
-      // [เวลา, ยาว, คลิก, ลงจังหวะ, เปลี่ยนเลน, แต้ม] ต่อ Fever
-      fevers: run.fevers.map(function (f) { return [r2(f.t), r2(f.len), f.clicks, f.onBeat, f.moves, f.score]; }),
+      // [เวลา, ยาว, คลิกโบนัสในท่อ, แต้ม] ต่อ Fever (กติกาใหม่ 19 พ.ย. · เดิม 6 ช่อง มีลงจังหวะ/เปลี่ยนเลน)
+      fevers: run.fevers.map(function (f) { return [r2(f.t), r2(f.len), f.clicks, f.score]; }),
       faderRaw: faderRaw,   // [เวลา ms, ค่าดิบ 0–127] ทุกข้อความเฟดเดอร์จากเครื่อง · ไว้ดูว่าเปิดเปล่าเกิดจากเฟดเดอร์สั่นหรือคนเปิดเอง
       fxRaw: fxRaw,   // [เวลา ms, 1 เปิด / 0 ปิด] ทุกครั้งที่กด FX (คีย์ F หรือเครื่อง) · เทียบต้นโซนดูว่าพลาดเปิดเพราะกดเร็วหรือช้า
-      // [เวลา, ยาว, ผลเปิด FX, ผลปิด FX, คลาดเปิด ms, คลาดปิด ms, หมุนอยู่] ต่อโซน
+      // [เวลา, ยาว, เปิด FX ('on'/'miss'), จบโซน ('ok' ค้างครบ/'early' ปิดก่อน/'miss'), เปิดเทียบต้นโซน ms, ปิดเทียบปลายโซน ms (null = ค้างครบ), หมุนอยู่] ต่อโซน
       zones: run.zones.map(function (z) { var ms = function (d) { return d === null ? null : Math.round(d * 1000); }; return [r2(z.t), r2(z.len), z.on, z.off, ms(z.onDt), ms(z.offDt), z.frac === null ? null : r2(z.frac)]; }) };
     stop();
     $('endStars').textContent = '★★★'.slice(0, s.stars) + '☆☆☆'.slice(s.stars);

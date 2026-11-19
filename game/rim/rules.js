@@ -18,12 +18,15 @@
   var SLIDE_GRACE = 0.12;    // ท่อลาก: อยู่ผิดเลนได้ไม่เกินเท่านี้ (เผื่อหมุนเร็ว/ช้ากว่าจุดเปลี่ยน)
   var BOUNCE = 0.06;        // ปิดแล้วเปิดใหม่ภายในเท่านี้ = เฟดเดอร์สั่น นับว่าเปิดค้างต่อ (FLX4 สั่น 3–12 ครั้งใน 10–70 ms ทุกครั้งที่คัท · ผลเล่นจริง 13 พ.ย.)
   var JOG_MAX = 40;
-  // FX Zone: เปิด FX ต้นโซน · หมุน dry/wet อยู่ = โบนัส (ข้อความหนึ่งครั้งนับว่าหมุนอยู่อีก SPIN_HOLD วินาที) · ปิด FX ปลายโซน
-  var SPIN_PTS = 500, SPIN_HOLD = 0.3;
-  // Fever (เล่นเต็มเพลงเท่านั้น · เจ้าของออกแบบ 14 พ.ย.): คอมโบถึง from แล้วโน้ตต่อๆ ไปเติมเกจตัวละ 1/n · เต็ม = รอ wait จังหวะ แล้วพักโน้ต beats จังหวะ
-  // ให้เล่น freestyle: เฟดเดอร์คลิก click แต้ม (+onBeat ถ้าห่างเสียงกลองในเพลงไม่เกิน WIN.great) · จานเปลี่ยนเลน move แต้ม · คลิกนับไม่ถี่กว่า 1/16 จังหวะ เปลี่ยนเลน 1/8
-  // n 30 → 60 (เจ้าของ 18 พ.ย. "Fever ติดบ่อยเกินไป"): เดิม De La Soul เต็มเพลงติด 6 ครั้ง = พักโน้ตเพลงจริง ~50 วิ (~21% ของเพลง) · ตัวเลขอื่นผมตั้ง
-  var FEVER = { from: 10, n: 60, wait: 2, beats: 16, click: 30, onBeat: 70, move: 20 };
+  // FX Zone (กติกาใหม่ เจ้าของ 19 พ.ย.): เข้าโซนต้องเปิด FX ค้างไว้ (เปิดก่อนเข้าโซนได้ · ให้เวลาถึง 1 จังหวะหลังต้นโซน ไม่ทัน = คอมโบขาด)
+  //   ปิดก่อนจบโซน = คอมโบขาด + โบนัสหยุด · หมุน dry/wet ระหว่าง FX เปิดในโซน = โบนัส (ข้อความหนึ่งครั้งนับว่าหมุนอยู่อีก SPIN_HOLD วินาที)
+  //   โน้ตในโซนยังต้องเล่นตามปกติ · โดนตอน FX เปิดค้าง = แต้ม ×FX_X (น้อยกว่า Fever)
+  var SPIN_PTS = 500, SPIN_HOLD = 0.3, FX_X = 1.5;
+  // Fever (เล่นเต็มเพลงเท่านั้น · เจ้าของออกแบบ 14 พ.ย. · กติกาใหม่ 19 พ.ย.): คอมโบถึง from แล้วโน้ตต่อๆ ไปเติมเกจตัวละ 1/n · เต็ม = รอ wait จังหวะ แล้ว Fever beats จังหวะ
+  //   ระหว่าง Fever โน้ตยังต้องเล่นตามปกติ ได้แต้ม ×x · เปิดเฟดเดอร์นอกโน้ตไม่นับเปิดเปล่า (ไม่เสียคอมโบ ไม่ได้แต้ม)
+  //   ท่อไม่ต้องค้าง (โดนหัวท่อ = ได้ค่าค้างเต็ม) · คลิกเฟดเดอร์ระหว่างความยาวท่อที่โดนหัวแล้ว = โบนัส hold แต้ม (นับไม่ถี่กว่า 1/16 จังหวะ)
+  //   x 2 · hold 50 · FX_X 1.5 = ตัวเลขที่ผมเสนอ เจ้าของตอบ "ใช้ตามที่แนะนำ" 19 พ.ย. · n 60 เจ้าของ 18 พ.ย. ("Fever ติดบ่อยเกินไป")
+  var FEVER = { from: 10, n: 60, wait: 2, beats: 16, x: 2, hold: 50 };
 
   function grade(dt) {
     dt = Math.abs(dt);
@@ -35,15 +38,16 @@
   function steps(path) { return path.map(function (p, i) { return i ? [(path[i - 1][0] + p[0]) / 2, p[1]] : p; }); }
 
   // lane = เลนเริ่ม (ไม่ใส่ = 0) · null = เล็งตรงกลาง ยังไม่อยู่เลนไหน จนกว่าจะหมุนจาน
-  // zones = FX Zone [{ t, len }] · on/off = ผลเปิด/ปิด FX (ระดับ หรือ 'miss') · frac = สัดส่วนเวลาที่หมุน dry/wet อยู่
-  // opts (ไม่บังคับ) = { fever: true, beatLen, beats: [เวลาเสียงกลองในเพลง] } · ไม่ใส่ = ไม่มีเกจ/Fever
+  // zones = FX Zone [{ t, len }] · on = 'on' เปิดทัน / 'miss' · off = 'ok' ค้างถึงจบโซน / 'early' ปิดก่อน / 'miss' ไม่ได้เปิด
+  //   onDt = เวลาที่เปิด FX เทียบต้นโซน (ติดลบ = เปิดมาก่อน) · offDt = เวลาที่ปิดเทียบปลายโซน (null = ค้างถึงจบ) · frac = สัดส่วนเวลาที่หมุน dry/wet อยู่
+  // opts (ไม่บังคับ) = { fever: true, beatLen, feverAt: เวลาเริ่ม Fever ที่กำหนดเอง (Tutorial) } · ไม่ใส่ fever = ไม่มีเกจ
   function create(notes, lane, zones, opts) {
     opts = opts || {};
     return {
-      feverOn: !!opts.fever, beatLen: opts.beatLen || 0.5, beats: opts.beats || [],
-      gauge: 0, feverAt: null, fever: null, fevers: [], feverScore: 0, fxScore: 0,   // fever = Fever ที่กำลังเล่น · fevers = ทุกครั้ง
+      feverOn: !!opts.fever, beatLen: opts.beatLen || 0.5,
+      gauge: 0, feverAt: opts.feverAt === undefined ? null : opts.feverAt, fever: null, fevers: [], feverScore: 0, fxScore: 0,   // fever = Fever ที่กำลังเล่น · fevers = ทุกครั้ง
       zones: (zones || []).map(function (z) { return { t: z.t, len: z.len, on: null, off: null, onDt: null, offDt: null, spun: 0, spunUntil: -Infinity, frac: null }; }),
-      fx: false,
+      fx: false, fxAt: null,
       notes: notes.map(function (n, i) { return { i: i, t: n.t, lane: n.lane, len: n.len || 0, path: n.path || null, steps: n.path ? steps(n.path) : null, state: 'wait', res: null, dt: null, frac: null, why: null }; }),
       lane: lane === undefined ? 0 : lane, open: false, openAt: null, closeAt: null, active: null, next: 0,   // closeAt = ปิดที่รอผ่านช่วงกันสั่น
       movedAt: -Infinity,   // เวลาที่ตัวรับเปลี่ยนเลนล่าสุด (ใช้หาว่าท่อลากผิดเลนตั้งแต่เมื่อไร)
@@ -54,8 +58,11 @@
   function mult(s) { return Math.min(4, 1 + Math.floor(s.combo / 10)); }
 
   function hit(s, n, keep, t) {
-    var m = mult(s), base = PTS[n.res] + (n.len ? Math.round(HOLD_PTS * n.frac) : 0);
-    s.score += base * m;
+    var m = mult(s), base = PTS[n.res] + (n.len ? Math.round(HOLD_PTS * n.frac) : 0), p = base * m;
+    var f = feverOf(s, n.t), z = !f && s.fx ? zoneOf(s, n.t) : null;   // ×Fever / ×FX ตามเวลาหัวโน้ต · ส่วนที่เพิ่มนับแยกในสรุป
+    var extra = Math.round(p * ((f ? FEVER.x : z ? FX_X : 1) - 1));
+    s.score += p + extra;
+    if (f) { f.score += extra; s.feverScore += extra; } else s.fxScore += extra;
     s.combo = keep ? s.combo + 1 : 0;
     s.maxCombo = Math.max(s.maxCombo, s.combo);
     if (s.feverOn && s.combo > FEVER.from && s.feverAt === null && !s.fever) {
@@ -74,36 +81,34 @@
     }
     return at;
   }
-  // เริ่ม Fever: พักโน้ตที่ยังรออยู่ในช่วง (state 'skip' ไม่นับในผล) · ถ้ากำลังค้างท่ออยู่ รอให้จบก่อน
-  function feverBegin(s, t) {
-    if (s.active && s.active.state === 'hold') { s.feverLate = true; return; }   // คลิกที่ค้างอยู่ (โน้ตก่อนเริ่ม) ปล่อยตัดสินตามปกติ
-    if (s.feverLate) {   // เริ่มช้าเพราะรอท่อ: ตรวจโซนใหม่ ชนแล้วเลื่อนไปหลังโซน (ผู้ตรวจ 14 พ.ย.)
-      s.feverLate = false;
-      var at = feverStart(s, t);
-      if (at > t + 1e-9) { s.feverAt = at; return; }
-      s.feverAt = t;
-    }
-    var f = { t: s.feverAt, len: FEVER.beats * s.beatLen, clicks: 0, onBeat: 0, moves: 0, score: 0, lastClick: -Infinity, lastMove: -Infinity, used: {} };
-    s.notes.forEach(function (n) { if (n.state === 'wait' && n.t >= f.t && n.t < f.t + f.len) n.state = 'skip'; });
+  // เริ่ม Fever (ไม่พักโน้ต · กติกาใหม่ 19 พ.ย.) · สร้างก่อนเวลาเริ่ม WIN.ok ให้โน้ตต้น Fever ที่กดเร็วได้ ×Fever (ตัดสินด้วย feverOf ตามเวลาหัวโน้ต)
+  function feverBegin(s) {
+    var f = { t: s.feverAt, len: FEVER.beats * s.beatLen, clicks: 0, score: 0, lastClick: -Infinity };
     s.fever = f; s.fevers.push(f); s.feverAt = null; s.gauge = 0;
   }
+  function feverOf(s, t) {
+    for (var i = s.fevers.length - 1; i >= 0; i--) { var f = s.fevers[i]; if (t >= f.t - 1e-9 && t < f.t + f.len) return f; }
+    return null;
+  }
+  function zoneOf(s, t) {   // โซนที่ FX เปิดค้างอยู่ (เปิดทันและยังไม่ปิด) ณ เวลา t
+    for (var i = 0; i < s.zones.length; i++) { var z = s.zones[i]; if (z.on === 'on' && z.off === null && t >= z.t && t < z.t + z.len) return z; }
+    return null;
+  }
   function feverPts(s, f, p) { f.score += p; s.score += p; s.feverScore += p; }
+  // เปิดเฟดเดอร์นอกโน้ตระหว่าง Fever: อยู่ในความยาวท่อที่โดนหัวแล้ว (หัวอยู่ใน Fever) = โบนัส · ที่อื่น = ไม่มีผล
   function feverClick(s, f, t) {
     if (t - f.lastClick < s.beatLen / 4 - 1e-9) return;
+    var on = s.notes.some(function (n) { return n.len && n.state === 'done' && n.res !== 'miss' && feverOf(s, n.t) && t >= n.t && t <= n.t + n.len; });
+    if (!on) return;
     f.lastClick = t; f.clicks++;
-    var p = FEVER.click;
-    for (var i = 0; i < s.beats.length; i++) {
-      var b = s.beats[i];
-      if (b > t + WIN.great) break;
-      if (!f.used[i] && Math.abs(t - b) <= WIN.great) { f.used[i] = true; f.onBeat++; p += FEVER.onBeat; break; }
-    }
-    feverPts(s, f, p);
+    feverPts(s, f, FEVER.hold);
   }
 
   function miss(s, n, why) { n.state = 'done'; n.res = 'miss'; n.why = why; s.combo = 0; if (s.active === n) s.active = null; }
 
   function endHold(s, n, t) {
     n.state = 'done'; n.frac = Math.max(0, Math.min(1, (t - n.t) / n.len)); s.active = null;
+    if (feverOf(s, n.t)) n.frac = 1;   // Fever: ท่อไม่ต้องค้าง โดนหัว = ค่าค้างเต็ม
     hit(s, n, n.frac >= HOLD_KEEP, t);
   }
 
@@ -118,31 +123,31 @@
     }
     if (a && a.state === 'hold' && t >= a.t + a.len && upTo >= a.t + a.len) endHold(s, a, a.t + a.len);   // ปิดก่อนปลาย = รอผลกันสั่นก่อน
     if (s.fever && t >= s.fever.t + s.fever.len) s.fever = null;
-    if (s.feverAt !== null && t >= s.feverAt) feverBegin(s, t);
+    if (s.feverAt !== null && t >= s.feverAt - WIN.ok) feverBegin(s);
     while (s.next < s.notes.length && (s.notes[s.next].state !== 'wait' || t > s.notes[s.next].t + WIN.ok)) {
       if (s.notes[s.next].state === 'wait') miss(s, s.notes[s.next], 'ไม่ได้รับ');
       s.next++;
     }
     s.zones.forEach(function (z) {
-      if (z.on === null && t > z.t + WIN.ok) { z.on = 'miss'; s.combo = 0; }
-      if (z.off === null && t > z.t + z.len + WIN.ok) zoneOff(s, z, 'miss', null);   // ไม่ปิด / ไม่เคยเปิด
+      if (z.on === null && s.fx && t >= z.t) { z.on = 'on'; z.onDt = s.fxAt - z.t; }   // เปิดค้างมาตั้งแต่ก่อนเข้าโซน
+      if (z.on === null && t > z.t + s.beatLen) { z.on = 'miss'; s.combo = 0; }   // เลย 1 จังหวะแล้วยังไม่เปิด
+      if (z.off === null && t >= z.t + z.len) zoneDone(s, z, z.on === 'on' ? 'ok' : 'miss', null);
     });
   }
 
   // ── FX Zone ──
-  function zoneOff(s, z, res, dt) {
+  // จบโซน (ถึงปลายโซน หรือปิด FX ในโซน): โบนัสหมุน dry/wet ตามสัดส่วนเวลาที่หมุน × ตัวคูณคอมโบ
+  function zoneDone(s, z, res, dt) {
     z.off = res; z.offDt = dt; z.frac = Math.min(1, z.spun / z.len);
-    if (res === 'miss') s.combo = 0; else hitFx(s, res);
     var spin = Math.round(SPIN_PTS * z.frac) * mult(s);
     s.score += spin; s.fxScore += spin;
   }
-  function hitFx(s, res) { var p = PTS[res] * mult(s); s.score += p; s.fxScore += p; s.combo++; s.maxCombo = Math.max(s.maxCombo, s.combo); }
   function fxOn(s, t) {
     tick(s, t);
     if (s.fx) return;
-    s.fx = true;
-    s.zones.forEach(function (z) {   // เปิดนอกช่วงต้นโซน = ไม่มีผล (ไม่นับเปิดเปล่า)
-      if (z.on === null && grade(t - z.t)) { z.on = grade(t - z.t); z.onDt = t - z.t; hitFx(s, z.on); }
+    s.fx = true; s.fxAt = t;
+    s.zones.forEach(function (z) {   // เปิดนอกโซน = ไม่มีผล (ไม่นับเปิดเปล่า) · เปิดก่อนเข้าโซนแล้วค้างไว้ tick() นับให้ตอนเข้าโซน
+      if (z.on === null && t >= z.t && t <= z.t + s.beatLen) { z.on = 'on'; z.onDt = t - z.t; }
     });
   }
   function fxOff(s, t) {
@@ -151,10 +156,12 @@
     s.fx = false;
     s.zones.forEach(function (z) {
       var end = z.t + z.len;
-      if (z.off !== null || t < z.t - WIN.ok) return;
-      z.spun -= Math.max(0, Math.min(z.spunUntil, end) - Math.max(t, z.t));   // หมุนที่นับล่วงหน้าเลยตอนปิดไป ไม่นับ
+      if (z.off !== null || t < z.t || t >= end) return;
+      z.spun -= Math.max(0, Math.min(z.spunUntil, end) - t);   // หมุนที่นับล่วงหน้าเลยตอนปิดไป ไม่นับ
       z.spunUntil = t;
-      zoneOff(s, z, grade(t - end) || 'miss', t - end);   // ปิดก่อนปลายเกินช่วง = ปิดพลาด
+      var res = z.on !== 'on' ? 'miss' : t < end - WIN.ok ? 'early' : 'ok';   // ปิดก่อนปลายไม่เกิน WIN.ok = ค้างครบ
+      zoneDone(s, z, res, t - end);
+      if (res === 'early') s.combo = 0;
     });
   }
   // หมุน dry/wet หนึ่งครั้ง: ระหว่าง FX เปิดในโซน นับว่าหมุนอยู่ตั้งแต่ตอนนี้ไปอีก SPIN_HOLD (ไม่นับซ้ำช่วงที่นับแล้ว)
@@ -174,9 +181,6 @@
     tick(s, t);
     if (lane === s.lane) return;
     s.lane = lane; s.movedAt = t;
-    var f = s.fever;
-    // นับเปลี่ยนเลนไม่ถี่กว่า 1/8 จังหวะ: จานส่ายที่รอยต่อเลน (ตัวรับอิสระ) ไม่ได้แต้มรัว
-    if (f && lane !== null && t - f.lastMove >= s.beatLen / 2 - 1e-9) { f.lastMove = t; f.moves++; feverPts(s, f, FEVER.move); }
     var a = s.active;
     if (a && a.state === 'hold' && !a.path) endHold(s, a, t);   // ออกจากเลนกลางท่อ = ค้างได้แค่นั้น (ท่อลาก: tick() ตรวจเอง)
   }
@@ -203,8 +207,9 @@
       var n = s.notes[i];
       if (n.state === 'wait' && n.lane === s.lane && grade(t - n.t) && (!best || Math.abs(t - n.t) < Math.abs(t - best.t))) best = n;
     }
-    // Freestyle: ไม่มีโน้ต ไม่นับเปิดเปล่า · หาโน้ตก่อน เพราะโน้ตคร่อมขอบ Fever ยังต้องตัดสินปกติ (ผู้ตรวจ 14 พ.ย.)
-    if (!best && s.fever) { feverClick(s, s.fever, t); return; }
+    // Fever: ไม่มีโน้ต = ไม่นับเปิดเปล่า (โบนัสถ้าอยู่ในท่อที่โดนหัวแล้ว) · หาโน้ตก่อน โน้ตใน Fever ยังต้องตัดสินปกติ
+    var fv = best ? null : feverOf(s, t);
+    if (fv) { feverClick(s, fv, t); return; }
     if (!best) { s.ghosts++; s.ghostAt.push(t); s.combo = 0; return; }   // เปิดมั่ว ไม่มีโน้ต = คอมโบขาด กันเปิดรัว
     best.res = grade(t - best.t); best.dt = t - best.t;
     best.state = best.len ? 'hold' : 'click';
@@ -226,15 +231,13 @@
   function summary(s) {
     var out = { perfect: 0, great: 0, ok: 0, miss: 0, ghosts: s.ghosts, maxCombo: s.maxCombo, score: s.score, fx: s.fxScore, fever: s.feverScore, fevers: s.fevers.length }, got = 0, max = 0;
     s.notes.forEach(function (n) {
-      if (n.state === 'skip') return;   // โน้ตที่ Fever พักไว้ ไม่นับในความแม่น
       max += PTS.perfect + (n.len ? HOLD_PTS : 0);
       if (n.state !== 'done') return;
       out[n.res]++;
       if (n.res !== 'miss') got += PTS[n.res] + (n.len ? HOLD_PTS * n.frac : 0);
     });
-    s.zones.forEach(function (z) {   // โซน = เปิด + ปิด (นับรวมในระดับผลเหมือนโน้ต) + โบนัสหมุน
-      max += 2 * PTS.perfect + SPIN_PTS;
-      [z.on, z.off].forEach(function (r) { if (r) { out[r]++; if (r !== 'miss') got += PTS[r]; } });
+    s.zones.forEach(function (z) {   // โซน = โบนัสหมุน dry/wet (เปิด/ปิด FX ไม่ตัดสินเป็นระดับแล้ว · ไม่ค้าง = คอมโบขาด)
+      max += SPIN_PTS;
       got += SPIN_PTS * (z.frac || 0);
     });
     out.acc = max ? got / max : 0;
@@ -360,7 +363,7 @@
 
   function faderMm(cal, v, travel) { return (v - cal.closed) / (cal.open - cal.closed) * travel; }   // ระยะจากฝั่งปิด (mm)
 
-  return { LANES: LANES, CENTER: CENTER, WIN: WIN, PTS: PTS, HOLD_PTS: HOLD_PTS, SPIN_PTS: SPIN_PTS, FEVER: FEVER, CLICK_MAX: CLICK_MAX, BOUNCE: BOUNCE, SLIDE_GRACE: SLIDE_GRACE, SPIN_HOLD: SPIN_HOLD, grade: grade, create: create, tick: tick, move: move, open: open, close: close, summary: summary,
+  return { LANES: LANES, CENTER: CENTER, WIN: WIN, PTS: PTS, HOLD_PTS: HOLD_PTS, SPIN_PTS: SPIN_PTS, FX_X: FX_X, FEVER: FEVER, CLICK_MAX: CLICK_MAX, BOUNCE: BOUNCE, SLIDE_GRACE: SLIDE_GRACE, SPIN_HOLD: SPIN_HOLD, grade: grade, create: create, tick: tick, move: move, open: open, close: close, summary: summary,
     fxOn: fxOn, fxOff: fxOff, knob: knob, learnFx: learnFx, fxMsg: fxMsg, learnKnob: learnKnob, learnButton: learnButton, pressed: pressed,
     slide: slide, laneOf: laneOf, jogDelta: jogDelta, learnJog: learnJog, jogDir: jogDir, jogTicks: jogTicks, learnFader: learnFader, faderCal: faderCal, faderOpen: faderOpen, faderMm: faderMm };
 });

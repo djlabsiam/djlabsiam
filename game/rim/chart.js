@@ -298,7 +298,7 @@
     var beatLen = 2 * step, beat0 = first + beatSide * step;
 
     // FX Zone = ช่วงพัก (break): ห้อง (4 จังหวะ) ที่เสียงเข้าเฉลี่ยเหลือ < QUIET_BAR ของค่ากลางทั้งเพลง ติดกัน ≥ 2 ห้อง
-    // ไม่เริ่มใน 2 ห้องแรก (อินโทร) · ยาวสุด ZONE_MAX ห้อง · ทุกระดับไม่มีโน้ตเฟดเดอร์ในโซน + เว้น 1 จังหวะหน้า-หลัง (มือย้ายไปที่ FX · เจ้าของตัดสิน)
+    // ไม่เริ่มใน 2 ห้องแรก (อินโทร) · ยาวสุด ZONE_MAX ห้อง · โน้ตในโซนยังอยู่ทุกระดับ (เจ้าของ 19 พ.ย.: ในโซนยังต้อง Hit note · เดิมตัดโน้ตในโซน + เว้น 1 จังหวะหน้า-หลัง)
     var act = [], zones = [], run = 0, outro = null;   // outro = ช่วงพักที่เงียบยาวจนจบเพลง (กลองหายท้ายเพลง)
     for (var k0 = beatSide; k0 + 8 <= slots.length; k0 += 8) {
       var sum = 0;
@@ -326,11 +326,6 @@
       }
     }
     zones.sort(function (a, b) { return a.t - b.t; });
-    function clear(notes) {
-      return notes.filter(function (n) {
-        return zones.every(function (z) { return n.t + n.len <= z.t - beatLen + 1e-6 || n.t >= z.t + z.len + beatLen - 1e-6; });
-      });
-    }
 
     // โน้ตชิ้นย้ายไปตรงเสียงจริงในหน้าต่างช่องของมัน (กลองสวิง / ตารางเลื่อน) · ท่อ ท่อลาก โซน ยังอยู่บนตาราง (ไม่ต้องตรงเป๊ะ · คงขั้นต่ำครึ่งจังหวะ)
     // ทำก่อน reachable ระยะข้ามเลนจึงคิดจากเวลาจริง · หน้าต่างของแต่ละช่องไม่ทับกัน ลำดับโน้ตจึงไม่สลับ
@@ -344,7 +339,7 @@
       var L = LEVELS[name], notes = cands.filter(function (c) { return c.pow >= (c.beat ? L.beat : L.off) * 0.999; })
         .map(function (c) { return { t: c.t, lane: c.lane, len: 0, k: c.k }; });
       notes = stemHolds(notes, L);
-      levels[name] = reachable(clear(snap(L.slide ? babyClick(notes) : notes)), L.move, L.slide && slidePath);
+      levels[name] = reachable(snap(L.slide ? babyClick(notes) : notes), L.move, L.slide && slidePath);
     });
     // ความยากของเพลง (rank D–S · เจ้าของ 14 พ.ย.): จากโน้ตระดับยากในช่วงย่อเสมอ ไม่ขึ้นกับระดับที่เลือกหรือเล่นเต็มเพลง
     var span = range ? range[1] : x.length / sr;
