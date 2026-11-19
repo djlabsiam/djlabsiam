@@ -52,6 +52,19 @@ body.playing #menu { display: none; }
 #menu:not([data-ready]) .mMain { font-size: 20px; padding: 16px; background: var(--red); border-color: #ff2b3c; box-shadow: 0 0 34px rgba(189,32,38,.65); }
 .mRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .mBtns :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.mBtns .mNew::after { content: 'แนะนำครั้งแรก'; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 11px; background: var(--red); vertical-align: 2px; }
+/* ── Tutorial: กล่องคำอธิบายตอนหยุดภาพ (ไม่ใช่ dialog — Enter / PLAY / จาน ยังใช้ได้) ── */
+#tut { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 4; width: min(420px, calc(100vw - 32px)); padding: 18px 20px; text-align: center; color: #fff;
+  background: rgba(1,1,1,.84); border: 1px solid rgba(255,43,60,.6); border-radius: 16px; box-shadow: 0 0 40px rgba(189,32,38,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+#tut[hidden], #tut [hidden] { display: none; }
+.tStep { margin: 0; font: 700 12px "Chakra Petch", var(--font); letter-spacing: .3em; color: #ff2b3c; }
+#tutTitle { margin: 4px 0 6px; font: 700 22px var(--font); }
+#tutText { margin: 0 0 14px; font-size: 15px; color: rgba(255,255,255,.88); }
+.tCount { margin: 0; font: italic 800 72px/1 "Chakra Petch", var(--font); text-shadow: 0 0 24px rgba(255,43,60,.8); }
+.tBtns { display: flex; gap: 10px; justify-content: center; }
+.tBtns button { font: 700 15px "Chakra Petch", var(--font); padding: 10px 16px; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; cursor: pointer; }
+.tBtns .tGo { background: var(--red); border-color: #ff2b3c; }
+.tBtns small { font-size: 11px; opacity: .75; margin-left: 4px; }
 #howBox h3 { margin: 12px 0 4px; font-size: 15px; } #howBox ul { margin: 0; padding-left: 20px; } #howBox li { margin: 2px 0; }
 button:focus-visible, select:focus-visible, .file:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
 dialog button, dialog select { font: 500 14px var(--font); padding: 6px 12px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
@@ -150,6 +163,13 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   <button id="stopBtn" type="button">หยุด</button>
 </header>
 <canvas id="cv" role="img" aria-label="สนามเกม"></canvas>
+<div id="tut" hidden aria-live="polite">
+  <p class="tStep" id="tutStep"></p>
+  <h2 id="tutTitle"></h2>
+  <p id="tutText"></p>
+  <p class="tCount" id="tutCount" hidden></p>
+  <div class="tBtns" id="tutBtns"><button id="tutGo" type="button" class="tGo"></button><button id="tutQuit" type="button"></button></div>
+</div>
 
 <!-- Main menu (เจ้าของสั่ง 14 พ.ย.): ยังไม่มีเพลง = หน้าแรก · มีเพลงแล้ว (data-ready) = ขึ้นข้อมูลเพลง + ระดับ + ความยาว + ปุ่มเริ่ม · ระหว่างเล่นซ่อน -->
 <div id="menu">
@@ -167,6 +187,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     <div class="mBtns">
       <button id="play" type="button" class="mGo" disabled>เริ่ม <small>Enter</small></button>
       <label class="file mMain"><span class="mHome">เลือกเพลง</span><span class="mReady">เปลี่ยนเพลง</span><input id="file" type="file" accept="audio/*" multiple hidden></label>
+      <button id="tutOpen" type="button">สอนเล่น (Tutorial)</button>
       <div class="mRow">
         <button id="boardOpen" type="button">อันดับ</button>
         <button id="howOpen" type="button">วิธีเล่น</button>
@@ -271,6 +292,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
 <script>window.RIM_WEB={"fn":"https://vvtefgjseihadsmvuntd.supabase.co/functions/v1/rim-scores","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dGVmZ2pzZWloYWRzbXZ1bnRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM5ODUsImV4cCI6MjEwMTI2OTk4NX0.tgRD7_5hZuUG4zvajnIbe-tuNPNqELURSHIYtnh-MyM","account":"/account/","login":"/member/"};</script>
 <script src="board.js"></script>
 <script src="timecode.js"></script>
+<script src="tutorial.js"></script>
 <script>
 (function () {
   var R = RimRules, C = RimChart, $ = function (id) { return document.getElementById(id); };
@@ -327,10 +349,10 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function at(ms) { var t = Math.max(songAt(ms), lastT); lastT = t; return t; }
   function setLane(lane, ms) {
     if (!run) { idleLane = lane; return; }   // ยังไม่เริ่ม: แค่ขยับตัวรับให้เห็น
-    if (lane !== run.lane) R.move(run, at(ms), lane);
+    if (lane !== run.lane) R.move(run, paused() ? lastT : at(ms), lane);   // Tutorial หยุดภาพอยู่: ตัวรับขยับตามจาน ณ เวลาที่หยุด
   }
   function fader(open, ms) {   // ส่งทุกครั้ง: กติกากันซ้ำเอง และต้องเห็นการเปิดกลับระหว่างรอปิด (กันสั่น)
-    if (!run) { if (open) sfx('hit'); return; }   // ยังไม่เริ่ม: ลองฟังเสียง/ความหน่วงได้
+    if (!run || paused()) { if (open) sfx('hit'); return; }   // ยังไม่เริ่ม / Tutorial หยุดภาพ: ลองฟังเสียง/ความหน่วงได้ ไม่ตัดสิน
     var t = at(ms);
     if (!open) { R.close(run, t); return; }
     var before = run.active, fc = run.fever ? run.fever.clicks : -1;
@@ -338,13 +360,73 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if ((run.active && run.active !== before) || (run.fever && run.fever.clicks !== fc)) sfx('hit');   // โดนโน้ตใหม่ / คลิกใน Fever (เปิดกลับในช่วงกันสั่น / เปิดเปล่า = เงียบ)
   }
   function fx(on, ms) {   // ยังไม่เริ่ม: แค่โชว์สถานะ
-    fxUp = on; if (!run) return;
+    fxUp = on; if (!run || paused()) return;
     fxRaw.push([Math.round(songAt(ms) * 1000), on ? 1 : 0]);
     var good = function () { return run.zones.filter(function (z) { return (on ? z.on : z.off) && (on ? z.on : z.off) !== 'miss'; }).length; }, n0 = good();
     (on ? R.fxOn : R.fxOff)(run, at(ms));
     if (good() > n0) sfx(on ? 'fxon' : 'fxoff');
   }
-  function spin(ms) { spinAt = ms; if (run) R.knob(run, at(ms)); }
+  function spin(ms) { spinAt = ms; if (run && !paused()) R.knob(run, at(ms)); }
+
+  // ── Tutorial (tutorial.js · เจ้าของสั่ง 19 พ.ย.): เพลงสังเคราะห์ + โน้ตที่วางเอง · ถึงจุดหยุด = หยุดเพลง/ภาพ ขึ้นคำอธิบาย → พร้อม → นับถอยหลัง 3 จังหวะ → เล่นต่อจากเวลาเดิม
+  //   ไม่ส่งผลขึ้น Leader Board · ไม่ใช้เพลงที่ผู้เล่นเลือก
+  var tut = null;   // { d: บทเรียน, i: จุดหยุดถัดไป, hold: เวลาเพลงที่หยุดอยู่ (null = กำลังเล่น), go: เวลานาฬิกาเสียงที่นับถอยหลังจบ }
+  function paused() { return !!(tut && tut.hold !== null); }
+  function tutStart() {
+    audio(); stop();
+    var d = RimTutorial.make(ctx);
+    run = R.create(d.notes, null, [], null); lastT = -1e9; ended = {}; look.reset(); input = 'key'; faderRaw = []; fxRaw = [];
+    pos = R.CENTER; faderUp = false; fxUp = false;
+    playLen = d.len; count = { beat0: 0, len: d.beatLen, n: 0 };   // n 0 = ไม่มีนับเข้าของเกม (นับถอยหลังของ Tutorial แทน)
+    tut = { d: d, i: 0, hold: null, go: null };
+    document.body.classList.add('playing');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    tutPause(0);
+  }
+  function tutBox(step, title, text, go, quit) {
+    $('tutStep').textContent = step; $('tutTitle').textContent = title; $('tutText').textContent = text;
+    $('tutGo').innerHTML = go; $('tutQuit').innerHTML = quit;
+    $('tutCount').hidden = true; $('tutBtns').hidden = false; $('tut').hidden = false;
+  }
+  function tutPause(t) {
+    if (src) { try { src.stop(); } catch (e) { /* ยังไม่เริ่มเล่น */ } src = null; }
+    var s = tut.d.stops[tut.i++];
+    tut.hold = t; tut.go = null;
+    if (document.pointerLockElement) document.exitPointerLock();   // ปล่อยเมาส์ให้กดปุ่มในกล่องได้ (กด "พร้อม" / Enter แล้วล็อกใหม่)
+    tutBox('TUTORIAL ' + tut.i + '/' + tut.d.stops.length, s.title, s.text, 'พร้อม <small>Enter / PLAY</small>', 'ออก');
+  }
+  function tutGo() {
+    if (!paused() || tut.go !== null) return;
+    var L = tut.d.beatLen, t0 = audio().currentTime + 0.05;
+    tut.go = t0 + 3 * L;
+    for (var k = 0; k < 3; k++) {
+      var o = ctx.createOscillator(), cg = ctx.createGain(), when = t0 + k * L;
+      o.frequency.value = k ? 1000 : 1600; cg.gain.setValueAtTime(0.25, when); cg.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
+      o.connect(cg); cg.connect(ctx.destination); o.start(when); o.stop(when + 0.06); clicks.push(o);
+    }
+    startAt = tut.go - tut.hold;   // เวลาเพลงต่อจากที่หยุด ตอนนับถอยหลังจบ
+    src = ctx.createBufferSource(); src.buffer = tut.d.buf; src.connect(ctx.destination); src.start(tut.go, tut.hold);
+    $('tutBtns').hidden = true; $('tutCount').hidden = false; $('tutCount').textContent = '3';
+  }
+  function tutTick() {   // ทุกเฟรมระหว่างหยุด: นับถอยหลังจบ = เล่นต่อ
+    if (tut.go === null) return;
+    var left = tut.go - ctx.currentTime;
+    if (left > 0) { $('tutCount').textContent = Math.ceil(left / tut.d.beatLen - 1e-6); return; }
+    tut.hold = null; tut.go = null; $('tut').hidden = true;
+  }
+  function tutEnd() {
+    R.tick(run, 1e9);
+    var s = R.summary(run);
+    stop();
+    try { localStorage.setItem('rim-tut', '1'); } catch (e) { /* ครั้งหน้ายังขึ้นป้ายแนะนำ */ }
+    $('tutOpen').classList.remove('mNew');
+    tutBox('TUTORIAL จบแล้ว', 'พร้อมเล่นเพลงของคุณ', LABEL.perfect + ' ' + s.perfect + ' · ' + LABEL.great + ' ' + s.great + ' · ' + LABEL.ok + ' ' + s.ok + ' · ' + LABEL.miss + ' ' + s.miss +
+      ' · เลือกเพลงแล้วกดเริ่มได้เลย', 'เล่นบทเรียนอีกครั้ง', 'กลับเมนู <small>Enter</small>');
+  }
+  $('tutOpen').onclick = function () { this.blur(); tutStart(); lockMouse(); };
+  $('tutGo').onclick = function () { this.blur(); if (tut) { tutGo(); lockMouse(); } else { $('tut').hidden = true; tutStart(); lockMouse(); } };
+  $('tutQuit').onclick = function () { this.blur(); if (tut) stop(); else $('tut').hidden = true; };
+  try { if (!localStorage.getItem('rim-tut')) $('tutOpen').classList.add('mNew'); } catch (e) { /* ไม่มีที่เก็บ = ไม่ขึ้นป้าย */ }
 
   // เลือก 1 ไฟล์ = เพลงเต็ม · เลือกหลายไฟล์ = STEM จาก StemSep ("<เพลง> - drums.wav" ฯลฯ ครบ 4 ไฟล์)
   // STEM: เล่นเสียงรวมของ 4 ไฟล์ (ไม่ใช่ไฟล์ต้นฉบับ) เสียงที่ได้ยินกับแผนที่โน้ตจึงตรงกันพอดี
@@ -429,6 +511,7 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     if (src) { try { src.stop(); } catch (e) { /* ยังไม่เริ่มเล่น */ } src = null; }
     clicks.forEach(function (o) { try { o.stop(); } catch (e) { /* เล่นจบไปแล้ว */ } }); clicks = [];
     run = null; count = null; idleLane = null; pos = R.CENTER;
+    if (tut) { tut = null; $('tut').hidden = true; }
     document.body.classList.remove('playing');   // กลับเมนู
     if (document.pointerLockElement) document.exitPointerLock();   // จบ/หยุด: คืนลูกศรเมาส์ให้กดหน้าจบเพลง
   }
@@ -561,7 +644,9 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function lockMouse() { var p = $('cv').requestPointerLock && $('cv').requestPointerLock(); if (p && p.catch) p.catch(function () { /* เบราว์เซอร์ไม่ให้ล็อก: ส่ายได้จนสุดขอบจอ */ }); }
   // ปุ่ม PLAY / Enter / ปุ่มเริ่มบนจอ: เริ่ม · กดซ้ำระหว่างเล่น = หยุด · lock = ล็อกเมาส์ (เฉพาะที่ผู้เล่นกดเอง เบราว์เซอร์ไม่ให้ล็อกจาก MIDI)
   function playKey(lock) {
+    if (paused()) { tutGo(); if (lock) lockMouse(); return; }   // Tutorial หยุดภาพ: Enter / PLAY = พร้อม
     if (run) { stop(); return; }
+    if (!$('tut').hidden) { $('tut').hidden = true; return; }   // หน้าจบ Tutorial: Enter = กลับเมนู
     if ($('play').disabled) return;
     start(); if (lock) lockMouse();
   }
@@ -779,7 +864,9 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
     // เล่นจริง
     if (!gear.jog || name !== gear.jog.name) return;
     if (gear.play && R.pressed(gear.play, m)) {   // PLAY = เริ่ม / กดซ้ำระหว่างเล่น = หยุด (เหมือนปุ่มเริ่มบนจอ) · หน้าจบเพลง = เล่นอีก
-      if (run) stop();
+      if (paused()) tutGo();
+      else if (run) stop();
+      else if (!$('tut').hidden) $('tut').hidden = true;
       else if (!$('play').disabled) { ['endBox', 'setBox', 'midiBox', 'howBox', 'boardBox'].forEach(function (d) { if ($(d).open) $(d).close(); }); start(); }
       return;
     }
@@ -856,14 +943,16 @@ dialog input[type=text] { flex: 1; font: inherit; padding: 4px 8px; min-width: 0
   function frame() {
     requestAnimationFrame(frame);
     var t = 0;
-    if (run) {
+    if (run && paused()) { t = tut.hold; tutTick(); }   // Tutorial หยุดภาพ: ไม่เดินกติกา
+    else if (run) {
       t = songAt(performance.now());
       // เดินกติกาตามหลัง 30 ms เผื่อข้อความ MIDI/ปุ่มที่มาถึงช้ากว่าเวลาจริงของมัน
       if (t - 0.03 > lastT) { lastT = t - 0.03; R.tick(run, lastT); }
       run.notes.forEach(function (n) {   // จบท่อครบ = เสียงใสเบา (ตอนที่กติกาตัดสินว่าจบ)
         if (n.len && n.state === 'done' && !ended[n.i]) { ended[n.i] = 1; if (n.res !== 'miss' && n.frac >= 0.9) sfx('hold'); }
       });
-      if (t > playLen + 1) { finish(); t = 0; }
+      if (tut && tut.i < tut.d.stops.length && t >= tut.d.stops[tut.i].t) tutPause(t);
+      else if (t > playLen + 1) { if (tut) tutEnd(); else finish(); t = 0; }
     }
     draw(t);
   }
