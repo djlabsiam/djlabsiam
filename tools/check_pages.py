@@ -478,7 +478,7 @@ for k, s in SRC.items():
         continue
     ok(s.count('<script src="/assets/js/popup.js?v=' + pv + '" defer></script>') == 1, f"{k}: popup script must be on the page exactly once with the current version {pv}")
 pop = json.loads(read(os.path.join(SITE, "data", "popup.json")))
-ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 4 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
+ok(isinstance(pop.get("items"), list) and len(pop["items"]) <= 6 and isinstance(pop.get("enabled"), bool) and isinstance(pop.get("autoPromotions"), bool), "data/popup.json: need enabled/autoPromotions booleans and items[] with at most 4 entries")
 POP_HOSTS = {"facebook.com", "www.facebook.com", "fb.watch", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "youtu.be", "tiktok.com", "www.tiktok.com", "line.me", "lin.ee", "djlabsiam.com", "www.djlabsiam.com", "console.djlabsiam.com"}
 ok("slice(0, 3)).slice(0, 4)" in pj, "popup.js: the pop-up must show at most 4 slides (promotions first, then up to three news/event items from the file)")
 ok(all(i.get("type") != "facebook" for i in pop["items"]), "data/popup.json: facebook items belong to the home page sections, not the pop-up (a podcast slide is allowed only as an image-only slide linking out, owner 2026-11-03)")
@@ -489,6 +489,8 @@ ok(len(_sync) == 1 and _sync[0].get("img") == "event-sync-nov.webp" and _sync[0]
 _sf = [i for i in pop["items"] if i.get("link") == "/game/"]
 ok(len(_sf) == 1 and _sf[0].get("type") == "update" and not _sf[0].get("bare") and not _sf[0].get("embed") and not _sf[0].get("autoplay") and all(os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(_sf[0].get(k, "")))) for k in ("img", "imgM")) and bool(str(_sf[0].get("alt", "")).strip()) and "until" not in _sf[0], "data/popup.json: the Signal Flow slide (link /game/) must be one plain update slide with both pictures, alt text, no embed/autoplay and no end date")
 ok(pop["items"].index(_sf[0]) > pop["items"].index(_sync[0]) if _sf and _sync else False, "data/popup.json: Signal Flow slide must come after the SYNC! slide")
+_gm = {i.get("link"): i for i in pop["items"] if i.get("link") in ("/game/rim/", "/game/resonance/")}
+ok(set(_gm) == {"/game/rim/", "/game/resonance/"} and all(i.get("type") == "update" and not i.get("bare") and not i.get("embed") and not i.get("autoplay") and not i.get("until") and str(i.get("alt", "")).strip() and all(os.path.exists(os.path.join(SITE, "assets", "img", "popup", str(i.get(k, "")))) for k in ("img", "imgM")) for i in _gm.values()), "data/popup.json: RIM and Resonance game slides (type update, own picture in both sizes with alt, link to the game page, no embed/autoplay/until) must stay")
 pim = pop.get("promoImages", {})
 ok(isinstance(pim, dict) and "default" in pim, "data/popup.json: promoImages must exist and have a \"default\" picture (every promotion needs one)")
 for pk, pv in (pim.items() if isinstance(pim, dict) else []):
