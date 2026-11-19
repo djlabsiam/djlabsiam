@@ -47,16 +47,15 @@
   },
   "items": [
     {
-      "type": "news",
-      "title": "เปิด SYNC! first mix with DJ LAB SIAM · 7–8 พ.ย. 2569",
-      "text": "กิจกรรมฟรี ลองมิกซ์เพลงครั้งแรกกับ DJ LAB SIAM เล่นได้ใน 10 นาที · 7–8 พ.ย. 2569 เวลา 15:00–19:00 น. ที่ Siam Square One ทางลาดหน้า Shop FILA",
-      "img": "event-sync-nov.webp",
-      "imgM": "event-sync-nov-m.webp",
-      "alt": "โปสเตอร์กิจกรรมเปิด SYNC! 7–8 พ.ย. 2569 เวลา 15:00–19:00 น. Siam Square One ทางลาดหน้า Shop FILA เข้าร่วมฟรี",
+      "type": "podcast",
+      "title": "Podcast EP.7 — สิ่งที่อาชีพ DJ ไม่เคยบอก",
+      "img": "podcast-ep7.webp",
+      "imgM": "podcast-ep7-m.webp",
+      "alt": "ปก Podcast EP.7 สิ่งที่อาชีพ DJ ไม่เคยบอก พิธีกรและแขกรับเชิญนั่งคุยกันหน้าม่านดำ มีป้าย EP.7 ออนไลน์แล้ว",
       "bare": true,
-      "link": "https://www.facebook.com/photo/?fbid=1490803169589205&set=a.569845068351691",
-      "cta": "ดูรายละเอียดบน Facebook",
-      "until": "2026-11-08"
+      "link": "https://youtu.be/qYMtCtlvFc4",
+      "cta": "ดูบน YouTube",
+      "until": "2026-11-26"
     },
     {
       "type": "update",
@@ -77,28 +76,6 @@
       "alt": "ภาพวาดแก้วไวน์ที่มีรอยร้าว บนพื้นหลังสีแดงลายจุด",
       "link": "/game/resonance/",
       "cta": "เล่น Resonance"
-    },
-    {
-      "type": "news",
-      "title": "เปิด SYNC! — ดูคลิปและภาพจากงาน",
-      "text": "กิจกรรมลองมิกซ์เพลงครั้งแรกด้วย DJ Controller เมื่อ 7–8 พ.ย. 2569 ที่ Siam Square One ดูคลิปและภาพบรรยากาศจากงานได้ที่หน้าข่าว",
-      "img": "event-sync-clip.webp",
-      "imgM": "event-sync-clip-m.webp",
-      "alt": "โต๊ะ AlphaTheta ในงานเปิด SYNC! มี DJ Controller แท็บเล็ต ลำโพง และหูฟังวางบนโต๊ะ",
-      "link": "/news/sync-2026/",
-      "cta": "ดูคลิปจากงาน",
-      "until": "2026-11-30"
-    },
-    {
-      "type": "podcast",
-      "title": "Podcast EP.6 — DJ BALLISTICONE ตามหาความหมายที่ซ่อนอยู่ในเพลง",
-      "img": "podcast-ep6.webp",
-      "imgM": "podcast-ep6-m.webp",
-      "alt": "ปก Podcast EP.6 DJ BALLISTICONE ตามหาความหมายที่ซ่อนอยู่ในเพลง ฉาย 12 พ.ย. 2569 เวลา 19:00 น.",
-      "bare": true,
-      "link": "https://youtu.be/J-uHcYXEe_U",
-      "cta": "ดูบน YouTube",
-      "until": "2026-11-19"
     },
     {
       "type": "update",
