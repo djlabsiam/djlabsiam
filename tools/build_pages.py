@@ -1655,7 +1655,7 @@ def shop_page():
             f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
             f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
             f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
-    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: {"f": v["file"], "o": bool(v.get("override"))} for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@PAGES@@", json.dumps(PRODUCT_PATH)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
+    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: {"f": v["file"], "o": bool(v.get("override"))} for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@PAGES@@", json.dumps(PRODUCT_PATH if SHOP_CARD_LINKS else {})).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
     desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
     return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
                  active="shop", script=js, css_extra=SHOP_CSS)
@@ -1668,6 +1668,7 @@ OFFERS_IN_SCHEMA = False   # the one switch: True = the page script adds Product
 SHOP_PRODUCTS = load(A.shop_products)["products"]
 SHOP_VIDEOS = load(A.shop_videos).get("videos", {})
 GROUP_LABEL = {"player": "CDJ / Player", "mixer": "Mixer", "all-in-one": "All-in-one", "controller": "Controller", "turntable": "Turntable", "headphones": "หูฟัง", "speaker": "ลำโพง", "cable": "สาย", "accessory": "อุปกรณ์เสริม"}
+SHOP_CARD_LINKS = False   # False = the /shop/ cards do NOT link to the product pages yet (pilot pages are noindex, reachable only by direct link). Turn on together with removing noindex + adding the pages to sitemap.xml, after the owner approves the design.
 PRODUCT_PATH = {v["id"]: f"{A.shop}{s}/" for s, p in SHOP_PRODUCTS.items() for v in p["variants"]}   # product id -> its page (the /shop/ cards link here)
 
 PROD_CSS = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3", ".schip", ".serr", ".stk"))) + r"""

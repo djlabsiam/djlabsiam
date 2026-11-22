@@ -808,7 +808,16 @@ ok(not [f for f in glob.glob(os.path.join(SITE, "shop", "**", "*.*"), recursive=
 ok(all(k in _spd["products"] for k in _svd.get("videos", {})), "data/shop-videos.json: every key must be a slug in data/shop-products.json")
 _sid = {v["id"] for _p in _spd["products"].values() for v in _p["variants"]}
 ok(len(_sid) == sum(len(_p["variants"]) for _p in _spd["products"].values()), "data/shop-products.json: a product id appears on two pages")
-ok(all(('"' + i + '": "/shop/' + sl + '/"') in SRC.get("shop", "") for sl, _p in _spd["products"].items() for i in (v["id"] for v in _p["variants"])), "shop: the product cards must link to every product page (PAGES map)")
+SHOP_CARD_LINKS_EXPECTED = False   # keep in step with SHOP_CARD_LINKS in build_pages.py: False while the pilot pages are noindex and unapproved
+_shs = SRC.get("shop", "")
+if SHOP_CARD_LINKS_EXPECTED:
+    ok(all(('"' + i + '": "/shop/' + sl + '/"') in _shs for sl, _p in _spd["products"].items() for i in (v["id"] for v in _p["variants"])), "shop: the product cards must link to every product page (PAGES map)")
+else:
+    ok("PAGES={}" in _shs and not any(f"/shop/{sl}/" in _shs for sl in _spd["products"]), "shop: card links to the pilot product pages must stay OFF (SHOP_CARD_LINKS) until the owner approves the design")
+for _sl, _p in _spd["products"].items():
+    if _p.get("specs") and "prod:" + _sl in SRC:
+        _t = SRC["prod:" + _sl]
+        ok(bool(_p.get("sources")) and bool(_p.get("checked")) and "ข้อมูลจากหน้าทางการของผู้ผลิต ตรวจเมื่อ " + _p["checked"] in text_of(_t) and all(f'href="{u}"' in _t for u in _p["sources"]), f"prod:{_sl}: a page with specs must show its source (official page links + check date)")
 
 for f in fails:
     print("  FAIL", f)
