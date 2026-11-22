@@ -8,10 +8,12 @@ track on the pages matches that file, the visible FAQ equals the JSON-LD FAQ, no
 placeholders, every image has width/height/alt, the privacy policy covers YouTube if any page can load a video, and the sitemap lists exactly the
 indexable pages.  Standard library only.
 """
-import argparse, glob, hashlib, html, io, json, os, re, sys, urllib.parse
+import argparse, datetime, glob, hashlib, html, io, json, os, re, sys, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+import shop_snapshot as SS
 ap = argparse.ArgumentParser()
 ap.add_argument("--courses", default=os.path.join(os.path.dirname(SITE), "bots", "bot", "shared", "courses.json"))
 A = ap.parse_args()
@@ -772,21 +774,22 @@ for _sl, _p in _spd["products"].items():
     _ldt = {d.get("@type") for d in _lds}
     ok(("Product" in _ldt or "ProductGroup" in _ldt) and "BreadcrumbList" in _ldt, f"{_k}: JSON-LD must have Product (or ProductGroup) and BreadcrumbList")
     _ldraw = json.dumps(_lds)
-    ok(not re.search(r'"(offers|price|priceCurrency|availability|aggregateRating|review)"', _ldraw), f"{_k}: JSON-LD must not carry offers/price/availability/ratings (owner has not approved) ")
     for _d in _lds:
         if _d.get("@type") in ("Product", "ProductGroup"):
             ok(bool(_d.get("name")) and _d.get("brand", {}).get("name") == _p["brand"] and bool(_d.get("image")) and bool(_d.get("description")), f"{_k}: Product JSON-LD needs name, brand, image, description")
             _skus = [_d.get("sku")] if _d["@type"] == "Product" else [v.get("sku") for v in _d.get("hasVariant", [])]
             ok(_skus == [v["sku"] for v in _p["variants"]] and all(_skus), f"{_k}: Product JSON-LD sku must be the SKU of each variant")
     _body = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", _s, flags=re.S)   # markup + visible text only (CSS has rgba(255,255,..))
+    for _m in SS.check_page(_s, _sl, _p, SS.today()):
+        ok(False, f"{_k}: {_m}")
+    ok(True, f"{_k}: price snapshot (HTML = JSON-LD Offer, InStock/OutOfStock, priceValidUntil ahead)")
+    ok("sc.type='application/ld+json'" not in "\n".join(re.findall(r"<script>(.*?)</script>", _s, re.S)) and _s.count('<!--snap:start-->') == 1 and _s.count('<!--snap:end-->') == 1, f"{_k}: the page script must correct the existing JSON-LD (no second block) and the snapshot markers must be there")
     ok(not any(x in _vis for x in _HOLD.get(_sl, ())), f"{_k}: a value on the hold list (unconfirmed / contradicting on the Official page) is on the page")
-    ok(not re.search(r"฿|บาท|\d{1,3},\d{3}", _body), f"{_k}: a price is written into the HTML (price must be read live)")
     ok(all(f'data-vid="{v["id"]}"' in _s for v in _p["variants"]) and _body.count('data-vid="') == len(_p["variants"]), f"{_k}: one live price row per variant id")
     _scr = "\n".join(re.findall(r"<script>(.*?)</script>", _s, re.S))
     ok("/rest/v1/web_products" in _scr and "bot_products" not in _s and "service_role" not in _s, f"{_k}: must read web_products only")
     ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function", _scr), f"{_k}: the page script must never turn database text into HTML")
     ok(bool(_bkey) and f'"key": "{_bkey.group(1)}"' in _scr, f"{_k}: the anon key must be the one /book/ uses")
-    ok("&&seen&&false)" in _scr, f"{_k}: offers in schema must stay switched off (OFFERS_IN_SCHEMA)")
     ok("ราคาปกติรวม VAT 7% แล้ว ไม่รวมโปรโมชัน" in _vis and "สอบถามโปรโมชัน" in _vis and "Lido Connect" in _vis, f"{_k}: VAT / promotion note / shop address missing")
     ok(not re.search(r'<script[^>]+src="https?://', _s) and "<model-viewer" not in _s, f"{_k}: no third-party script / inline 3D viewer")
     ok('href="https://line.me/R/oaMessage/%40djlabsiam/?' in _s and urllib.parse.quote("สนใจ " + _p["name"], safe="") in _s, f"{_k}: LINE button must carry the model name")

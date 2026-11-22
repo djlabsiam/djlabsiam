@@ -1,0 +1,43 @@
+# อัปเดตราคา/สต็อกในหน้ารุ่นสินค้า (/shop/<slug>/) ทุกวันเวลา 02:00 น. ไทย (= 19:00 UTC)
+# แตะเฉพาะ shop/ — อ่านราคาจากฐานร้าน (anon key สาธารณะที่อยู่ในโค้ดเว็บอยู่แล้ว ไม่ใช้ secret) · ถ้าอ่านฐานไม่ได้/ราคาผิด build ล้ม ไม่ commit อะไร
+name: shop-daily
+
+on:
+  schedule:
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+# ค่าเริ่มต้นของ repo คืออ่านอย่างเดียว จึงต้องขอสิทธิ์เขียนไว้ตรงนี้
+permissions:
+  contents: write
+
+concurrency:
+  group: shop-daily
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Refresh price snapshot (shop only)
+        run: python tools/build_pages.py --only-shop --shop /shop/ --home /
+      - name: Check product pages
+        run: python tools/check_shop.py --shop /shop/
+      - name: Commit and push if shop/ changed
+        run: |
+          if git diff --quiet -- shop/; then
+            echo "no change in shop/ — nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shop/
+          git commit -m "SHOP: อัปเดตราคา/สต็อกอัตโนมัติ (รายวัน)"
+          git push origin HEAD:main

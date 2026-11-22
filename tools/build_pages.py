@@ -12,6 +12,7 @@ Standard library only.  Usage (from anywhere):  python tools/build_pages.py [--c
 import argparse, datetime, hashlib, html, io, json, os, re, sys, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cdj_demo, siam_skyline
+import shop_snapshot as SS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -37,7 +38,13 @@ ap.add_argument("--home-faq", default=os.path.join(SITE, "data", "faq-home.json"
 ap.add_argument("--shop-products", default=os.path.join(SITE, "data", "shop-products.json"), help="content of the /shop/<slug>/ product pages")
 ap.add_argument("--shop-videos", default=os.path.join(SITE, "data", "shop-videos.json"))
 ap.add_argument("--shop", default="/next/shop/", help="where the shop page is written: /next/shop/ = draft (noindex) · /shop/ = live")
+ap.add_argument("--only-shop", action="store_true", help="daily mode: refresh ONLY the price snapshot (HTML price rows + JSON-LD Offer) of the existing /shop/<slug>/ pages; needs no courses.json / design files")
+ap.add_argument("--snapshot", default=None, help="read the prices from this JSON file (a web_products answer) instead of the database — for tests")
+ap.add_argument("--today", default=None, help="YYYY-MM-DD used for priceValidUntil (tests)")
 A = ap.parse_args()
+if A.only_shop:
+    SS.refresh(A.shop, A.out, A.snapshot, A.today)
+    sys.exit(0)
 
 
 def load(p):
@@ -1664,10 +1671,11 @@ def shop_page():
 # ───────── /shop/<slug>/ product pages (owner 22 Nov 2026) ─────────
 # Content (name / specs / source) is static and comes from data/shop-products.json; price, stock and "no longer sold" are read live in the browser from web_products (same as /shop/) —
 # no price is ever written into the HTML or the JSON-LD.  Review video: own short clip from the public Supabase bucket product-videos (muted, loop, starts when scrolled to).
-OFFERS_IN_SCHEMA = False   # the one switch: True = the page script adds Product offers (live price) to the JSON-LD after the live read. Off until the owner decides.
 SHOP_PRODUCTS = load(A.shop_products)["products"]
 SHOP_VIDEOS = load(A.shop_videos).get("videos", {})
-GROUP_LABEL = {"player": "CDJ / Player", "mixer": "Mixer", "all-in-one": "All-in-one", "controller": "Controller", "turntable": "Turntable", "headphones": "หูฟัง", "speaker": "ลำโพง", "cable": "สาย", "accessory": "อุปกรณ์เสริม"}
+SNAPSHOT = SS.fetch([v["id"] for _p in SHOP_PRODUCTS.values() for v in _p["variants"]], A.snapshot)   # dies BEFORE anything is written when the prices cannot be read
+SNAP_VALID = SS.today(A.today) + datetime.timedelta(days=SS.VALID_DAYS)
+GROUP_LABEL = SS.GROUP_LABEL
 SHOP_CARD_LINKS = False   # False = the /shop/ cards do NOT link to the product pages yet (pilot pages are noindex, reachable only by direct link). Turn on together with removing noindex + adding the pages to sitemap.xml, after the owner approves the design.
 PRODUCT_PATH = {v["id"]: f"{A.shop}{s}/" for s, p in SHOP_PRODUCTS.items() for v in p["variants"]}   # product id -> its page (the /shop/ cards link here)
 
@@ -1725,19 +1733,23 @@ function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null
 function baht(n){return '฿'+Number(n).toLocaleString('en-US')}
 function q(s){return document.querySelector(s)}
 function rest(qs){return fetch(C.rest+'?'+qs,{headers:{apikey:C.key,Authorization:'Bearer '+C.key}}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()}).then(function(d){if(!Array.isArray(d))throw new Error('bad');return d})}
-/* ---- live price / stock / "no longer sold" ---- */
-var live={};
-function paint(rows,ok){
+/* ---- live price: the page already carries a build-time snapshot (HTML + JSON-LD); this only corrects both when the database says something newer ---- */
+function num(n){n=Number(n);return n%1?n.toFixed(2):String(n)}
+function ldSet(i,r){var s=document.querySelector('script[type="application/ld+json"]');if(!s)return;
+  try{var d=JSON.parse(s.textContent),t=d['@type']==='ProductGroup'?(d.hasVariant||[])[i]:d;if(!t)return;
+    if(!r){delete t.offers}else{var v=new Date(Date.now()+2*864e5).toISOString().slice(0,10);
+      t.offers={'@type':'Offer',url:location.origin+location.pathname,priceCurrency:'THB',price:num(r.price),priceValidUntil:v,availability:'https://schema.org/'+(r.in_stock?'InStock':'OutOfStock'),
+        priceSpecification:{'@type':'PriceSpecification',price:num(r.price),priceCurrency:'THB',valueAddedTaxIncluded:true}}}
+    s.textContent=JSON.stringify(d)}catch(e){}}
+function paint(rows){
   var seen=0;
-  C.ids.forEach(function(id){var box=q('[data-vid="'+id+'"]');if(!box)return;var r=rows.filter(function(x){return x.id===id&&Number(x.price)>0})[0],pr=box.querySelector('.pr'),st=box.querySelector('.stk');
-    if(!ok){pr.textContent='ถามราคาทาง LINE';st.hidden=true;return}
-    if(!r){box.hidden=true;return}
-    seen++;live[id]=r;pr.textContent=baht(r.price);st.hidden=false;st.className='stk '+(r.in_stock?'in':'out');st.textContent=r.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก'});
-  q('#pvars').setAttribute('aria-busy','false');
-  if(ok&&!seen){q('#pgone').hidden=false;q('#pvars').hidden=true;q('#pnote').hidden=true;q('#pcta').hidden=true;var s=q('#pvid');if(s)s.hidden=true}
-  if(ok&&seen&&@@OFFERS@@){var o=C.ids.filter(function(i){return live[i]}).map(function(i){return {'@type':'Offer',priceCurrency:'THB',price:String(live[i].price),url:location.href.split('#')[0],availability:'https://schema.org/'+(live[i].in_stock?'InStock':'PreOrder')}});
-    var sc=document.createElement('script');sc.type='application/ld+json';sc.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Product',name:C.name,offers:o.length===1?o[0]:o});document.head.appendChild(sc)}}
-rest('select=id,name,price,in_stock,image_path&id=in.('+C.ids.join(',')+')').then(function(d){paint(d,true)}).catch(function(){paint([],false)});
+  C.ids.forEach(function(id,i){var box=q('[data-vid="'+id+'"]');if(!box)return;var r=rows.filter(function(x){return x.id===id&&Number(x.price)>0})[0],pr=box.querySelector('.pr'),st=box.querySelector('.stk');
+    if(!r){if(box.getAttribute('data-price')){pr.textContent='ไม่มีจำหน่ายแล้ว';st.hidden=true;box.setAttribute('data-price','');box.setAttribute('data-stock','');ldSet(i,null)}return}
+    seen++;var sp=num(r.price),ss=r.in_stock?'1':'0';
+    if(box.getAttribute('data-price')!==sp||box.getAttribute('data-stock')!==ss){box.setAttribute('data-price',sp);box.setAttribute('data-stock',ss);pr.textContent=baht(r.price);
+      st.hidden=false;st.className='stk '+(r.in_stock?'in':'out');st.textContent=r.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก';ldSet(i,r)}});
+  var gone=!seen;q('#pgone').hidden=!gone;['#pvars','#pnote','#pcta','#pvid'].forEach(function(s){var e=q(s);if(e)e.hidden=gone})}
+rest('select=id,name,price,in_stock,image_path&id=in.('+C.ids.join(',')+')').then(paint).catch(function(){})   /* database not reachable: the snapshot on the page stays as it is */
 /* ---- other products of the same category, same brand first (live) ---- */
 var rel=q('#prel');
 if(rel&&C.group){rest('select=id,name,brand,price&bot_category=eq.'+encodeURIComponent(C.group)+'&price=gt.0&id=not.in.('+C.ids.join(',')+')&order=price.desc,id.asc&limit=40').then(function(d){
@@ -1796,7 +1808,6 @@ def product_page(sl, p):
         lab = v.get("label") or v["name"]
         cap = f'<figcaption>{E(lab)}</figcaption>' if multi else ""
         figs += f'<figure><img src="{img_base}{E(v["image_path"])}" width="640" height="480" alt="{E(lab)}" decoding="async"{"" if i else " fetchpriority=high"}>{cap}</figure>'
-    vrows = "".join(f'<div class="pv" data-vid="{v["id"]}"><b>{E(v.get("label") or v["name"])}</b><span class="pr" aria-live="polite">กำลังดูราคา…</span><span class="stk" hidden></span></div>' for v in p["variants"])
     specs = ""
     if p.get("highlights"):
         specs += '<section class="psec"><h2>จุดเด่น</h2><ul>' + "".join(f"<li>{E(x)}</li>" for x in p["highlights"]) + "</ul></section>"
@@ -1827,36 +1838,18 @@ def product_page(sl, p):
                 '<p class="vhint">คลิปนี้มีเสียงพากย์และซับไทยในภาพ กด "เปิดเสียง" เพื่อฟังเสียงพากย์</p>' + yt + "</section>")
     cfg = {"rest": origin + "/rest/v1/web_products", "key": key, "ids": ids, "names": [{"id": v["id"], "name": v.get("label") or v["name"]} for v in p["variants"]], "name": name, "brand": brand, "group": g,
            "pages": PRODUCT_PATH, "shop": A.shop, "m3base": origin + "/storage/v1/object/public/product-3d/", "local3d": local3d}
-    js = PROD_JS.replace("@@CFG@@", json.dumps(cfg, ensure_ascii=False)).replace("@@OFFERS@@", "true" if OFFERS_IN_SCHEMA else "false")
+    js = PROD_JS.replace("@@CFG@@", json.dumps(cfg, ensure_ascii=False))
     crumb = (f'<nav class="crumb" aria-label="เส้นทาง"><a href="{A.home}">หน้าแรก</a><span aria-hidden="true">/</span><a href="{A.shop}">SHOP</a><span aria-hidden="true">/</span>'
              f'<a href="{A.shop}#catalog">{E(gl)}</a><span aria-hidden="true">/</span><span aria-current="page">{E(name)}</span></nav>')
-    msg = f"สนใจ {name}" + (f" ({' / '.join(v['name'] for v in p['variants'])})" if multi else "")
     summ = f'<p class="sum">{E(p["summary"])}</p>' if p.get("summary") else ""
     main = (f'<div class="pp"><div class="pmedia"><div class="art">{figs}</div><div class="d3row" id="d3row" hidden></div></div>'
             f'<div class="pinfo"><div><span class="br">{E(brand)} · {E(gl)}</span><h1>{E(name)}</h1></div>{summ}'
-            f'<div class="vars" id="pvars" aria-busy="true">{vrows}</div>'
-            '<p class="note" id="pnote">ราคาปกติรวม VAT 7% แล้ว ไม่รวมโปรโมชัน สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam</p>'
-            f'<div class="cta" id="pcta">{line_btn(msg, "ถามรุ่นนี้ทาง LINE")}<a class="btn sec" href="{A.shop}">ดูสินค้าทั้งหมด</a></div>'
-            f'<div class="gone" id="pgone" hidden role="status"><p>รุ่นนี้ไม่มีจำหน่ายแล้ว</p><a class="btn sec" href="{A.shop}">กลับไปดูสินค้าใน SHOP</a></div></div></div>')
+            f'{SS.region(p, {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}, A.shop)}</div></div>')
     body = (crumb + f'<div class="pwrap{vcls}"><div>{main}{specs}{setsec}{rel}</div>{vsec}</div>'
             '<section class="psec"><h2>แวะลองเครื่องจริงที่ร้าน</h2><p>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330 · เปิดทุกวัน 12:00–20:00 น.</p>'
             '<p><a class="btn sec" href="https://maps.google.com/?cid=14947686714332238791" target="_blank" rel="noopener">เปิดแผนที่ ' + ic("ext", 18) + '</a></p></section>')
-    desc = p.get("summary") or f"{name} {gl} จาก {brand} ดูราคา สต็อก และสอบถามรุ่นนี้ได้ที่ DJ LAB SIAM ตัวแทนจำหน่ายอย่างเป็นทางการ สยามสแควร์"
-
-    def prod_ld(nm, sku, im):
-        d = {"@type": "Product", "name": nm, "brand": {"@type": "Brand", "name": brand}, "description": desc, "image": im}
-        if sku:
-            d["sku"] = sku
-        return d
-    imgs = [img_base + v["image_path"] for v in p["variants"]]
-    if multi:
-        prod = prod_ld(name, "", imgs)
-        prod["@type"] = "ProductGroup"
-        prod["productGroupID"] = sl
-        prod["hasVariant"] = [prod_ld(v["name"], v["sku"], [img_base + v["image_path"]]) for v in p["variants"]]
-    else:
-        prod = prod_ld(name, p["variants"][0]["sku"], imgs)
-    prod = dict({"@context": "https://schema.org"}, **prod)
+    desc = SS.desc_of(p)
+    prod = SS.ld_product(sl, p, {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}, path, SNAP_VALID)
     crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "หน้าแรก", "item": ORIGIN + "/"}, {"@type": "ListItem", "position": 2, "name": "SHOP", "item": ORIGIN + "/shop/"},
         {"@type": "ListItem", "position": 3, "name": gl, "item": ORIGIN + "/shop/#catalog"}, {"@type": "ListItem", "position": 4, "name": name, "item": ORIGIN + path}]}
