@@ -754,6 +754,8 @@ _spd = json.loads(read(os.path.join(SITE, "data", "shop-products.json")))
 _svd = json.loads(read(os.path.join(SITE, "data", "shop-videos.json")))
 _bkey = re.search(r"const KEY='([^']+)'", read(os.path.join(SITE, "book", "index.html")))
 ok(not re.search(r'"(price|offers|availability)"', read(os.path.join(SITE, "data", "shop-products.json"))), "data/shop-products.json: no price in this file (price/stock are read live)")
+ok(not re.search(r'"hold"', read(os.path.join(SITE, "data", "shop-products.json"))), "data/shop-products.json: values on hold (unconfirmed) must never be copied in")
+_HOLD = {"ddj-rev5": ("Type-C", "Type-B", "16 ปุ่ม", "8 ปุ่ม", "Sample rate", "S/N", "THD"), "hdj-x7": ("36 Ω", "102 dB", "Impedance", "Sensitivity", "Frequency response", "น้ำหนัก"), "cdj-3000x": ("วัตต์", "Watt"), "ddj-flx4": ("Bluetooth range", "sampler slot")}   # facts the Official pages contradict or do not give (hold list of 22 Nov 2026) — never on a page
 for _sl, _p in _spd["products"].items():
     _k = "prod:" + _sl
     ok(re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", _sl) is not None, f"{_k}: slug must be the lowercase model name with dashes")
@@ -777,6 +779,7 @@ for _sl, _p in _spd["products"].items():
             _skus = [_d.get("sku")] if _d["@type"] == "Product" else [v.get("sku") for v in _d.get("hasVariant", [])]
             ok(_skus == [v["sku"] for v in _p["variants"]] and all(_skus), f"{_k}: Product JSON-LD sku must be the SKU of each variant")
     _body = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", _s, flags=re.S)   # markup + visible text only (CSS has rgba(255,255,..))
+    ok(not any(x in _vis for x in _HOLD.get(_sl, ())), f"{_k}: a value on the hold list (unconfirmed / contradicting on the Official page) is on the page")
     ok(not re.search(r"฿|บาท|\d{1,3},\d{3}", _body), f"{_k}: a price is written into the HTML (price must be read live)")
     ok(all(f'data-vid="{v["id"]}"' in _s for v in _p["variants"]) and _body.count('data-vid="') == len(_p["variants"]), f"{_k}: one live price row per variant id")
     _scr = "\n".join(re.findall(r"<script>(.*?)</script>", _s, re.S))

@@ -1,5 +1,5 @@
 {
-  "_about": "เนื้อหาหน้ารุ่นสินค้า /shop/<slug>/ (สร้างโดย tools/build_pages.py) · คีย์ = slug (ชื่อรุ่นตัวพิมพ์เล็ก) · variants[].id = id สินค้าใน web_products (ราคา/สต็อก/สถานะอ่านสดในเบราว์เซอร์ ห้ามใส่ราคาในไฟล์นี้) · name/sku/image_path ของแต่ละ variant คัดจาก view web_products เมื่อ 22 พ.ย. 2569 (ไว้ทำภาพ/JSON-LD ที่ไม่มีราคา) · group = ประเภทตาม bot_category · summary = สรุปด้วยคำเอง 1–2 ประโยค · specs = [[หัวข้อ, ค่า]] · source = {name, url} หน้า Official ที่ใช้ (ห้ามแต่งสเปกจากความจำ · ว่าง = ไม่แสดงส่วนนั้น · ผู้จัดการข้อมูลภายในรีวิวก่อนขึ้นทุกรุ่น)",
+  "_about": "เนื้อหาหน้ารุ่นสินค้า /shop/<slug>/ (สร้างโดย tools/build_pages.py) · คีย์ = slug (ชื่อรุ่นตัวพิมพ์เล็ก) · variants[].id = id สินค้าใน web_products (ราคา/สต็อก/สถานะอ่านสดในเบราว์เซอร์ ห้ามใส่ราคาในไฟล์นี้) · name/sku/image_path ของแต่ละ variant คัดจาก view web_products เมื่อ 22 พ.ย. 2569 (ไว้ทำภาพ/JSON-LD ที่ไม่มีราคา) · group = ประเภทตาม bot_category · summary = สรุปด้วยคำเอง 1–2 ประโยค · specs = [[หัวข้อ, ค่า]] · highlights/works_with = รายการข้อความสั้น · sources = ลิงก์หน้าทางการของผู้ผลิตที่ใช้ · checked = วันที่ตรวจ · variants[].label = ป้ายที่แสดง (ถ้ามี) (ห้ามแต่งสเปกจากความจำ · ว่าง = ไม่แสดงส่วนนั้น · ผู้จัดการข้อมูลภายในรีวิวก่อนขึ้นทุกรุ่น)",
   "products": {
     "cdj-3000x": {
       "name": "CDJ-3000X",
@@ -24,10 +24,17 @@
           "ค่าตัวอย่าง 2"
         ]
       ],
-      "source": {
-        "name": "ตัวอย่างแหล่งที่มา (ทดสอบ)",
-        "url": "https://example.invalid/"
-      }
+      "highlights": [
+        "ตัวอย่างจุดเด่น 1",
+        "ตัวอย่างจุดเด่น 2"
+      ],
+      "works_with": [
+        "ตัวอย่างโปรแกรม"
+      ],
+      "sources": [
+        "https://example.invalid/"
+      ],
+      "checked": "22 พ.ย. 2569"
     },
     "ddj-rev5": {
       "name": "DDJ-REV5",
@@ -52,10 +59,17 @@
           "ค่าตัวอย่าง 2"
         ]
       ],
-      "source": {
-        "name": "ตัวอย่างแหล่งที่มา (ทดสอบ)",
-        "url": "https://example.invalid/"
-      }
+      "highlights": [
+        "ตัวอย่างจุดเด่น 1",
+        "ตัวอย่างจุดเด่น 2"
+      ],
+      "works_with": [
+        "ตัวอย่างโปรแกรม"
+      ],
+      "sources": [
+        "https://example.invalid/"
+      ],
+      "checked": "22 พ.ย. 2569"
     },
     "ddj-flx4": {
       "name": "DDJ-FLX4",
@@ -80,10 +94,17 @@
           "ค่าตัวอย่าง 2"
         ]
       ],
-      "source": {
-        "name": "ตัวอย่างแหล่งที่มา (ทดสอบ)",
-        "url": "https://example.invalid/"
-      }
+      "highlights": [
+        "ตัวอย่างจุดเด่น 1",
+        "ตัวอย่างจุดเด่น 2"
+      ],
+      "works_with": [
+        "ตัวอย่างโปรแกรม"
+      ],
+      "sources": [
+        "https://example.invalid/"
+      ],
+      "checked": "22 พ.ย. 2569"
     },
     "hdj-x7": {
       "name": "HDJ-X7",
@@ -94,13 +115,15 @@
           "id": "2919303e-11da-4495-a94e-fb3944963161",
           "name": "HDJ-X7K",
           "sku": "PIO-X7K",
-          "image_path": "2919303e-11da-4495-a94e-fb3944963161/a3cde3c9-e986-443c-afec-dcf4832ca28e.webp"
+          "image_path": "2919303e-11da-4495-a94e-fb3944963161/a3cde3c9-e986-443c-afec-dcf4832ca28e.webp",
+          "label": "สีดำ (HDJ-X7K)"
         },
         {
           "id": "8afb211f-47dd-4d0b-ae5b-efe88d69af0f",
           "name": "HDJ-X7S",
           "sku": "PIO-X7S",
-          "image_path": "8afb211f-47dd-4d0b-ae5b-efe88d69af0f/4f50de67-fd4c-4155-bd1d-b9abb862dfa0.webp"
+          "image_path": "8afb211f-47dd-4d0b-ae5b-efe88d69af0f/4f50de67-fd4c-4155-bd1d-b9abb862dfa0.webp",
+          "label": "สีเงิน (HDJ-X7S)"
         }
       ],
       "summary": "ข้อความตัวอย่างสำหรับทดสอบหน้า (ไม่ใช่ข้อมูลจริง ห้ามนำไปใช้บนเว็บ)",
@@ -114,10 +137,17 @@
           "ค่าตัวอย่าง 2"
         ]
       ],
-      "source": {
-        "name": "ตัวอย่างแหล่งที่มา (ทดสอบ)",
-        "url": "https://example.invalid/"
-      }
+      "highlights": [
+        "ตัวอย่างจุดเด่น 1",
+        "ตัวอย่างจุดเด่น 2"
+      ],
+      "works_with": [
+        "ตัวอย่างโปรแกรม"
+      ],
+      "sources": [
+        "https://example.invalid/"
+      ],
+      "checked": "22 พ.ย. 2569"
     },
     "test-gone": {
       "name": "TEST-GONE",
@@ -142,10 +172,17 @@
           "ค่าตัวอย่าง 2"
         ]
       ],
-      "source": {
-        "name": "ตัวอย่างแหล่งที่มา (ทดสอบ)",
-        "url": "https://example.invalid/"
-      }
+      "highlights": [
+        "ตัวอย่างจุดเด่น 1",
+        "ตัวอย่างจุดเด่น 2"
+      ],
+      "works_with": [
+        "ตัวอย่างโปรแกรม"
+      ],
+      "sources": [
+        "https://example.invalid/"
+      ],
+      "checked": "22 พ.ย. 2569"
     }
   }
 }

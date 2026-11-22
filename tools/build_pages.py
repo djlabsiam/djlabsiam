@@ -1792,14 +1792,18 @@ def product_page(sl, p):
     local3d = {i: {"f": shop_models[i]["file"], "o": bool(shop_models[i].get("override"))} for i in ids if i in shop_models}
     figs = ""
     for i, v in enumerate(p["variants"]):
-        cap = f'<figcaption>{E(v["name"])}</figcaption>' if multi else ""
-        figs += f'<figure><img src="{img_base}{E(v["image_path"])}" width="640" height="480" alt="{E(v["name"])}" decoding="async"{"" if i else " fetchpriority=high"}>{cap}</figure>'
-    vrows = "".join(f'<div class="pv" data-vid="{v["id"]}"><b>{E(v["name"])}</b><span class="pr" aria-live="polite">กำลังดูราคา…</span><span class="stk" hidden></span></div>' for v in p["variants"])
+        lab = v.get("label") or v["name"]
+        cap = f'<figcaption>{E(lab)}</figcaption>' if multi else ""
+        figs += f'<figure><img src="{img_base}{E(v["image_path"])}" width="640" height="480" alt="{E(lab)}" decoding="async"{"" if i else " fetchpriority=high"}>{cap}</figure>'
+    vrows = "".join(f'<div class="pv" data-vid="{v["id"]}"><b>{E(v.get("label") or v["name"])}</b><span class="pr" aria-live="polite">กำลังดูราคา…</span><span class="stk" hidden></span></div>' for v in p["variants"])
     specs = ""
+    if p.get("highlights"):
+        specs += '<section class="psec"><h2>จุดเด่น</h2><ul>' + "".join(f"<li>{E(x)}</li>" for x in p["highlights"]) + "</ul></section>"
     if p.get("specs"):
-        src = p.get("source") or {}
-        specs = ('<section class="psec"><h2>สเปกสำคัญ</h2><table class="specs"><tbody>' + "".join(f'<tr><th scope="row">{E(a)}</th><td>{E(b)}</td></tr>' for a, b in p["specs"]) + "</tbody></table>"
-                 + (f'<p class="src">ข้อมูลจากหน้า Official: <a href="{E(src["url"])}" rel="noopener">{E(src["name"])}</a></p>' if src.get("url") else "") + "</section>")
+        specs += ('<section class="psec"><h2>สเปกสำคัญ</h2><table class="specs"><tbody>' + "".join(f'<tr><th scope="row">{E(a)}</th><td>{E(b)}</td></tr>' for a, b in p["specs"]) + "</tbody></table>"
+                  + (f'<p class="src">ข้อมูลจากหน้าทางการของผู้ผลิต ตรวจเมื่อ {E(p["checked"])} · ' + " · ".join(f'<a href="{E(u)}" rel="noopener">{E(urllib.parse.urlparse(u).netloc)}</a>' for u in p["sources"]) + "</p>" if p.get("sources") and p.get("checked") else "") + "</section>")
+    if p.get("works_with"):
+        specs += '<section class="psec"><h2>ใช้งานร่วมกับ</h2><ul>' + "".join(f"<li>{E(x)}</li>" for x in p["works_with"]) + "</ul></section>"
     names_up = {v["name"].upper() for v in p["variants"]}
     sets = [s for s in load(os.path.join(SITE, "data", "shop-sets.json"))["sets"] if any(it["name"].upper() in names_up for it in s["items"])]
     setsec = ""
@@ -1820,7 +1824,7 @@ def product_page(sl, p):
                 f'<video muted loop playsinline preload="none" poster="{base}{E(vid["poster"])}" src="{base}{E(vid["file"])}" aria-label="วิดีโอรีวิว {E(name)} (มีเสียงพากย์ กดเปิดเสียงได้)"></video>'
                 '<div class="vctl"><button class="btn" type="button" id="vplay">เล่น</button><button class="btn" type="button" id="vsnd">เปิดเสียง</button></div></div>'
                 '<p class="vhint">คลิปนี้มีเสียงพากย์และซับไทยในภาพ กด "เปิดเสียง" เพื่อฟังเสียงพากย์</p>' + yt + "</section>")
-    cfg = {"rest": origin + "/rest/v1/web_products", "key": key, "ids": ids, "names": [{"id": v["id"], "name": v["name"]} for v in p["variants"]], "name": name, "brand": brand, "group": g,
+    cfg = {"rest": origin + "/rest/v1/web_products", "key": key, "ids": ids, "names": [{"id": v["id"], "name": v.get("label") or v["name"]} for v in p["variants"]], "name": name, "brand": brand, "group": g,
            "pages": PRODUCT_PATH, "shop": A.shop, "m3base": origin + "/storage/v1/object/public/product-3d/", "local3d": local3d}
     js = PROD_JS.replace("@@CFG@@", json.dumps(cfg, ensure_ascii=False)).replace("@@OFFERS@@", "true" if OFFERS_IN_SCHEMA else "false")
     crumb = (f'<nav class="crumb" aria-label="เส้นทาง"><a href="{A.home}">หน้าแรก</a><span aria-hidden="true">/</span><a href="{A.shop}">SHOP</a><span aria-hidden="true">/</span>'
