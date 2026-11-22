@@ -1802,7 +1802,7 @@ def product_page(sl, p):
         specs += '<section class="psec"><h2>จุดเด่น</h2><ul>' + "".join(f"<li>{E(x)}</li>" for x in p["highlights"]) + "</ul></section>"
     if p.get("specs"):
         specs += ('<section class="psec"><h2>สเปกสำคัญ</h2><table class="specs"><tbody>' + "".join(f'<tr><th scope="row">{E(a)}</th><td>{E(b)}</td></tr>' for a, b in p["specs"]) + "</tbody></table>"
-                  + (f'<p class="src">ข้อมูลจากหน้าทางการของผู้ผลิต ตรวจเมื่อ {E(p["checked"])} · ' + " · ".join(f'<a href="{E(u)}" rel="noopener">{E(urllib.parse.urlparse(u).netloc)}</a>' for u in p["sources"]) + "</p>" if p.get("sources") and p.get("checked") else "") + "</section>")
+                  + (f'<p class="src">ข้อมูลจากหน้าทางการของผู้ผลิต ตรวจเมื่อ {E(p["checked"])} · ' + " · ".join(f'<a href="{E(u)}" rel="noopener">{E((p.get("source_labels") or [])[i:i + 1] and p["source_labels"][i] or re.sub("^www[.]", "", urllib.parse.urlparse(u).netloc))}</a>' for i, u in enumerate(p["sources"])) + "</p>" if p.get("sources") and p.get("checked") else "") + "</section>")
     if p.get("works_with"):
         specs += '<section class="psec"><h2>ใช้งานร่วมกับ</h2><ul>' + "".join(f"<li>{E(x)}</li>" for x in p["works_with"]) + "</ul></section>"
     names_up = {v["name"].upper() for v in p["variants"]}

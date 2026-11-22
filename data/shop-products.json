@@ -220,7 +220,11 @@
         "https://www.pioneerdj.com/en/product/headphones/hdj-x7/black/specifications/",
         "https://www.pioneerdj.com/en/product/headphones/hdj-x7/silver/specifications/"
       ],
-      "checked": "22 พ.ย. 2569"
+      "checked": "22 พ.ย. 2569",
+      "source_labels": [
+        "pioneerdj.com (สีดำ)",
+        "pioneerdj.com (สีเงิน)"
+      ]
     }
   }
 }
