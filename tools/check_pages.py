@@ -53,6 +53,8 @@ _sp = os.path.join(SITE, "next", "shop", "index.html")
 pages["shop"] = _sp if os.path.exists(_sp) else os.path.join(SITE, "shop", "index.html")   # /next/ = draft · / = live (after cut-over)
 for t in TEACHERS:
     pages["teacher:" + t["name"]] = os.path.join(SITE, "teachers", slug(t["name"]), "index.html")
+for _pf in sorted(glob.glob(os.path.join(SITE, "shop", "*", "index.html"))):   # product pages /shop/<slug>/ (content: data/shop-products.json)
+    pages["prod:" + os.path.basename(os.path.dirname(_pf))] = _pf
 SRC = {}
 for k, p in pages.items():
     ok(os.path.exists(p), f"{k}: file missing ({os.path.relpath(p, SITE)})")
@@ -76,6 +78,8 @@ for k, s in SRC.items():
     # 3. banned words / placeholders (visible text only)
     vis = text_of(s)
     for b in BANNED:
+        if b == "รีวิว" and k.startswith("prod:"):
+            continue   # product pages: "วิดีโอรีวิว" is the shop's own review clip (owner 22 Nov); star ratings and review counts stay banned (★ / the stray-number rule)
         ok(not re.search(b, vis, re.I), f"{k}: banned phrase {b!r} on the page")
     # 4. nothing loaded from another domain (img / script / iframe / stylesheet / preload / icon)
     for tag, attr in (("img", "src"), ("script", "src"), ("iframe", "src"), ("link", "href")):
@@ -84,7 +88,7 @@ for k, s in SRC.items():
                 continue
             v = re.search(rf'\b{attr}="([^"]*)"', t)
             if v and re.match(r"https?://", v.group(1)):
-                ok(any(v.group(1).startswith("https://" + h) for h in ALLOWED_RES_HOSTS), f"{k}: loads {v.group(1)} from another domain")
+                ok(any(v.group(1).startswith("https://" + h) for h in ALLOWED_RES_HOSTS) or (k.startswith("prod:") and tag == "img" and re.match(r"https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/product-images/", v.group(1)) is not None), f"{k}: loads {v.group(1)} from another domain")
             elif v and v.group(1).startswith("//"):
                 ok(False, f"{k}: protocol-relative resource {v.group(1)}")
     # 5. images: width/height/alt + the file exists
@@ -745,6 +749,64 @@ if os.path.exists(os.path.join(_np, "index.html")):
     ok(not re.search(r"https?://(?!djlabsiam\.com)", re.sub(r'<link rel="canonical"[^>]*>|<meta property="(og|twitter)[^>]*>|<meta name="twitter[^>]*>|schema\.org|facebook\.com/PioneerDjLabSiam|instagram\.com/djlabsiam|line\.me|lin\.ee|youtube\.com|<script[^>]*src="https://[^"]*"', "", _nh)) or True, "news/sync-2026: external links")
 
 print(f"check_pages: {passes} passed, {len(fails)} failed · courses.json md5 {md5}")
+# ---- /shop/<slug>/ product pages: static content from data/shop-products.json, price/stock live only; nothing priced in the HTML or the JSON-LD ----
+_spd = json.loads(read(os.path.join(SITE, "data", "shop-products.json")))
+_svd = json.loads(read(os.path.join(SITE, "data", "shop-videos.json")))
+_bkey = re.search(r"const KEY='([^']+)'", read(os.path.join(SITE, "book", "index.html")))
+ok(not re.search(r'"(price|offers|availability)"', read(os.path.join(SITE, "data", "shop-products.json"))), "data/shop-products.json: no price in this file (price/stock are read live)")
+for _sl, _p in _spd["products"].items():
+    _k = "prod:" + _sl
+    ok(re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", _sl) is not None, f"{_k}: slug must be the lowercase model name with dashes")
+    ok(_k in SRC, f"{_k}: product page is missing — run tools/build_pages.py")
+    if _k not in SRC:
+        continue
+    _s = SRC[_k]
+    _vis = text_of(re.sub(r'<script[^>]*>.*?</script>', " ", _s, flags=re.S))
+    ok(f'<link rel="canonical" href="https://djlabsiam.com/shop/{_sl}/">' in _s, f"{_k}: canonical must be https://djlabsiam.com/shop/{_sl}/")
+    ok('name="robots" content="noindex,follow"' in _s, f"{_k}: pilot pages stay noindex,follow until the owner approves the design")
+    _crumb = re.search(r'<nav class="crumb"[^>]*>(.*?)</nav>', _s, re.S)
+    ok(_crumb is not None and re.findall(r'<a href="([^"]+)"', _crumb.group(1)) == ["/", "/shop/", "/shop/#catalog"] and _p["name"] in _crumb.group(1), f"{_k}: breadcrumb must be หน้าแรก › SHOP › หมวด › รุ่น")
+    _lds = [json.loads(x) for x in re.findall(r'<script type="application/ld\+json">(.*?)</script>', _s, re.S)]
+    _ldt = {d.get("@type") for d in _lds}
+    ok(("Product" in _ldt or "ProductGroup" in _ldt) and "BreadcrumbList" in _ldt, f"{_k}: JSON-LD must have Product (or ProductGroup) and BreadcrumbList")
+    _ldraw = json.dumps(_lds)
+    ok(not re.search(r'"(offers|price|priceCurrency|availability|aggregateRating|review)"', _ldraw), f"{_k}: JSON-LD must not carry offers/price/availability/ratings (owner has not approved) ")
+    for _d in _lds:
+        if _d.get("@type") in ("Product", "ProductGroup"):
+            ok(bool(_d.get("name")) and _d.get("brand", {}).get("name") == _p["brand"] and bool(_d.get("image")) and bool(_d.get("description")), f"{_k}: Product JSON-LD needs name, brand, image, description")
+            _skus = [_d.get("sku")] if _d["@type"] == "Product" else [v.get("sku") for v in _d.get("hasVariant", [])]
+            ok(_skus == [v["sku"] for v in _p["variants"]] and all(_skus), f"{_k}: Product JSON-LD sku must be the SKU of each variant")
+    _body = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", _s, flags=re.S)   # markup + visible text only (CSS has rgba(255,255,..))
+    ok(not re.search(r"฿|บาท|\d{1,3},\d{3}", _body), f"{_k}: a price is written into the HTML (price must be read live)")
+    ok(all(f'data-vid="{v["id"]}"' in _s for v in _p["variants"]) and _body.count('data-vid="') == len(_p["variants"]), f"{_k}: one live price row per variant id")
+    _scr = "\n".join(re.findall(r"<script>(.*?)</script>", _s, re.S))
+    ok("/rest/v1/web_products" in _scr and "bot_products" not in _s and "service_role" not in _s, f"{_k}: must read web_products only")
+    ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function", _scr), f"{_k}: the page script must never turn database text into HTML")
+    ok(bool(_bkey) and f'"key": "{_bkey.group(1)}"' in _scr, f"{_k}: the anon key must be the one /book/ uses")
+    ok("&&seen&&false)" in _scr, f"{_k}: offers in schema must stay switched off (OFFERS_IN_SCHEMA)")
+    ok("ราคาปกติรวม VAT 7% แล้ว ไม่รวมโปรโมชัน" in _vis and "สอบถามโปรโมชัน" in _vis and "Lido Connect" in _vis, f"{_k}: VAT / promotion note / shop address missing")
+    ok(not re.search(r'<script[^>]+src="https?://', _s) and "<model-viewer" not in _s, f"{_k}: no third-party script / inline 3D viewer")
+    ok('href="https://line.me/R/oaMessage/%40djlabsiam/?' in _s and urllib.parse.quote("สนใจ " + _p["name"], safe="") in _s, f"{_k}: LINE button must carry the model name")
+    # every internal link must reach a real page/file
+    for _h in set(re.findall(r'href="(/[^"#?]*)', _s)):
+        _t = os.path.join(SITE, _h.lstrip("/").replace("/", os.sep))
+        ok(os.path.isfile(_t) or os.path.isfile(os.path.join(_t, "index.html")) or _h == "/", f"{_k}: link {_h} does not reach a page")
+    # video block: only when data/shop-videos.json lists the slug; never a file in the repo
+    _vd = _svd.get("videos", {}).get(_sl)
+    if _vd:
+        ok(bool(re.fullmatch(r"[A-Za-z0-9._-]+\.mp4", _vd.get("file", ""))) and bool(re.fullmatch(r"[A-Za-z0-9._-]+\.(webp|jpg)", _vd.get("poster", ""))) and re.fullmatch(r"[A-Za-z0-9_-]{11}", _vd.get("yt", "AAAAAAAAAAA")) is not None, f"{_k}: shop-videos entry needs file .mp4, poster .webp/.jpg and (optional) 11-char yt id")
+        _vt = re.search(r"<video[^>]*>", _s)
+        ok(_vt is not None and all(x in _vt.group(0) for x in (" muted", " loop", " playsinline", 'preload="none"', "/storage/v1/object/public/product-videos/")), f"{_k}: video must be muted loop playsinline preload=none from the product-videos bucket")
+        ok("IntersectionObserver" in _scr and "prefers-reduced-motion" in _scr and "saveData" in _scr and 'id="vplay"' in _s and 'id="vsnd"' in _s, f"{_k}: video needs scroll-start, reduced-motion/saveData respect, play/pause and sound buttons")
+        ok("<iframe" not in _s and (not _vd.get("yt") or ('id="vyt"' in _s and "youtube-nocookie.com/embed/" in _scr)), f"{_k}: YouTube must load only after the click (no iframe in the page)")
+    else:
+        ok("<video" not in _s and 'id="pvid"' not in _s, f"{_k}: no video entry = no video block at all")
+ok(not [f for f in glob.glob(os.path.join(SITE, "shop", "**", "*.*"), recursive=True) if f.lower().endswith((".mp4", ".webm", ".mov", ".m4v"))], "shop/: a video file must never be committed (clips live in the Supabase bucket product-videos)")
+ok(all(k in _spd["products"] for k in _svd.get("videos", {})), "data/shop-videos.json: every key must be a slug in data/shop-products.json")
+_sid = {v["id"] for _p in _spd["products"].values() for v in _p["variants"]}
+ok(len(_sid) == sum(len(_p["variants"]) for _p in _spd["products"].values()), "data/shop-products.json: a product id appears on two pages")
+ok(all(('"' + i + '": "/shop/' + sl + '/"') in SRC.get("shop", "") for sl, _p in _spd["products"].items() for i in (v["id"] for v in _p["variants"])), "shop: the product cards must link to every product page (PAGES map)")
+
 for f in fails:
     print("  FAIL", f)
 sys.exit(1 if fails else 0)

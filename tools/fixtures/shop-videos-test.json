@@ -1,0 +1,10 @@
+{
+  "_about": "fixture ทดสอบ ไม่ใช่ข้อมูลเว็บ",
+  "videos": {
+    "cdj-3000x": {
+      "file": "test-clip.mp4",
+      "poster": "test-clip.webp",
+      "yt": "AAAAAAAAAAA"
+    }
+  }
+}

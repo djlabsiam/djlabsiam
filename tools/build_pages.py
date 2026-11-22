@@ -34,6 +34,8 @@ ap.add_argument("--course-images", default=os.path.join(SITE, "data", "course-im
 ap.add_argument("--out", default=SITE)
 ap.add_argument("--home", default="/next/", help="where the home page is written: /next/ = draft (noindex) · / = live home")
 ap.add_argument("--home-faq", default=os.path.join(SITE, "data", "faq-home.json"))
+ap.add_argument("--shop-products", default=os.path.join(SITE, "data", "shop-products.json"), help="content of the /shop/<slug>/ product pages")
+ap.add_argument("--shop-videos", default=os.path.join(SITE, "data", "shop-videos.json"))
 ap.add_argument("--shop", default="/next/shop/", help="where the shop page is written: /next/shop/ = draft (noindex) · /shop/ = live")
 A = ap.parse_args()
 
@@ -1456,6 +1458,7 @@ SHOP_CSS = r"""
 .pc .b{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
 .pc .br{font:600 13px/1.4 var(--font-family-body);color:var(--text-muted)}
 .pc h3{font-size:18px;line-height:1.35}
+.pc h3 a{color:inherit;text-decoration:none}.pc h3 a:hover{text-decoration:underline}
 .pc .pr{font:800 22px/1.4 var(--font-family-display);margin-top:2px}
 .pc .btn{margin-top:auto;align-self:flex-start}
 .pc .bwrap{margin-top:auto;padding-top:10px}
@@ -1504,7 +1507,7 @@ SHOP_JS = r"""<script>
 var REST='@@REST@@',KEY='@@KEY@@',IMG='@@IMG@@',LINE='https://line.me/R/oaMessage/%40djlabsiam/?',PAGE=24;
 var LABEL={player:'CDJ / Player',mixer:'Mixer','all-in-one':'All-in-one',controller:'Controller',turntable:'Turntable',headphones:'หูฟัง',speaker:'ลำโพง',cable:'สาย',accessory:'อุปกรณ์เสริม'};
 var CATMAP={'cdj':'player','เครื่องเล่น':'player','มิกซ์เซอร์':'mixer','mixer':'mixer','all in one':'all-in-one','คอนโทลเลอร์':'controller','คอนโทรลเลอร์':'controller','midi':'controller','หูฟัง':'headphones','ลำโพง':'speaker','cable':'cable','deck cover':'accessory','flash drive':'accessory'};
-var LOCAL3D=@@LOCAL3D@@,SETS=@@SETS@@,SETBASE='/assets/models/sets/';
+var PAGES=@@PAGES@@,LOCAL3D=@@LOCAL3D@@,SETS=@@SETS@@,SETBASE='/assets/models/sets/';
 var ROWS=[],cat='all',sort='p-desc',only=false,shown=PAGE,M3={},M3BASE='@@M3@@',MV_LOADED=false;
 function mvLoad(){if(MV_LOADED)return;MV_LOADED=true;var s=document.createElement('script');s.type='module';s.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(s)}
 var m3=null;
@@ -1583,7 +1586,7 @@ function card(p){
     im.addEventListener('error',function(){im.remove();art.appendChild(icon(p.g))});art.appendChild(im)}
   else art.appendChild(icon(p.g));
   var st=el('span','stk '+(p.in_stock?'in':'out'),p.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก');art.appendChild(st);a.appendChild(art);
-  var b=el('div','b');b.appendChild(el('span','br',brand(p.brand)));b.appendChild(el('h3','',p.name));b.appendChild(el('span','pr',baht(p.price)));
+  var b=el('div','b'),h3=el('h3','');b.appendChild(el('span','br',brand(p.brand)));if(PAGES[p.id]){var ha=el('a','',p.name);ha.href=PAGES[p.id];h3.appendChild(ha)}else h3.textContent=p.name;b.appendChild(h3);b.appendChild(el('span','pr',baht(p.price)));
   var w=el('div','bwrap'),l=el('a','btn sec sm','ถามทาง LINE');l.href=LINE+encodeURIComponent('สนใจ '+p.name);l.rel='noopener';
   if(M3[p.id]){var d=el('div','acts3'),b3=el('button','btn pri sm','ดู 3D');b3.type='button';b3.setAttribute('aria-label','ดูโมเดล 3 มิติของ '+p.name);
     (function(pp,mm){b3.addEventListener('click',function(){open3d(pp,mm)})})(p,M3[p.id]);d.appendChild(b3);d.appendChild(l);w.appendChild(d)}
@@ -1652,10 +1655,207 @@ def shop_page():
             f'<div style="text-align:center;margin-top:24px"><button class="btn sec" id="smore" type="button" hidden>แสดงเพิ่ม</button></div>'
             f'<p class="snote">ราคารวม VAT 7% แล้ว เป็นราคาปกติที่ร้านใช้ ไม่รวมโปรโมชัน · สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam · '
             f'ภาพสินค้าบางรุ่นยังไม่มี จึงแสดงเป็นไอคอนประเภทเครื่อง</p></section>')
-    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: {"f": v["file"], "o": bool(v.get("override"))} for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
+    js = SHOP_JS.replace("@@LOCAL3D@@", json.dumps({k: {"f": v["file"], "o": bool(v.get("override"))} for k, v in load(os.path.join(SITE, "data", "shop-3d.json"))["models"].items()})).replace("@@SETS@@", json.dumps([{k: x[k] for k in ("title", "mixer", "file", "items")} for x in sets], ensure_ascii=False)).replace("@@PAGES@@", json.dumps(PRODUCT_PATH)).replace("@@REST@@", rest).replace("@@KEY@@", key).replace("@@IMG@@", img).replace("@@M3@@", origin + "/storage/v1/object/public/product-3d/")
     desc = "Showroom อุปกรณ์ DJ ที่ DJ LAB SIAM พร้อมราคาจากระบบร้าน รวม VAT ตัวแทนจำหน่าย Pioneer DJ และ AlphaTheta อย่างเป็นทางการ"
     return shell(A.shop, "Showroom อุปกรณ์ DJ พร้อมราคา — DJ LAB SIAM", desc, body, robots=None if live else "noindex,follow",
                  active="shop", script=js, css_extra=SHOP_CSS)
+
+
+# ───────── /shop/<slug>/ product pages (owner 22 Nov 2026) ─────────
+# Content (name / specs / source) is static and comes from data/shop-products.json; price, stock and "no longer sold" are read live in the browser from web_products (same as /shop/) —
+# no price is ever written into the HTML or the JSON-LD.  Review video: own short clip from the public Supabase bucket product-videos (muted, loop, starts when scrolled to).
+OFFERS_IN_SCHEMA = False   # the one switch: True = the page script adds Product offers (live price) to the JSON-LD after the live read. Off until the owner decides.
+SHOP_PRODUCTS = load(A.shop_products)["products"]
+SHOP_VIDEOS = load(A.shop_videos).get("videos", {})
+GROUP_LABEL = {"player": "CDJ / Player", "mixer": "Mixer", "all-in-one": "All-in-one", "controller": "Controller", "turntable": "Turntable", "headphones": "หูฟัง", "speaker": "ลำโพง", "cable": "สาย", "accessory": "อุปกรณ์เสริม"}
+PRODUCT_PATH = {v["id"]: f"{A.shop}{s}/" for s, p in SHOP_PRODUCTS.items() for v in p["variants"]}   # product id -> its page (the /shop/ cards link here)
+
+PROD_CSS = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3", ".schip", ".serr", ".stk"))) + r"""
+.pp{display:grid;gap:28px;padding-top:8px}
+.pp .pmedia{display:grid;gap:14px;align-content:start}
+.pp .art{position:relative;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));background-color:#FAF9F6;border:1px solid var(--lab-line);border-radius:var(--radius-lg);padding:14px;
+  background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
+.pp .art figure{margin:0;position:relative;aspect-ratio:4/3;display:grid;place-items:center}
+.pp .art img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.pp .art figcaption{position:absolute;left:0;top:0;font:600 13px/1.4 var(--font-family-body);padding:3px 10px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
+.pp .d3row{display:flex;flex-wrap:wrap;gap:10px}
+.pp .pinfo{display:grid;gap:22px;align-content:start}
+.pp .br{font:600 14px/1.4 var(--font-family-body);color:var(--text-muted)}
+.pp h1{font-size:40px;max-width:none}
+.pp .sum{color:var(--text-secondary);max-width:62ch}
+.pp .vars{display:grid;gap:12px}
+.pp .pv{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:14px 16px;border:1px solid var(--lab-line);border-radius:var(--radius-md);background:#fff}
+.pp .pv b{font:700 18px/1.3 var(--font-family-display)}
+.pp .pv .pr{font:800 26px/1.3 var(--font-family-display);margin-left:auto}
+.pp .pv .stk{position:static;box-shadow:none;border:1px solid var(--lab-line)}
+.pp [hidden]{display:none!important}
+.pp .note{color:var(--text-secondary);font-size:15px;max-width:62ch}
+.pp .cta{display:flex;flex-wrap:wrap;gap:12px}
+.pp .gone{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md)}
+.pp .gone p{margin:0 0 10px}
+.pgm .psec{display:grid;gap:12px;padding-top:40px}
+.psec h2{font-size:24px}
+.psec ul{margin:0;padding-left:20px;display:grid;gap:8px}
+.psec[hidden]{display:none}
+.specs{border-collapse:collapse;width:100%;max-width:720px}
+.specs th,.specs td{padding:10px 12px;border-bottom:1px solid var(--lab-line);text-align:left;vertical-align:top}
+.specs th{width:38%;color:var(--text-secondary);font-weight:600}
+.psec .src,.psec .note{font-size:14px;color:var(--text-muted)}
+.rel{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.rel a{display:grid;gap:2px;padding:14px 16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit}
+.rel a:hover{border-color:var(--text-primary)}
+.rel b{font:700 17px/1.35 var(--font-family-display)}.rel span{color:var(--text-secondary)}
+.pvid{justify-items:start;align-content:start}
+.pvid .vbox{position:relative;width:100%;max-width:405px;aspect-ratio:9/16;background:#0F0F0F;border-radius:var(--radius-lg);overflow:hidden}
+.pvid video,.pvid iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0}
+.pvid .vctl{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;z-index:2}
+.pvid .vctl .btn{min-height:44px;padding:4px 16px;font-size:15px;background:#fff;color:var(--text-primary);border:1.5px solid var(--text-primary)}
+.pvid .vhint{font-size:14px;color:var(--text-secondary);max-width:46ch;margin:0}
+.pwrap{display:grid;gap:0}
+@media (min-width:960px){.pp{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px}.pwrap.hasv{grid-template-columns:minmax(0,1fr) 405px;gap:48px;align-items:start}.pwrap.hasv .pvid{padding-top:8px}}
+@media (max-width:640px){.pp h1{font-size:32px}.pp .pv .pr{margin-left:0}.pvid .vbox{max-width:none}}
+@media (prefers-reduced-motion:reduce){.pp *{transition:none!important}}
+"""
+
+PROD_JS = r"""<script>
+(function(){
+var C=@@CFG@@;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function baht(n){return '฿'+Number(n).toLocaleString('en-US')}
+function q(s){return document.querySelector(s)}
+function rest(qs){return fetch(C.rest+'?'+qs,{headers:{apikey:C.key,Authorization:'Bearer '+C.key}}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()}).then(function(d){if(!Array.isArray(d))throw new Error('bad');return d})}
+/* ---- live price / stock / "no longer sold" ---- */
+var live={};
+function paint(rows,ok){
+  var seen=0;
+  C.ids.forEach(function(id){var box=q('[data-vid="'+id+'"]');if(!box)return;var r=rows.filter(function(x){return x.id===id&&Number(x.price)>0})[0],pr=box.querySelector('.pr'),st=box.querySelector('.stk');
+    if(!ok){pr.textContent='ถามราคาทาง LINE';st.hidden=true;return}
+    if(!r){box.hidden=true;return}
+    seen++;live[id]=r;pr.textContent=baht(r.price);st.hidden=false;st.className='stk '+(r.in_stock?'in':'out');st.textContent=r.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก'});
+  q('#pvars').setAttribute('aria-busy','false');
+  if(ok&&!seen){q('#pgone').hidden=false;q('#pvars').hidden=true;q('#pnote').hidden=true;q('#pcta').hidden=true;var s=q('#pvid');if(s)s.hidden=true}
+  if(ok&&seen&&@@OFFERS@@){var o=C.ids.filter(function(i){return live[i]}).map(function(i){return {'@type':'Offer',priceCurrency:'THB',price:String(live[i].price),url:location.href.split('#')[0],availability:'https://schema.org/'+(live[i].in_stock?'InStock':'PreOrder')}});
+    var sc=document.createElement('script');sc.type='application/ld+json';sc.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Product',name:C.name,offers:o.length===1?o[0]:o});document.head.appendChild(sc)}}
+rest('select=id,name,price,in_stock,image_path&id=in.('+C.ids.join(',')+')').then(function(d){paint(d,true)}).catch(function(){paint([],false)});
+/* ---- other products of the same category, same brand first (live) ---- */
+var rel=q('#prel');
+if(rel&&C.group){rest('select=id,name,brand,price&bot_category=eq.'+encodeURIComponent(C.group)+'&price=gt.0&id=not.in.('+C.ids.join(',')+')&order=price.desc,id.asc&limit=40').then(function(d){
+  var ok=d.filter(function(p){return p&&typeof p.name==='string'&&Number(p.price)>0}),list=ok.filter(function(p){return p.brand===C.brand}).concat(ok.filter(function(p){return p.brand!==C.brand})).slice(0,4);if(!list.length)return;
+  var box=rel.querySelector('.rel');list.forEach(function(p){var a=el('a');a.href=C.pages[p.id]||C.shop;a.appendChild(el('b','',p.name));a.appendChild(el('span','',baht(p.price)));box.appendChild(a)});rel.hidden=false}).catch(function(){})}
+/* ---- 3D / AR (self-hosted viewer, loaded on click; models from data/shop-3d.json or the product-3d bucket) ---- */
+var M3={},m3=null;
+function m3src(m){return m.local?m.file:C.m3base+m.file}
+function load3d(){return fetch(C.m3base+'manifest.bin',{cache:'no-cache'}).then(function(r){return r.ok?r.text():'{}'}).then(function(t){try{return JSON.parse(t)}catch(e){return {}}}).then(function(j){
+  var o={};Object.keys(j||{}).forEach(function(k){var m=j[k];if(C.ids.indexOf(k)>=0&&m&&typeof m.file==='string'&&/^[A-Za-z0-9._-]{3,120}\.glb$/.test(m.file)&&m.file.indexOf('..')<0)o[k]={file:m.file,poster:(typeof m.poster==='string'&&/^[A-Za-z0-9._-]{3,120}\.(webp|jpg|png)$/.test(m.poster))?m.poster:''}});
+  return o}).catch(function(){return {}}).then(function(o){Object.keys(C.local3d).forEach(function(k){var l=C.local3d[k];if(!o[k]||l.o)o[k]={file:l.f,poster:'',local:true}});return o})}
+function close3d(){if(!m3)return;m3.classList.remove('on');m3.textContent='';document.body.style.overflow=''}
+function open3d(name,m){
+  if(!m3){m3=el('div','m3');m3.setAttribute('role','dialog');m3.setAttribute('aria-modal','true');m3.addEventListener('click',function(e){if(e.target===m3)close3d()});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m3.classList.contains('on'))close3d()});document.body.appendChild(m3)}
+  m3.textContent='';m3.setAttribute('aria-label','โมเดล 3 มิติ '+name);
+  var box=el('div','m3-box'),h=el('div','m3-h'),x=el('button','m3-x','×');x.type='button';x.setAttribute('aria-label','ปิด');x.addEventListener('click',close3d);h.appendChild(el('b','',name));h.appendChild(x);box.appendChild(h);
+  if(!window.customElements||!customElements.get('model-viewer')){var s=document.createElement('script');s.type='module';s.src='/assets/vendor/model-viewer.min.js';document.head.appendChild(s)}
+  var v=document.createElement('model-viewer');v.setAttribute('src',m3src(m));v.setAttribute('alt','โมเดล 3 มิติของ '+name);v.setAttribute('camera-controls','');v.setAttribute('auto-rotate','');v.setAttribute('shadow-intensity','1');
+  v.setAttribute('ar','');v.setAttribute('ar-modes','webxr scene-viewer quick-look');v.setAttribute('ar-scale','fixed');v.setAttribute('ar-placement','floor');
+  var b=document.createElement('button');b.type='button';b.slot='ar-button';b.className='m3-ar';b.textContent='วางเครื่องในห้องของคุณ (AR)';v.appendChild(b);if(m.poster)v.setAttribute('poster',C.m3base+m.poster);
+  box.appendChild(v);box.appendChild(el('p','m3-f','ลากเพื่อหมุน · บีบ/เลื่อนล้อเมาส์เพื่อซูม'));m3.appendChild(box);m3.classList.add('on');x.focus();document.body.style.overflow='hidden'}
+load3d().then(function(o){M3=o;var row=q('#d3row');if(!row)return;C.names.forEach(function(n){var m=M3[n.id];if(!m)return;
+  var b=el('button','btn pri sm','ดู 3D / AR'+(C.names.length>1?' · '+n.name:''));b.type='button';b.addEventListener('click',function(){open3d(n.name,m)});row.appendChild(b)});row.hidden=!row.children.length});
+/* ---- review video: starts when scrolled to, stops when scrolled past; muted until the visitor turns the sound on ---- */
+var vb=q('#pvid .vbox'),vd=vb&&vb.querySelector('video');
+if(vd){
+  var calm=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)||(navigator.connection&&navigator.connection.saveData),held=!!calm,play=q('#vplay'),snd=q('#vsnd');
+  function sync(){play.textContent=vd.paused?'เล่น':'หยุด';play.setAttribute('aria-label',vd.paused?'เล่นวิดีโอ':'หยุดวิดีโอ');snd.textContent=vd.muted?'เปิดเสียง':'ปิดเสียง';snd.setAttribute('aria-label',vd.muted?'เปิดเสียงวิดีโอ':'ปิดเสียงวิดีโอ')}
+  play.addEventListener('click',function(){if(vd.paused){held=false;vd.play().catch(function(){})}else{held=true;vd.pause()}});
+  snd.addEventListener('click',function(){vd.muted=!vd.muted;if(!vd.muted&&vd.paused){held=false;vd.play().catch(function(){})}sync()});
+  ['play','pause','volumechange'].forEach(function(e){vd.addEventListener(e,sync)});sync();
+  if('IntersectionObserver' in window)new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){if(!held)vd.play().catch(function(){})}else if(!vd.paused)vd.pause()})},{threshold:.5}).observe(vb)}
+var yb=q('#vyt');
+if(yb)yb.addEventListener('click',function(){var box=q('#pvid .vbox'),v=box.querySelector('video');if(v)v.pause();var f=document.createElement('iframe');
+  f.src='https://www.youtube-nocookie.com/embed/'+yb.getAttribute('data-yt')+'?autoplay=1&rel=0';f.title='รีวิวเต็ม '+C.name;f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;
+  box.textContent='';box.appendChild(f);yb.hidden=true});
+})();
+</script>
+"""
+
+
+def product_page(sl, p):
+    api, key = book_backend()
+    origin = re.match(r"https://[a-z0-9.-]+\.supabase\.co", api).group(0)
+    path = f"{A.shop}{sl}/"
+    name, brand, g = p["name"], p["brand"], p["group"]
+    gl = GROUP_LABEL[g]
+    ids = [v["id"] for v in p["variants"]]
+    img_base = origin + "/storage/v1/object/public/product-images/"
+    multi = len(p["variants"]) > 1
+    shop_models = load(os.path.join(SITE, "data", "shop-3d.json"))["models"]
+    local3d = {i: {"f": shop_models[i]["file"], "o": bool(shop_models[i].get("override"))} for i in ids if i in shop_models}
+    figs = ""
+    for i, v in enumerate(p["variants"]):
+        cap = f'<figcaption>{E(v["name"])}</figcaption>' if multi else ""
+        figs += f'<figure><img src="{img_base}{E(v["image_path"])}" width="640" height="480" alt="{E(v["name"])}" decoding="async"{"" if i else " fetchpriority=high"}>{cap}</figure>'
+    vrows = "".join(f'<div class="pv" data-vid="{v["id"]}"><b>{E(v["name"])}</b><span class="pr" aria-live="polite">กำลังดูราคา…</span><span class="stk" hidden></span></div>' for v in p["variants"])
+    specs = ""
+    if p.get("specs"):
+        src = p.get("source") or {}
+        specs = ('<section class="psec"><h2>สเปกสำคัญ</h2><table class="specs"><tbody>' + "".join(f'<tr><th scope="row">{E(a)}</th><td>{E(b)}</td></tr>' for a, b in p["specs"]) + "</tbody></table>"
+                 + (f'<p class="src">ข้อมูลจากหน้า Official: <a href="{E(src["url"])}" rel="noopener">{E(src["name"])}</a></p>' if src.get("url") else "") + "</section>")
+    names_up = {v["name"].upper() for v in p["variants"]}
+    sets = [s for s in load(os.path.join(SITE, "data", "shop-sets.json"))["sets"] if any(it["name"].upper() in names_up for it in s["items"])]
+    setsec = ""
+    if sets:
+        setsec = ('<section class="psec"><h2>ชุดอุปกรณ์ที่มีรุ่นนี้</h2><ul>' + "".join(f'<li>{E(s["title"])}</li>' for s in sets)
+                  + f'</ul><p class="note">ดูโมเดล 3 มิติของชุดและราคาแยกชิ้นได้ที่หน้า <a href="{A.shop}">SHOP</a></p></section>')
+    rel = '<section class="psec" id="prel" hidden><h2>รุ่นอื่นในหมวดเดียวกัน</h2><div class="rel"></div></section>'
+    vid = SHOP_VIDEOS.get(sl)
+    vsec, vcls = "", ""
+    if vid and vid.get("file") and vid.get("poster"):
+        base = origin + "/storage/v1/object/public/product-videos/"
+        vcls = " hasv"
+        yt = ""
+        if vid.get("yt"):
+            yt = (f'<button class="btn sec" type="button" id="vyt" data-yt="{E(vid["yt"])}">ดูรีวิวเต็มบน YouTube</button>'
+                  '<p class="vhint">ก่อนกดปุ่มนี้ หน้านี้ไม่เรียกข้อมูลใดจาก YouTube เมื่อกด เบราว์เซอร์ของคุณจะเชื่อมต่อ YouTube (youtube-nocookie.com)</p>')
+        vsec = (f'<section class="pvid psec" id="pvid" aria-label="วิดีโอรีวิว {E(name)}"><h2>วิดีโอรีวิว {E(name)}</h2><div class="vbox">'
+                f'<video muted loop playsinline preload="none" poster="{base}{E(vid["poster"])}" src="{base}{E(vid["file"])}" aria-label="วิดีโอรีวิว {E(name)} (มีเสียงพากย์ กดเปิดเสียงได้)"></video>'
+                '<div class="vctl"><button class="btn" type="button" id="vplay">เล่น</button><button class="btn" type="button" id="vsnd">เปิดเสียง</button></div></div>'
+                '<p class="vhint">คลิปนี้มีเสียงพากย์และซับไทยในภาพ กด "เปิดเสียง" เพื่อฟังเสียงพากย์</p>' + yt + "</section>")
+    cfg = {"rest": origin + "/rest/v1/web_products", "key": key, "ids": ids, "names": [{"id": v["id"], "name": v["name"]} for v in p["variants"]], "name": name, "brand": brand, "group": g,
+           "pages": PRODUCT_PATH, "shop": A.shop, "m3base": origin + "/storage/v1/object/public/product-3d/", "local3d": local3d}
+    js = PROD_JS.replace("@@CFG@@", json.dumps(cfg, ensure_ascii=False)).replace("@@OFFERS@@", "true" if OFFERS_IN_SCHEMA else "false")
+    crumb = (f'<nav class="crumb" aria-label="เส้นทาง"><a href="{A.home}">หน้าแรก</a><span aria-hidden="true">/</span><a href="{A.shop}">SHOP</a><span aria-hidden="true">/</span>'
+             f'<a href="{A.shop}#catalog">{E(gl)}</a><span aria-hidden="true">/</span><span aria-current="page">{E(name)}</span></nav>')
+    msg = f"สนใจ {name}" + (f" ({' / '.join(v['name'] for v in p['variants'])})" if multi else "")
+    summ = f'<p class="sum">{E(p["summary"])}</p>' if p.get("summary") else ""
+    main = (f'<div class="pp"><div class="pmedia"><div class="art">{figs}</div><div class="d3row" id="d3row" hidden></div></div>'
+            f'<div class="pinfo"><div><span class="br">{E(brand)} · {E(gl)}</span><h1>{E(name)}</h1></div>{summ}'
+            f'<div class="vars" id="pvars" aria-busy="true">{vrows}</div>'
+            '<p class="note" id="pnote">ราคาปกติรวม VAT 7% แล้ว ไม่รวมโปรโมชัน สอบถามโปรโมชันและสต็อกล่าสุดทาง LINE @djlabsiam</p>'
+            f'<div class="cta" id="pcta">{line_btn(msg, "ถามรุ่นนี้ทาง LINE")}<a class="btn sec" href="{A.shop}">ดูสินค้าทั้งหมด</a></div>'
+            f'<div class="gone" id="pgone" hidden role="status"><p>รุ่นนี้ไม่มีจำหน่ายแล้ว</p><a class="btn sec" href="{A.shop}">กลับไปดูสินค้าใน SHOP</a></div></div></div>')
+    body = (crumb + f'<div class="pwrap{vcls}"><div>{main}{specs}{setsec}{rel}</div>{vsec}</div>'
+            '<section class="psec"><h2>แวะลองเครื่องจริงที่ร้าน</h2><p>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330 · เปิดทุกวัน 12:00–20:00 น.</p>'
+            '<p><a class="btn sec" href="https://maps.google.com/?cid=14947686714332238791" target="_blank" rel="noopener">เปิดแผนที่ ' + ic("ext", 18) + '</a></p></section>')
+    desc = p.get("summary") or f"{name} {gl} จาก {brand} ดูราคา สต็อก และสอบถามรุ่นนี้ได้ที่ DJ LAB SIAM ตัวแทนจำหน่ายอย่างเป็นทางการ สยามสแควร์"
+
+    def prod_ld(nm, sku, im):
+        d = {"@type": "Product", "name": nm, "brand": {"@type": "Brand", "name": brand}, "description": desc, "image": im}
+        if sku:
+            d["sku"] = sku
+        return d
+    imgs = [img_base + v["image_path"] for v in p["variants"]]
+    if multi:
+        prod = prod_ld(name, "", imgs)
+        prod["@type"] = "ProductGroup"
+        prod["productGroupID"] = sl
+        prod["hasVariant"] = [prod_ld(v["name"], v["sku"], [img_base + v["image_path"]]) for v in p["variants"]]
+    else:
+        prod = prod_ld(name, p["variants"][0]["sku"], imgs)
+    prod = dict({"@context": "https://schema.org"}, **prod)
+    crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "หน้าแรก", "item": ORIGIN + "/"}, {"@type": "ListItem", "position": 2, "name": "SHOP", "item": ORIGIN + "/shop/"},
+        {"@type": "ListItem", "position": 3, "name": gl, "item": ORIGIN + "/shop/#catalog"}, {"@type": "ListItem", "position": 4, "name": name, "item": ORIGIN + path}]}
+    return shell(path, f"{name} {gl} {brand} ราคาและรายละเอียด — DJ LAB SIAM", desc, body, robots="noindex,follow", ld=[prod, crumbs], active="shop", script=js, css_extra=PROD_CSS)
 
 
 # ───────── /member/ (member sign-in · linked from the menu, noindex, no Meta Pixel, no pop-up) ─────────
@@ -2187,6 +2387,8 @@ made.append(write("/account/", account_page()))
 made.append(write("/game/", game_page()))
 made.append(write(A.home, home_page()))
 made.append(write(A.shop, shop_page()))
+for _sl, _p in SHOP_PRODUCTS.items():
+    made.append(write(f"{A.shop}{_sl}/", product_page(_sl, _p)))
 for p, n in made:
     print(f"{n / 1024:6.1f} KB  {os.path.relpath(p, A.out)}")
 print(f"courses.json md5 {MD5} · {len(COURSES)} courses · {len(TEACHERS)} teachers")
