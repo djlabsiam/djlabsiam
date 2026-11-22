@@ -37,6 +37,7 @@ ap.add_argument("--home", default="/next/", help="where the home page is written
 ap.add_argument("--home-faq", default=os.path.join(SITE, "data", "faq-home.json"))
 ap.add_argument("--shop-products", default=os.path.join(SITE, "data", "shop-products.json"), help="content of the /shop/<slug>/ product pages")
 ap.add_argument("--shop-videos", default=os.path.join(SITE, "data", "shop-videos.json"))
+ap.add_argument("--shop-stage", default=os.path.join(SITE, "data", "shop-stage.json"), help="products shown as the scroll-story page (3D stage) — tests may pass a fixture with temporary screens")
 ap.add_argument("--shop", default="/next/shop/", help="where the shop page is written: /next/shop/ = draft (noindex) · /shop/ = live")
 ap.add_argument("--only-shop", action="store_true", help="daily mode: refresh ONLY the price snapshot (HTML price rows + JSON-LD Offer) of the existing /shop/<slug>/ pages; needs no courses.json / design files")
 ap.add_argument("--snapshot", default=None, help="read the prices from this JSON file (a web_products answer) instead of the database — for tests")
@@ -522,7 +523,7 @@ GEAR_HERO = ('<div class="gear g-hero" data-gear data-drop data-speed=".06" data
              '<img src="/assets/img/gear-controller.webp" width="647" height="359" alt="" decoding="async"></div>')
 
 
-def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra="", head_extra="", bare=False):   # bare = no Meta Pixel and no pop-up (member sign-in page)
+def shell(path, title, desc, body, robots=None, ld=None, script="", active="", css_extra="", head_extra="", bare=False, main_cls="pgm"):   # bare = no Meta Pixel and no pop-up (member sign-in page)
     li = "".join(f'<a href="{h}"{" class=on aria-current=page" if k == active else ""}>{t}</a>' for t, h, k in NAV)
     strip = ('<div class="topbar"><div><span><b>ตัวแทนจำหน่ายอย่างเป็นทางการ</b> Pioneer DJ · AlphaTheta · NEO by OYAIDE</span>'
              '<span>Lido Connect ชั้น 2 สยามสแควร์ · เปิดทุกวัน 12:00–20:00</span></div></div>')
@@ -557,7 +558,7 @@ def shell(path, title, desc, body, robots=None, ld=None, script="", active="", c
             f'<link rel="icon" href="/favicon.ico" sizes="any">\n<link rel="icon" href="/favicon-512.png" type="image/png" sizes="512x512">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="preload" href="/book/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>\n'
-            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="pgm">{body}</main>\n{foot}\n{"" if bare else PIXEL_SCRIPT}'
+            f'<style>\n{minify_css(FONTS + TOKENS + CSS + css_extra)}\n</style>\n{head_extra}{ldj}\n</head>\n<body>\n{top}\n<main id="main" class="{main_cls}">{body}</main>\n{foot}\n{"" if bare else PIXEL_SCRIPT}'
             f'{fader}<script src="/assets/js/decor.js" defer></script>\n{hdr_tag()}{"" if bare else popup_tag()}{script}</body>\n</html>\n')
 
 
@@ -1673,13 +1674,15 @@ def shop_page():
 # no price is ever written into the HTML or the JSON-LD.  Review video: own short clip from the public Supabase bucket product-videos (muted, loop, starts when scrolled to).
 SHOP_PRODUCTS = load(A.shop_products)["products"]
 SHOP_VIDEOS = load(A.shop_videos).get("videos", {})
+SHOP_STAGE = load(A.shop_stage).get("stages", {})
 SNAPSHOT = SS.fetch([v["id"] for _p in SHOP_PRODUCTS.values() for v in _p["variants"]], A.snapshot)   # dies BEFORE anything is written when the prices cannot be read
 SNAP_VALID = SS.today(A.today) + datetime.timedelta(days=SS.VALID_DAYS)
 GROUP_LABEL = SS.GROUP_LABEL
 SHOP_CARD_LINKS = False   # False = the /shop/ cards do NOT link to the product pages yet (pilot pages are noindex, reachable only by direct link). Turn on together with removing noindex + adding the pages to sitemap.xml, after the owner approves the design.
 PRODUCT_PATH = {v["id"]: f"{A.shop}{s}/" for s, p in SHOP_PRODUCTS.items() for v in p["variants"]}   # product id -> its page (the /shop/ cards link here)
 
-PROD_CSS = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3", ".schip", ".serr", ".stk"))) + r"""
+PROD_CSS_BASE = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3", ".schip", ".serr", ".stk")))   # 3D dialog + stock chip: shared by every product page
+PROD_CSS = PROD_CSS_BASE + r"""
 .top3{display:grid;gap:14px 40px;padding-top:4px;grid-template-areas:"head" "media" "buy" "video"}
 .top3 .phead{grid-area:head}.top3 .pmedia{grid-area:media}.top3 .pbuy{grid-area:buy}.top3 .pvid{grid-area:video}
 .top3 .pmedia{display:grid;gap:10px;align-content:start;justify-items:start}
@@ -1795,6 +1798,79 @@ if(yb)yb.addEventListener('click',function(){var box=q('#pvid .vbox'),v=box.quer
 """
 
 
+def asset_ver(rel):
+    with io.open(os.path.join(SITE, rel.replace("/", os.sep)), "rb") as fh:
+        return hashlib.md5(fh.read()).hexdigest()[:8]
+
+
+def story_main(sl, p, st, vid, base_vid, crumb, rows_p, img_base, setsec, specs_tbl):
+    """the scroll-story layout (data/shop-stage.json): hero -> review clip (only when there is one) -> big numbers -> close look -> 3D stage (or static story) -> visit -> specs -> sets"""
+    name, brand = p["name"], p["brand"]
+    gl = GROUP_LABEL[p["group"]]
+    v0 = p["variants"][0]
+    msg = f"สนใจ {name}"
+    im = st.get("image", {"width": 694, "height": 800})
+    hero = ('<section class="ap-hero">'
+            f'<p class="ap-eyebrow">{E(brand)} &nbsp;/&nbsp; {E(gl)}</p><h1 class="ap-h1">{E(name)}</h1><p class="ap-lede">{E(st["lede"])}</p>'
+            f'<div class="ap-buy">{SS.region(p, rows_p, A.shop)}<div class="d3row" id="d3row" hidden></div></div>'
+            f'<div class="ap-heroimg"><img src="{img_base}{E(v0["image_path"])}" width="{int(im["width"])}" height="{int(im["height"])}" alt="{E(name)}" decoding="async" fetchpriority="high"></div></section>')
+    review = ""
+    if vid and vid.get("file") and vid.get("poster"):
+        rv = st["review"]
+        yt = ""
+        if vid.get("yt"):
+            yt = (f'<button class="btn sec vyt" type="button" id="vyt" data-yt="{E(vid["yt"])}">ดูรีวิวเต็มบน YouTube</button>'
+                  '<p class="vhint">ก่อนกดปุ่มนี้ หน้านี้ไม่เรียกข้อมูลใดจาก YouTube เมื่อกด เบราว์เซอร์ของคุณจะเชื่อมต่อ YouTube (youtube-nocookie.com)</p>')
+        review = ('<section class="ap-review pvid" id="pvid" aria-labelledby="rv-h"><div class="ap-rv-in"><div class="ap-rv-text rv">'
+                  f'<p class="ap-kick">{E(rv["kick"])}</p><h2 class="ap-big" id="rv-h">{"<br>".join(E(x) for x in rv["title"])}</h2>'
+                  + (f'<p class="ap-sub">{E(rv["sub"])}</p>' if rv.get("sub") else "")
+                  + '<ol class="ap-rv-list">' + "".join(f"<li><span>{i + 1:02d}</span>{E(x)}</li>" for i, x in enumerate(rv["outline"])) + "</ol>"
+                  f'<p class="vhint">{E(rv["hint"])}</p></div><div class="ap-rv-media rv"><div class="vbox">'
+                  f'<video muted loop playsinline preload="none" poster="{base_vid}{E(vid["poster"])}" src="{base_vid}{E(vid["file"])}" aria-label="วิดีโอรีวิว {E(name)} (มีเสียงพากย์ กดเปิดเสียงได้)"></video>'
+                  '<div class="vctl"><button class="btn" type="button" id="vplay">เล่น</button><button class="btn" type="button" id="vsnd">เปิดเสียง</button></div></div>'
+                  + yt + "</div></div></section>")
+    nums = ('<section class="ap-dark ap-nums" aria-label="ตัวเลขสำคัญ"><p class="ap-kick rv">ภาพรวมแบบเร็ว</p><h2 class="ap-h2 rv">เห็นครบ ในไม่กี่ตัวเลข</h2><ul class="ap-numgrid">'
+            + "".join(f'<li class="rv"><b>{E(n["v"])}{"<i>" + E(n["u"]) + "</i>" if n.get("u") else ""}</b><span>{"<br>".join(E(x) for x in n["t"])}</span></li>' for n in st["numbers"])
+            + "</ul></section>")
+    lk = st["look"]
+    tabs = "".join(f'<button role="tab" aria-selected="{"true" if i == 0 else "false"}" aria-controls="lp{i}" id="lt{i}"{" class=on" if i == 0 else ""}>{E(t["tab"])}</button>' for i, t in enumerate(lk["tabs"]))
+    panels = "".join(f'<div role="tabpanel" id="lp{i}" aria-labelledby="lt{i}"{"" if i == 0 else " hidden"}><h3>{E(t["title"])}</h3><p>{E(t["text"])}</p></div>' for i, t in enumerate(lk["tabs"]))
+    look = (f'<section class="ap-look" aria-labelledby="look-h"><p class="ap-kick rv">{E(lk["kick"])}</p><h2 class="ap-h2 rv" id="look-h">{E(lk["title"])}</h2><div class="ap-lookgrid">'
+            f'<div class="ap-tabs" role="tablist" aria-label="จุดเด่นของ {E(name)}">{tabs}</div><div class="ap-lookpanels">{panels}</div>'
+            f'<div class="ap-lookimg" aria-hidden="true"><div class="zoom" id="zoom" data-ring="{E(json.dumps(lk["ring"]))}"><img src="{img_base}{E(v0["image_path"])}" width="{int(im["width"])}" height="{int(im["height"])}" alt="" loading="lazy" decoding="async"><span class="ring" id="ring"></span></div></div></div></section>')
+
+    def chips(c):
+        return '<ul class="ap-chips l">' + "".join(f"<li>{E(a)} <small>{E(b)}</small></li>" for a, b in c) + "</ul>"
+    ico = {"usb": '<rect x="13" y="12" width="14" height="22" rx="3"/><path d="M16 12V6M24 12V6"/>',
+           "stream": '<circle cx="9" cy="31" r="2.6"/><path d="M9 21a10 10 0 0 1 10 10M9 12a19 19 0 0 1 19 19M9 3a28 28 0 0 1 28 28"/>',
+           "cloud": '<path d="M11 30a7 7 0 0 1 0-14 9 9 0 0 1 17-3 7.5 7.5 0 0 1 1 17z"/>'}
+    beats3d = "".join('<div class="ap-b">' + f'<p class="ap-kick l">{E(b["kick"])}</p><h2 class="ap-big">' + "".join(f'<span class="l">{E(x)}</span>' for x in b["lines"]) + "</h2>"
+                      + (f'<p class="ap-sub l">{E(b["sub"])}</p>' if b.get("sub") else "") + (chips(b["chips"]) if b.get("chips") else "") + "</div>" for b in st["beats"])
+    src = "".join(f'<div class="ap-chip"><svg viewBox="0 0 40 40">{ico[c["k"]]}</svg><span><b>{E(c["t"])}</b><small>{E(c["s"])}</small></span></div>' for c in st["sources"])
+    cfg = {"m3": origin_of(img_base) + "/storage/v1/object/public/product-3d/", "models": st["models"], "labels": st["labels"], "screens": st.get("screens", {}),
+           "lib": [{"k": c["k"], "t": c["screen"], "s": c["s"]} for c in st["sources"]]}
+    stage = ('<section class="ap-scrolly" id="sc" aria-label="เรื่องเด่นของ ' + E(name) + '" hidden data-cfg="' + E(json.dumps(cfg, ensure_ascii=False)) + '"><div class="ap-pin">'
+             '<a class="ap-skip" href="#visit">ข้ามส่วนเล่าเรื่อง</a><canvas id="gl" aria-hidden="true"></canvas>'
+             '<svg class="ap-lines" id="lines" aria-hidden="true"><path/><path/><path/><circle/><circle/><circle/></svg>'
+             f'<div class="ap-bt">{beats3d}</div><div class="ap-src" aria-hidden="true">{src}</div>'
+             f'<div class="ap-hid" aria-hidden="true"><b>{E(st["hid"]["t"])}</b><small>{E(st["hid"]["s"])}</small></div>'
+             + '<span class="ap-tag" aria-hidden="true"></span>' * 6 + f'<div class="ap-prog" aria-hidden="true"><i></i></div><p class="ap-cap">{E(st["caption"])}</p></div></section>')
+    still = ('<section class="ap-story" id="sf">' + "".join(
+        f'<div class="ap-beat rv"><p class="ap-kick">{E(b["kick"])}</p><h2 class="ap-big">{"<br>".join(E(x) for x in b["lines"])}</h2>'
+        + (f'<p class="ap-sub">{E(b["sub"])}</p>' if b.get("sub") else "") + (chips(b["chips"]).replace(' class="ap-chips l"', ' class="ap-chips"') if b.get("chips") else "") + "</div>" for b in st["static"]) + "</section>")
+    visit = ('<section class="ap-dark ap-visit" id="visit"><p class="ap-kick rv">ลองเครื่องจริง</p><h2 class="ap-h2 rv">แวะที่ร้านได้</h2>'
+             '<p class="ap-sub rv">Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330<br>เปิดทุกวัน 12:00–20:00 น.</p>'
+             f'<p class="ap-visit-cta rv">{line_btn(msg, "ถามรุ่นนี้ทาง LINE")}'
+             '<a class="btn sec" href="https://maps.google.com/?cid=14947686714332238791" target="_blank" rel="noopener">เปิดแผนที่</a></p></section>')
+    specs = f'<section class="ap-specsec"><h2 class="ap-h2 rv">สเปกทั้งหมด</h2>{specs_tbl}</section>' if specs_tbl else ""
+    more = f'<section class="ap-more">{setsec}<div class="rv" id="prel" hidden><h2 class="ap-h3">รุ่นอื่นในหมวดเดียวกัน</h2><div class="rel"></div></div></section>'
+    return crumb + hero + review + nums + look + stage + still + visit + specs + more
+
+
+def origin_of(img_base):
+    return re.match(r"https://[a-z0-9.-]+\.supabase\.co", img_base).group(0)
+
+
 def product_page(sl, p):
     api, key = book_backend()
     origin = re.match(r"https://[a-z0-9.-]+\.supabase\.co", api).group(0)
@@ -1846,6 +1922,24 @@ def product_page(sl, p):
              f'<a href="{A.shop}#catalog">{E(gl)}</a><span aria-hidden="true">/</span><span aria-current="page">{E(name)}</span></nav>')
     summ = f'<section class="psec"><p class="sum">{E(p["summary"])}</p></section>' if p.get("summary") else ""
     rows_p = {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}
+    st = SHOP_STAGE.get(sl)
+    if st:
+        # scroll-story layout: same price snapshot / live script / JSON-LD as the standard page, different <main>
+        crumb_s = crumb
+        tbl = ""
+        if p.get("specs"):
+            tbl = ('<table class="ap-specs"><tbody>' + "".join(f'<tr><th scope="row">{E(a)}</th><td>{E(b)}</td></tr>' for a, b in p["specs"]) + "</tbody></table>"
+                   + (f'<p class="src">ข้อมูลจากหน้าทางการของผู้ผลิต ตรวจเมื่อ {E(p["checked"])} · ' + " · ".join(f'<a href="{E(u)}" rel="noopener">{E((p.get("source_labels") or [])[i:i + 1] and p["source_labels"][i] or re.sub("^www[.]", "", urllib.parse.urlparse(u).netloc))}</a>' for i, u in enumerate(p["sources"])) + "</p>" if p.get("sources") and p.get("checked") else ""))
+        sets_ap = setsec.replace('<section class="psec"><h2>', '<div class="rv"><h2 class="ap-h3">').replace("</h2><ul>", "</h2><ul>").replace('<p class="note">', '<p class="ap-note">').replace("</p></section>", "</p></div>") if setsec else ""
+        body = story_main(sl, p, st, vid, origin + "/storage/v1/object/public/product-videos/", crumb_s, rows_p, img_base, sets_ap, tbl)
+        desc = SS.desc_of(p)
+        prod = SS.ld_product(sl, p, {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}, path, SNAP_VALID)
+        crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "หน้าแรก", "item": ORIGIN + "/"}, {"@type": "ListItem", "position": 2, "name": "SHOP", "item": ORIGIN + "/shop/"},
+            {"@type": "ListItem", "position": 3, "name": gl, "item": ORIGIN + "/shop/#catalog"}, {"@type": "ListItem", "position": 4, "name": name, "item": ORIGIN + path}]}
+        he = (f'<link rel="stylesheet" href="/assets/css/shop-stage.css?v={asset_ver("assets/css/shop-stage.css")}">\n')
+        sc_ = f'<script src="/assets/js/shop-stage.js?v={asset_ver("assets/js/shop-stage.js")}" defer></script>\n'
+        return shell(path, f"{name} {gl} {brand} ราคาและรายละเอียด — DJ LAB SIAM", desc, body, robots="noindex,follow", ld=[prod, crumbs], active="shop", script=js + sc_, css_extra=PROD_CSS_BASE, head_extra=he, main_cls="ap")
     top = (f'<div class="top3{vcls}"><div class="phead"><span class="br">{E(brand)} · {E(gl)}</span><h1>{E(name)}</h1></div>'
            f'<div class="pmedia"><div class="art">{figs}</div><div class="d3row" id="d3row" hidden></div></div>'
            f'<div class="pbuy">{SS.region(p, rows_p, A.shop)}</div>{vsec}</div>')
