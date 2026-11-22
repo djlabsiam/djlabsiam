@@ -823,6 +823,11 @@ _sjs = read(os.path.join(SITE, "assets", "js", "shop-stage.js"))
 ok(not re.search(r"innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function|/_proto/|\bBPM\b|02:35", _sjs), "shop-stage.js: no HTML from strings / eval / prototype paths / made-up numbers on the mock screens")
 ok("webglcontextlost" in _sjs and "saveData" in _sjs and "prefers-reduced-motion" in _sjs and "deviceMemory" in _sjs and "effectiveType" in _sjs and "data-cfg" in _sjs and "/assets/vendor/three/" in _sjs and "supabase" not in _sjs, "shop-stage.js: must fall back to the still story on context loss / reduced motion / saveData / slow network / low memory, read its config from data-cfg and load three.js only from /assets/vendor/three/")
 ok(all(os.path.exists(os.path.join(SITE, "assets", "vendor", "three", f)) for f in ("three.min.js", "GLTFLoader.js", "RoomEnvironment.js", "LICENSE-three.txt")), "assets/vendor/three: three.js, GLTFLoader, RoomEnvironment or the licence file is missing")
+def _vd_has(sl_):
+    v_ = json.loads(read(os.path.join(SITE, "data", "shop-videos.json"))).get("videos", {}).get(sl_)
+    return bool(v_ and v_.get("file") and v_.get("poster"))
+
+
 for _sl, _st in _stg["stages"].items():
     _k = "prod:" + _sl
     ok(_sl in _spd["products"], f"{_k}: shop-stage.json lists a slug that is not in shop-products.json")
@@ -840,8 +845,11 @@ for _sl, _st in _stg["stages"].items():
     ok(f'<link rel="stylesheet" href="/assets/css/shop-stage.css?v={_cv}">' in _t and f'<script src="/assets/js/shop-stage.js?v={_jv}" defer></script>' in _t, f"{_k}: shop-stage.css/js must be linked once with the current version (run tools/build_pages.py)")
     ok(not re.search(r"World standard|ทุกคนเป็น DJ|ที่ใช้เครื่องจริง|ตามผู้ผลิต|BPM", _tv), f"{_k}: a claim that is not confirmed (World standard / team-are-all-DJs wording / per-the-maker set / made-up number) is on the page")
     ok('class="ap-skip" href="#visit"' in _t and 'id="visit"' in _t and "ภาพจำลองประกอบ" in _tv, f"{_k}: the skip link, its target and the 'mock picture' caption must be on the page")
+    _pv_ = _t.find('id="pvprev"')
+    ok((_pv_ == -1) or (not _vd_has(_sl) and "<video" not in _t and 'id="pvid"' not in _t and 'id="vplay"' not in _t and 'id="vsnd"' not in _t and "คลิปรีวิว · กำลังจัดทำ" in _tv and _st.get("review", {}).get("preview") is True and not _st["review"].get("sub")), f"{_k}: the position preview needs review.preview=true, no clip entry, no <video>/#pvid/#vplay/#vsnd, the words 'กำลังจัดทำ' and no pending wording")
+    ok(_pv_ != -1 or not _st.get("review", {}).get("preview") or _vd_has(_sl), f"{_k}: review.preview is on but the preview block is missing")
     _order = [_t.find(x) for x in ('class="ap-hero"', 'id="pvid"', 'class="ap-dark ap-nums"', 'class="ap-look"', 'id="sc"', 'class="ap-dark ap-visit"', 'class="ap-specsec"', 'class="ap-more"')]
-    ok(_order[0] < _order[2] < _order[3] < _order[4] < _order[5] < _order[6] < _order[7] and (_order[1] == -1 or _order[0] < _order[1] < _order[2]), f"{_k}: section order must be first screen → review clip (only if there is one) → numbers → close look → stage → visit → specs → sets")
+    ok(_order[0] < _order[2] < _order[3] < _order[4] < _order[5] < _order[6] < _order[7] and (_order[1] == -1 or _order[0] < _order[1] < _order[2]) and (_pv_ == -1 or _order[0] < _pv_ < _order[2]), f"{_k}: section order must be first screen → review clip (only if there is one) → numbers → close look → stage → visit → specs → sets")
     ok(not re.search(r'src="/(_proto|assets/img/shop)/[^"]*(screen-|review-placeholder)', _t), f"{_k}: the page references a temporary mock-up file")
 ok(not [f for f in glob.glob(os.path.join(SITE, "shop", "**", "*.*"), recursive=True) if f.lower().endswith((".mp4", ".webm", ".mov", ".m4v"))], "shop/: a video file must never be committed (clips live in the Supabase bucket product-videos)")
 ok(all(k in _spd["products"] for k in _svd.get("videos", {})), "data/shop-videos.json: every key must be a slug in data/shop-products.json")

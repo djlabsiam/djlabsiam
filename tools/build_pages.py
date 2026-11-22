@@ -1754,7 +1754,7 @@ function paint(rows){
     seen++;var sp=num(r.price),ss=r.in_stock?'1':'0';
     if(box.getAttribute('data-price')!==sp||box.getAttribute('data-stock')!==ss){box.setAttribute('data-price',sp);box.setAttribute('data-stock',ss);pr.textContent=baht(r.price);
       st.hidden=false;st.className='stk '+(r.in_stock?'in':'out');st.textContent=r.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก';ldSet(i,r)}});
-  var gone=!seen;q('#pgone').hidden=!gone;['#pvars','#pnote','#pcta','#pvid'].forEach(function(s){var e=q(s);if(e)e.hidden=gone})}
+  var gone=!seen;q('#pgone').hidden=!gone;['#pvars','#pnote','#pcta','#pvid','#pvprev'].forEach(function(s){var e=q(s);if(e)e.hidden=gone})}
 rest('select=id,name,price,in_stock,image_path&id=in.('+C.ids.join(',')+')').then(paint).catch(function(){})   /* database not reachable: the snapshot on the page stays as it is */
 /* ---- other products of the same category, same brand first (live) ---- */
 var rel=q('#prel');
@@ -1829,6 +1829,12 @@ def story_main(sl, p, st, vid, base_vid, crumb, rows_p, img_base, setsec, specs_
                   f'<video muted loop playsinline preload="none" poster="{base_vid}{E(vid["poster"])}" src="{base_vid}{E(vid["file"])}" aria-label="วิดีโอรีวิว {E(name)} (มีเสียงพากย์ กดเปิดเสียงได้)"></video>'
                   '<div class="vctl"><button class="btn" type="button" id="vplay">เล่น</button><button class="btn" type="button" id="vsnd">เปิดเสียง</button></div></div>'
                   + yt + "</div></div></section>")
+    elif st["review"].get("preview"):
+        rv = st["review"]
+        review = ('<section class="ap-review" id="pvprev" aria-labelledby="rv-h"><div class="ap-rv-in"><div class="ap-rv-text rv">'
+                  f'<p class="ap-kick">{E(rv["kick"])}</p><h2 class="ap-big" id="rv-h">{"<br>".join(E(x) for x in rv["title"])}</h2>'
+                  + '<ol class="ap-rv-list">' + "".join(f"<li><span>{i + 1:02d}</span>{E(x)}</li>" for i, x in enumerate(rv["outline"])) + "</ol></div>"
+                  f'<div class="ap-rv-media rv"><div class="vbox ph" role="img" aria-label="ตำแหน่งคลิปรีวิว {E(name)} — กำลังจัดทำ"><b>{E(name)}</b><span>คลิปรีวิว · กำลังจัดทำ</span></div></div></div></section>')
     nums = ('<section class="ap-dark ap-nums" aria-label="ตัวเลขสำคัญ"><p class="ap-kick rv">ภาพรวมแบบเร็ว</p><h2 class="ap-h2 rv">เห็นครบ ในไม่กี่ตัวเลข</h2><ul class="ap-numgrid">'
             + "".join(f'<li class="rv"><b>{E(n["v"])}{"<i>" + E(n["u"]) + "</i>" if n.get("u") else ""}</b><span>{"<br>".join(E(x) for x in n["t"])}</span></li>' for n in st["numbers"])
             + "</ul></section>")

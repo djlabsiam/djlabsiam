@@ -51,7 +51,7 @@ function paint(rows){
     seen++;var sp=num(r.price),ss=r.in_stock?'1':'0';
     if(box.getAttribute('data-price')!==sp||box.getAttribute('data-stock')!==ss){box.setAttribute('data-price',sp);box.setAttribute('data-stock',ss);pr.textContent=baht(r.price);
       st.hidden=false;st.className='stk '+(r.in_stock?'in':'out');st.textContent=r.in_stock?'มีของ':'สั่งจอง/สอบถามสต็อก';ldSet(i,r)}});
-  var gone=!seen;q('#pgone').hidden=!gone;['#pvars','#pnote','#pcta','#pvid'].forEach(function(s){var e=q(s);if(e)e.hidden=gone})}
+  var gone=!seen;q('#pgone').hidden=!gone;['#pvars','#pnote','#pcta','#pvid','#pvprev'].forEach(function(s){var e=q(s);if(e)e.hidden=gone})}
 rest('select=id,name,price,in_stock,image_path&id=in.('+C.ids.join(',')+')').then(paint).catch(function(){})   /* database not reachable: the snapshot on the page stays as it is */
 /* ---- other products of the same category, same brand first (live) ---- */
 var rel=q('#prel');
