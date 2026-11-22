@@ -1680,28 +1680,29 @@ SHOP_CARD_LINKS = False   # False = the /shop/ cards do NOT link to the product 
 PRODUCT_PATH = {v["id"]: f"{A.shop}{s}/" for s, p in SHOP_PRODUCTS.items() for v in p["variants"]}   # product id -> its page (the /shop/ cards link here)
 
 PROD_CSS = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3", ".schip", ".serr", ".stk"))) + r"""
-.pp{display:grid;gap:28px;padding-top:8px}
-.pp .pmedia{display:grid;gap:14px;align-content:start}
-.pp .art{position:relative;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));background-color:#FAF9F6;border:1px solid var(--lab-line);border-radius:var(--radius-lg);padding:14px;
+.top3{display:grid;gap:14px 40px;padding-top:4px;grid-template-areas:"head" "media" "buy" "video"}
+.top3 .phead{grid-area:head}.top3 .pmedia{grid-area:media}.top3 .pbuy{grid-area:buy}.top3 .pvid{grid-area:video}
+.top3 .pmedia{display:grid;gap:10px;align-content:start;justify-items:start}
+.top3 .art{position:relative;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));width:100%;max-width:380px;background-color:#FAF9F6;border:1px solid var(--lab-line);border-radius:var(--radius-lg);padding:10px;
   background-image:linear-gradient(rgba(15,15,15,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,.05) 1px,transparent 1px);background-size:20px 20px}
-.pp .art figure{margin:0;position:relative;aspect-ratio:4/3;display:grid;place-items:center}
-.pp .art img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
-.pp .art figcaption{position:absolute;left:0;top:0;font:600 13px/1.4 var(--font-family-body);padding:3px 10px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
-.pp .d3row{display:flex;flex-wrap:wrap;gap:10px}
-.pp .pinfo{display:grid;gap:22px;align-content:start}
-.pp .br{font:600 14px/1.4 var(--font-family-body);color:var(--text-muted)}
-.pp h1{font-size:40px;max-width:none}
-.pp .sum{color:var(--text-secondary);max-width:62ch}
-.pp .vars{display:grid;gap:12px}
-.pp .pv{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:14px 16px;border:1px solid var(--lab-line);border-radius:var(--radius-md);background:#fff}
-.pp .pv b{font:700 18px/1.3 var(--font-family-display)}
-.pp .pv .pr{font:800 26px/1.3 var(--font-family-display);margin-left:auto}
-.pp .pv .stk{position:static;box-shadow:none;border:1px solid var(--lab-line)}
-.pp [hidden]{display:none!important}
-.pp .note{color:var(--text-secondary);font-size:15px;max-width:62ch}
-.pp .cta{display:flex;flex-wrap:wrap;gap:12px}
-.pp .gone{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md)}
-.pp .gone p{margin:0 0 10px}
+.top3 .art figure{margin:0;position:relative;aspect-ratio:4/3;display:grid;place-items:center;max-height:220px;margin-inline:auto;width:100%}
+.top3 .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.top3 .art figcaption{position:absolute;left:0;top:0;font:600 12px/1.4 var(--font-family-body);padding:2px 8px;border-radius:var(--radius-pill);background:#fff;box-shadow:0 2px 6px rgba(15,15,15,.14)}
+.top3 .d3row{display:flex;flex-wrap:wrap;gap:10px}
+.top3 .pbuy{display:grid;gap:14px;align-content:start}
+.top3 .br{font:600 14px/1.4 var(--font-family-body);color:var(--text-muted)}
+.top3 h1{font-size:40px;max-width:none}
+.psec .sum,.sum{color:var(--text-secondary);max-width:62ch}
+.top3 .vars{display:grid;gap:10px}
+.top3 .pv{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:12px 16px;border:1px solid var(--lab-line);border-radius:var(--radius-md);background:#fff}
+.top3 .pv b{font:700 18px/1.3 var(--font-family-display)}
+.top3 .pv .pr{font:800 26px/1.3 var(--font-family-display);margin-left:auto}
+.top3 .pv .stk{position:static;box-shadow:none;border:1px solid var(--lab-line)}
+.top3 [hidden]{display:none!important}
+.top3 .note{margin:0;color:var(--text-secondary);font-size:15px;max-width:62ch}
+.top3 .cta{display:flex;flex-wrap:wrap;gap:12px}
+.top3 .gone{padding:16px 18px;border:1px solid var(--brand-base);background:var(--lab-tint);border-radius:var(--radius-md)}
+.top3 .gone p{margin:0 0 10px}
 .pgm .psec{display:grid;gap:12px;padding-top:40px}
 .psec h2{font-size:24px}
 .psec ul{margin:0;padding-left:20px;display:grid;gap:8px}
@@ -1714,16 +1715,18 @@ PROD_CSS = "".join(l + "\n" for l in SHOP_CSS.split("\n") if l.startswith((".m3"
 .rel a{display:grid;gap:2px;padding:14px 16px;background:#fff;border:1px solid var(--lab-line);border-radius:var(--radius-md);text-decoration:none;color:inherit}
 .rel a:hover{border-color:var(--text-primary)}
 .rel b{font:700 17px/1.35 var(--font-family-display)}.rel span{color:var(--text-secondary)}
-.pvid{justify-items:start;align-content:start}
-.pvid .vbox{position:relative;width:100%;max-width:405px;aspect-ratio:9/16;background:#0F0F0F;border-radius:var(--radius-lg);overflow:hidden}
+.top3 .pvid{display:grid;gap:8px;justify-items:start;align-content:start;padding-top:0}
+.pvid h2{font-size:16px}
+.pvid .vbox{position:relative;height:min(62vh,520px);aspect-ratio:9/16;max-width:100%;background:#0F0F0F;border-radius:var(--radius-lg);overflow:hidden}
 .pvid video,.pvid iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0}
 .pvid .vctl{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;z-index:2}
 .pvid .vctl .btn{min-height:44px;padding:4px 16px;font-size:15px;background:#fff;color:var(--text-primary);border:1.5px solid var(--text-primary)}
 .pvid .vhint{font-size:14px;color:var(--text-secondary);max-width:46ch;margin:0}
-.pwrap{display:grid;gap:0}
-@media (min-width:960px){.pp{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px}.pwrap.hasv{grid-template-columns:minmax(0,1fr) 405px;gap:48px;align-items:start}.pwrap.hasv .pvid{padding-top:8px}}
-@media (max-width:640px){.pp h1{font-size:32px}.pp .pv .pr{margin-left:0}.pvid .vbox{max-width:none}}
-@media (prefers-reduced-motion:reduce){.pp *{transition:none!important}}
+.pgm .lower{display:grid;gap:0}
+@media (min-width:960px){.top3{grid-template-columns:380px minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:"media head" "media buy"}.top3.hasv{grid-template-columns:380px minmax(0,1fr) auto;grid-template-areas:"media head video" "media buy video"}.top3 .phead{align-self:start}.top3 .pbuy{align-self:start;max-width:640px}}
+@media (max-width:959px){.pvid .vbox{height:auto;width:100%;max-width:405px;aspect-ratio:9/16}}
+@media (max-width:640px){.top3{gap:10px}.top3 h1{font-size:30px}.top3 .art{max-width:none;padding:8px}.top3 .art figure{max-height:170px}.top3 .pv{gap:4px 10px;padding:10px 12px}.top3 .pv b{font-size:15px}.top3 .pv .pr{font-size:22px}.top3 .note{font-size:13px}.top3 .pbuy{gap:10px}.top3 .d3row .btn{min-height:40px;padding:2px 16px;font-size:14px}.top3 .cta .btn.sec{display:none}}
+@media (prefers-reduced-motion:reduce){.top3 *{transition:none!important}}
 """
 
 PROD_JS = r"""<script>
@@ -1841,11 +1844,12 @@ def product_page(sl, p):
     js = PROD_JS.replace("@@CFG@@", json.dumps(cfg, ensure_ascii=False))
     crumb = (f'<nav class="crumb" aria-label="เส้นทาง"><a href="{A.home}">หน้าแรก</a><span aria-hidden="true">/</span><a href="{A.shop}">SHOP</a><span aria-hidden="true">/</span>'
              f'<a href="{A.shop}#catalog">{E(gl)}</a><span aria-hidden="true">/</span><span aria-current="page">{E(name)}</span></nav>')
-    summ = f'<p class="sum">{E(p["summary"])}</p>' if p.get("summary") else ""
-    main = (f'<div class="pp"><div class="pmedia"><div class="art">{figs}</div><div class="d3row" id="d3row" hidden></div></div>'
-            f'<div class="pinfo"><div><span class="br">{E(brand)} · {E(gl)}</span><h1>{E(name)}</h1></div>{summ}'
-            f'{SS.region(p, {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}, A.shop)}</div></div>')
-    body = (crumb + f'<div class="pwrap{vcls}"><div>{main}{specs}{setsec}{rel}</div>{vsec}</div>'
+    summ = f'<section class="psec"><p class="sum">{E(p["summary"])}</p></section>' if p.get("summary") else ""
+    rows_p = {v["id"]: SNAPSHOT[v["id"]] for v in p["variants"] if v["id"] in SNAPSHOT}
+    top = (f'<div class="top3{vcls}"><div class="phead"><span class="br">{E(brand)} · {E(gl)}</span><h1>{E(name)}</h1></div>'
+           f'<div class="pmedia"><div class="art">{figs}</div><div class="d3row" id="d3row" hidden></div></div>'
+           f'<div class="pbuy">{SS.region(p, rows_p, A.shop)}</div>{vsec}</div>')
+    body = (crumb + top + f'<div class="lower">{summ}{specs}{setsec}{rel}</div>'
             '<section class="psec"><h2>แวะลองเครื่องจริงที่ร้าน</h2><p>Lido Connect ชั้น 2, Siam Square Soi 3 ปทุมวัน กรุงเทพฯ 10330 · เปิดทุกวัน 12:00–20:00 น.</p>'
             '<p><a class="btn sec" href="https://maps.google.com/?cid=14947686714332238791" target="_blank" rel="noopener">เปิดแผนที่ ' + ic("ext", 18) + '</a></p></section>')
     desc = SS.desc_of(p)
