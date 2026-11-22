@@ -186,7 +186,7 @@
 
 /* ===== ส่วนที่เพิ่มตอนทำเป็นเทมเพลตจริง ===== */
 .ap>.crumb{padding:20px clamp(20px,5vw,64px) 0!important}
-.ap-buy .vars{order:1}.ap-buy .cta{order:2}.ap-buy .d3row{order:3}.ap-buy .note{order:4;flex:1 0 100%;text-align:center}
+.ap-buy .vars{order:1}.ap-buy .cta{order:2}.ap-buy .d3row .btn{order:3}.ap-hero .ap-buy .note{order:9;flex:0 0 100%;margin:6px 0 0;max-width:none;text-align:center}
 .ap-buy .gone{order:5;flex:1 0 100%;text-align:center;padding:16px 18px;border:1px solid var(--red);background:#fdf3f3}
 .ap-buy [hidden]{display:none!important}
 .ap-buy .d3row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
